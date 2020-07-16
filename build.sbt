@@ -21,7 +21,17 @@ lazy val api = project
 lazy val gateway = project
   .settings(
     commonSettings,
+    libraryDependencies ++= Seq(
+      "org.http4s"                  %% "http4s-blaze-server"      % Versions.http4s,
+      "org.http4s"                  %% "http4s-circe"             % Versions.http4s,
+      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server"      % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"       % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % Versions.tapir,
+      "ch.qos.logback"               % "logback-classic"          % Versions.logback
+    )
   )
+  .dependsOn(api)
 
 lazy val `read-side` = project
   .settings(commonSettings)

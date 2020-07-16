@@ -2,6 +2,7 @@ package io.github.rpiotrow.projecttimetracker.api
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.Uuid
+import eu.timepit.refined.collection.NonEmpty
 
 object Model {
 
@@ -18,8 +19,8 @@ object Model {
     implicit val decoder: Decoder[UserId] = deriveUnwrappedDecoder
 
    */
-  type UserId = String Refined Uuid
-  type ProjectId = String Refined Uuid
-  type TaskId = String Refined Uuid
+  type UserId    = String Refined Uuid
+  type ProjectId = String Refined NonEmpty
+  type TaskId    = String Refined Uuid
 
 }

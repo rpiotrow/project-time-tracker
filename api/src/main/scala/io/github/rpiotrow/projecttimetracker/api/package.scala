@@ -91,7 +91,19 @@ package object api {
     .get
     .in(query[List[UserId]]("ids"))
     .in(query[Option[LocalDateTime]]("from")) // TODO: new type for format YYYY-MM
-    .in(query[Option[LocalDateTime]]("to")) // TODO: new type for format YYYY-MM
-    .out(jsonBody[List[StatisticsOutput]])
+    .in(query[Option[LocalDateTime]]("to"))   // TODO: new type for format YYYY-MM
+    .out(jsonBody[StatisticsOutput])
+
+  val allEndpoints = List(
+    projectListEndpoint,
+    projectDetailEndpoint,
+    projectCreateEndpoint,
+    projectUpdateEndpoint,
+    projectDeleteEndpoint,
+    taskCreateEndpoint,
+    taskUpdateEndpoint,
+    taskDeleteEndpoint,
+    statisticsEndpoint
+  )
 
 }
