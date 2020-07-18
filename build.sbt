@@ -34,7 +34,31 @@ lazy val gateway = project
   .dependsOn(api)
 
 lazy val `read-side` = project
-  .settings(commonSettings)
+  .configs(IntegrationTest)
+  .settings(
+    commonSettings,
+    Defaults.itSettings,
+    libraryDependencies ++= Seq(
+      "dev.zio"       %% "zio"                             % Versions.zio,
+      "dev.zio"       %% "zio-config"                      % Versions.zioConfig,
+      "dev.zio"       %% "zio-config-magnolia"             % Versions.zioConfig,
+      "dev.zio"       %% "zio-config-typesafe"             % Versions.zioConfig,
+      "dev.zio"       %% "zio-interop-cats"                % Versions.zioInteropCats,
+      "org.http4s"    %% "http4s-blaze-server"             % Versions.http4s,
+      "org.http4s"    %% "http4s-circe"                    % Versions.http4s,
+      "org.http4s"    %% "http4s-dsl"                      % Versions.http4s,
+      "io.circe"      %% "circe-generic"                   % Versions.circe,
+      "org.tpolecat"  %% "doobie-core"                     % Versions.doobie,
+      "org.tpolecat"  %% "doobie-postgres"                 % Versions.doobie,
+      "org.tpolecat"  %% "doobie-hikari"                   % Versions.doobie,
+      "org.tpolecat"  %% "doobie-quill"                    % Versions.doobie,
+      "ch.qos.logback" % "logback-classic"                 % Versions.logback,
+      "com.dimafeng"  %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
+      "com.dimafeng"  %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest,
+      "org.scalactic" %% "scalactic"                       % Versions.scalatest      % IntegrationTest,
+      "org.scalatest" %% "scalatest"                       % Versions.scalatest      % IntegrationTest
+    )
+  )
 
 lazy val `write-side` = project
   .settings(commonSettings)

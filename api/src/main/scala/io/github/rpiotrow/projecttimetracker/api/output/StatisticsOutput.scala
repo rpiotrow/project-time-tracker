@@ -4,5 +4,5 @@ case class StatisticsOutput(
   numberOfTasks: Int,
   averageTaskDuration: Double,
   averageTaskVolume: Double,
-  averageTaskDurationWeightedVolume: Double
+  volumeWeightedAverageTaskDuration: Double
 )

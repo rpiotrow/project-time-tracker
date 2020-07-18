@@ -70,7 +70,7 @@ object Server {
         numberOfTasks = 6,
         averageTaskDuration = 1.1,
         averageTaskVolume = 2.3,
-        averageTaskDurationWeightedVolume = 5.2
+        volumeWeightedAverageTaskDuration = 5.2
       ).asRight[ApiError].pure[F]
     })
     projectList <+> projectDetail <+> projectCreate <+> projectUpdate <+> projectDelete <+>
