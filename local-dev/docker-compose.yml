@@ -1,0 +1,17 @@
+version: '3'
+services:
+  project-time-tracker-postgresql:
+    container_name: project-time-tracker-postgresql
+    image: postgres:12.2
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ptt
+    ports:
+      - 5432:5432
+    volumes:
+      - project-time-tracker-postgresql-data:/var/lib/postgresql/data
+      - ./create-schema.sql:/docker-entrypoint-initdb.d/create-schema.sql
+
+volumes:
+  project-time-tracker-postgresql-data:
