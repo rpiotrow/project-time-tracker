@@ -1,14 +1,14 @@
 package io.github.rpiotrow.ptt.read.entity
 
+import java.time.Duration
 import java.util.UUID
 
 case class StatisticsEntity(
-  dbId: Long,
   owner: UUID,
   year: Int,
   month: Int,
   numberOfTasks: Int,
-  averageTaskDuration: Double,
+  averageTaskDuration: Duration,
   averageTaskVolume: Double,
-  volumeWeightedAverageTaskDuration: Double
+  volumeWeightedAverageTaskDuration: Duration
 )
