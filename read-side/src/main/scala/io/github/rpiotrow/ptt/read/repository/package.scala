@@ -21,6 +21,10 @@ package object repository {
 
   type Repositories = StatisticsRepository with ProjectRepository with TaskRepository
 
+  sealed trait RepositoryFailure
+  case object EntityNotFound                    extends RepositoryFailure
+  case class RepositoryThrowable(ex: Throwable) extends RepositoryFailure
+
   def postgreSQL(connectEC: ExecutionContext): ZLayer[RepositoryEnv, Throwable, Repositories] =
     transactorLive(connectEC) >>> repositoriesLive()
 

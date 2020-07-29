@@ -25,7 +25,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
 
       (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List()))
       val result =
-        zio.Runtime.default.unsafeRunTask(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(ids, range))
 
       result should matchTo(StatisticsOutput.ZERO)
     }
@@ -51,7 +51,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       )
       (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List(entity)))
       val result =
-        zio.Runtime.default.unsafeRunTask(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(ids, range))
 
       result should matchTo(output)
     }
@@ -87,7 +87,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       )
       (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List(entity1, entity2)))
       val result =
-        zio.Runtime.default.unsafeRunTask(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(ids, range))
 
       result should matchTo(output)
     }
@@ -133,7 +133,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       )
       (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List(entity1, entity2, entity3)))
       val result =
-        zio.Runtime.default.unsafeRunTask(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(ids, range))
 
       result should matchTo(output)
     }

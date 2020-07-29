@@ -5,12 +5,12 @@ import doobie.implicits._
 import doobie.quill.DoobieContext
 import io.getquill.{SnakeCase, idiom => _}
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
-import zio.Task
+import zio.{IO, Task}
 import zio.interop.catz._
 
 object TaskRepository {
   trait Service {
-    def read(projectIds: List[Long]): Task[List[TaskEntity]]
+    def read(projectIds: List[Long]): IO[RepositoryThrowable, List[TaskEntity]]
   }
   def live(tnx: Transactor[Task]): Service =
     new Service {
@@ -19,10 +19,12 @@ object TaskRepository {
 
       private val tasks = quote { querySchema[TaskEntity]("tasks") }
 
-      override def read(projectIds: List[Long]): Task[List[TaskEntity]] = {
+      override def read(projectIds: List[Long]) = {
         run(quote {
           tasks.filter(e => liftQuery(projectIds).contains(e.projectId))
-        }).transact(tnx)
+        })
+          .transact(tnx)
+          .mapError(RepositoryThrowable)
       }
     }
 }

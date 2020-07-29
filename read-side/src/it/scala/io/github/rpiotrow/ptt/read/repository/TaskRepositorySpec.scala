@@ -58,15 +58,15 @@ trait TaskRepositorySpec {
 
   describe("TaskRepositorySpec read() should") {
     it("return list of tasks for two projects") {
-      val result = zio.Runtime.default.unsafeRunTask(taskRepo.read(List(project1Id, project2Id)))
+      val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(project1Id, project2Id)))
       result should matchTo(List(t1, t2, t3))
     }
     it("return list of tasks for one project") {
-      val result = zio.Runtime.default.unsafeRunTask(taskRepo.read(List(project2Id)))
+      val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(project2Id)))
       result should matchTo(List(t3))
     }
     it("return empty list when tasks for given projects does not exists") {
-      val result = zio.Runtime.default.unsafeRunTask(taskRepo.read(List(666)))
+      val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(666)))
       result should be(List())
     }
   }
