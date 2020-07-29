@@ -15,16 +15,16 @@ case class YearMonthRange(from: YearMonth, to: YearMonth)
 
 object StatisticsRepository {
   trait Service {
-    def read(owners: List[UUID], range: YearMonthRange): Task[List[StatisticsEntity]]
+    def list(owners: List[UUID], range: YearMonthRange): Task[List[StatisticsEntity]]
   }
   def live(tnx: Transactor[Task]): Service =
     new Service {
-      private val dc = new DoobieContext.Postgres(SnakeCase) with DurationDecoder
+      private val dc = new DoobieContext.Postgres(SnakeCase)
       import dc._
 
       private val statistics = quote { querySchema[StatisticsEntity]("statistics") }
 
-      override def read(owners: List[UUID], range: YearMonthRange): Task[List[StatisticsEntity]] = {
+      override def list(owners: List[UUID], range: YearMonthRange): Task[List[StatisticsEntity]] = {
         run(quote {
           statistics
             .filter(e => liftQuery(owners).contains(e.owner))

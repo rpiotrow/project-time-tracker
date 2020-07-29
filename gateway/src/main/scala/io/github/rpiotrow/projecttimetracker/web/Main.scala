@@ -68,9 +68,9 @@ object Server {
     val statistics    = statisticsEndpoint.toRoutes(_ => {
       StatisticsOutput(
         numberOfTasks = 6,
-        averageTaskDuration = 1.1,
+        averageTaskDuration = Duration.ofMinutes(32),
         averageTaskVolume = 2.3,
-        volumeWeightedAverageTaskDuration = 5.2
+        volumeWeightedAverageTaskDuration = Duration.ofMinutes(52)
       ).asRight[ApiError].pure[F]
     })
     projectList <+> projectDetail <+> projectCreate <+> projectUpdate <+> projectDelete <+>

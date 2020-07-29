@@ -33,12 +33,12 @@ CREATE TABLE IF NOT EXISTS ptt_read_model.statistics(
   year SMALLINT NOT NULL CONSTRAINT year_after_2020 CHECK (year >= 2020),
   month SMALLINT NOT NULL CONSTRAINT month_in_range_1_to_12 CHECK (month >= 1 AND month <= 12),
   number_of_tasks INT NOT NULL CONSTRAINT number_of_tasks_positive CHECK (number_of_tasks >= 0),
-  average_task_duration INTERVAL NOT NULL
-    CONSTRAINT average_task_duration_positive CHECK (average_task_duration >= interval '0 seconds'),
+  average_task_duration_minutes INT NOT NULL
+    CONSTRAINT average_task_duration_minutes_positive CHECK (average_task_duration_minutes >= 0),
   average_task_volume DECIMAL CONSTRAINT average_task_volume_positive CHECK (average_task_volume >= 0),
-  volume_weighted_average_task_duration INTERVAL
-    CONSTRAINT volume_weighted_average_task_duration_positive
-    CHECK (volume_weighted_average_task_duration >= interval '0 seconds'),
+  volume_weighted_task_duration_sum DECIMAL
+    CONSTRAINT volume_weighted_task_duration_sum_positive CHECK (volume_weighted_task_duration_sum >= 0),
+  volume_sum DECIMAL CONSTRAINT volume_sum_positive CHECK (volume_sum >= 0),
 
   UNIQUE(owner, year, month)
 );
