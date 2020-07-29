@@ -9,7 +9,7 @@ import eu.timepit.refined.auto._
 import io.github.rpiotrow.projecttimetracker.api.param.OrderingDirection.{Ascending, Descending}
 import io.github.rpiotrow.projecttimetracker.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
-import io.github.rpiotrow.ptt.read.repository.ProjectRepository.ProjectListSearchParams
+import io.github.rpiotrow.ptt.read.repository.ProjectRepository.{ProjectListSearchParams, ProjectNotFound}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 
@@ -57,81 +57,94 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     durationSum = Duration.ofHours(0)
   )
 
-  describe("ProjectRepositorySpec list() should") {
-    it("return list with all projects") {
-      val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams))
-      result should matchTo(List(p1, p2, p3))
+  describe("ProjectRepository") {
+    describe("one() should") {
+      it("return entity when exists") {
+        val result = zio.Runtime.default.unsafeRun(projectRepo.one("second"))
+        result should matchTo(p2)
+      }
+      it("return not found error when entity not exists") {
+        val result = zio.Runtime.default.unsafeRun(projectRepo.one("none").either)
+        result should be(Left(ProjectNotFound))
+      }
     }
-    it("return one project based on one id") {
-      val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(ids = List("first"))))
-      result should matchTo(List(p1))
-    }
-    it("return two project based on three ids (one of non-existing project)") {
-      val result = zio.Runtime.default.unsafeRunTask(
-        projectRepo.list(defaultParams.copy(ids = List("first", "non-existing", "deleted")))
-      )
-      result should matchTo(List(p1, p3))
-    }
-    it("return empty list for non-existing project id") {
-      val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(ids = List("non-existing"))))
-      result should be(List())
-    }
-    it("return projects to createdAt") {
-      val result = zio.Runtime.default.unsafeRunTask(
-        projectRepo.list(
-          defaultParams
-            .copy(to = Some(LocalDateTime.of(2020, 7, 25, 15, 0)))
+    describe("list() should") {
+      it("return list with all projects") {
+        val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams))
+        result should matchTo(List(p1, p2, p3))
+      }
+      it("return one project based on one id") {
+        val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(ids = List("first"))))
+        result should matchTo(List(p1))
+      }
+      it("return two project based on three ids (one of non-existing project)") {
+        val result = zio.Runtime.default.unsafeRunTask(
+          projectRepo.list(defaultParams.copy(ids = List("first", "non-existing", "deleted")))
         )
-      )
-      result should matchTo(List(p1, p2))
-    }
-    it("return projects from createdAt time range") {
-      val result = zio.Runtime.default.unsafeRunTask(
-        projectRepo.list(
-          defaultParams
-            .copy(from = Some(LocalDateTime.of(2020, 7, 15, 15, 0)), to = Some(LocalDateTime.of(2020, 7, 25, 15, 0)))
+        result should matchTo(List(p1, p3))
+      }
+      it("return empty list for non-existing project id") {
+        val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(ids = List("non-existing"))))
+        result should be(List())
+      }
+      it("return projects to createdAt") {
+        val result = zio.Runtime.default.unsafeRunTask(
+          projectRepo.list(
+            defaultParams
+              .copy(to = Some(LocalDateTime.of(2020, 7, 25, 15, 0)))
+          )
         )
-      )
-      result should matchTo(List(p1, p2))
-    }
-    it("return only deleted projects") {
-      val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(deleted = Some(true))))
-      result should matchTo(List(p3))
-    }
-    it("return only not deleted projects") {
-      val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(deleted = Some(false))))
-      result should matchTo(List(p1, p2))
-    }
-    it("return order list by createdAt ascending") {
-      val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(orderBy = Some(CreatedAt))))
-      result should matchTo(List(p1, p2, p3))
-    }
-    it("return order list by createdAt descending") {
-      val result = zio.Runtime.default.unsafeRunTask(
-        projectRepo.list(defaultParams.copy(orderBy = Some(CreatedAt), orderDirection = Some(Descending)))
-      )
-      result should matchTo(List(p3, p2, p1))
-    }
-    it("return order list by updatedAt ascending") {
-      val result = zio.Runtime.default.unsafeRunTask(
-        projectRepo.list(defaultParams.copy(orderBy = Some(UpdatedAt), orderDirection = Some(Ascending)))
-      )
-      result should matchTo(List(p2, p1, p3))
-    }
-    it("return order list by updatedAt descending") {
-      val result = zio.Runtime.default.unsafeRunTask(
-        projectRepo.list(defaultParams.copy(orderBy = Some(UpdatedAt), orderDirection = Some(Descending)))
-      )
-      result should matchTo(List(p3, p1, p2))
-    }
-    it("return return second page with createdAt descending order") {
-      val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(pageNumber = 1, pageSize = 1)))
-      result should matchTo(List(p2))
-    }
-    it("return return empty list when page number is out of scope of pages") {
-      val result =
-        zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(pageNumber = 10, pageSize = 2)))
-      result should be(List())
+        result should matchTo(List(p1, p2))
+      }
+      it("return projects from createdAt time range") {
+        val result = zio.Runtime.default.unsafeRunTask(
+          projectRepo.list(
+            defaultParams
+              .copy(from = Some(LocalDateTime.of(2020, 7, 15, 15, 0)), to = Some(LocalDateTime.of(2020, 7, 25, 15, 0)))
+          )
+        )
+        result should matchTo(List(p1, p2))
+      }
+      it("return only deleted projects") {
+        val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(deleted = Some(true))))
+        result should matchTo(List(p3))
+      }
+      it("return only not deleted projects") {
+        val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(deleted = Some(false))))
+        result should matchTo(List(p1, p2))
+      }
+      it("return order list by createdAt ascending") {
+        val result = zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(orderBy = Some(CreatedAt))))
+        result should matchTo(List(p1, p2, p3))
+      }
+      it("return order list by createdAt descending") {
+        val result = zio.Runtime.default.unsafeRunTask(
+          projectRepo.list(defaultParams.copy(orderBy = Some(CreatedAt), orderDirection = Some(Descending)))
+        )
+        result should matchTo(List(p3, p2, p1))
+      }
+      it("return order list by updatedAt ascending") {
+        val result = zio.Runtime.default.unsafeRunTask(
+          projectRepo.list(defaultParams.copy(orderBy = Some(UpdatedAt), orderDirection = Some(Ascending)))
+        )
+        result should matchTo(List(p2, p1, p3))
+      }
+      it("return order list by updatedAt descending") {
+        val result = zio.Runtime.default.unsafeRunTask(
+          projectRepo.list(defaultParams.copy(orderBy = Some(UpdatedAt), orderDirection = Some(Descending)))
+        )
+        result should matchTo(List(p3, p1, p2))
+      }
+      it("return return second page with createdAt descending order") {
+        val result =
+          zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(pageNumber = 1, pageSize = 1)))
+        result should matchTo(List(p2))
+      }
+      it("return return empty list when page number is out of scope of pages") {
+        val result =
+          zio.Runtime.default.unsafeRunTask(projectRepo.list(defaultParams.copy(pageNumber = 10, pageSize = 2)))
+        result should be(List())
+      }
     }
   }
 

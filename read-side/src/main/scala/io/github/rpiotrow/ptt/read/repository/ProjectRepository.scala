@@ -10,7 +10,7 @@ import io.github.rpiotrow.projecttimetracker.api.param.OrderingDirection._
 import io.github.rpiotrow.projecttimetracker.api.param.ProjectOrderingField._
 import io.github.rpiotrow.projecttimetracker.api.param._
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
-import zio.Task
+import zio.{IO, Task, ZIO}
 import zio.interop.catz._
 
 object ProjectRepository {
@@ -25,7 +25,12 @@ object ProjectRepository {
     pageSize: PageSize
   )
 
+  sealed trait ProjectRepositoryFailure
+  case object ProjectNotFound                      extends ProjectRepositoryFailure
+  case class ProjectRepositoryError(ex: Throwable) extends ProjectRepositoryFailure
+
   trait Service {
+    def one(id: String): IO[ProjectRepositoryFailure, ProjectEntity]
     def list(params: ProjectListSearchParams): Task[List[ProjectEntity]]
   }
 
@@ -35,6 +40,14 @@ object ProjectRepository {
       import dc._
 
       private val projects = quote { querySchema[ProjectEntity]("projects") }
+
+      override def one(id: String): IO[ProjectRepositoryFailure, ProjectEntity] = {
+        run(projects.filter(_.id == lift(id)))
+          .map(_.headOption)
+          .transact(tnx)
+          .mapError(ProjectRepositoryError)
+          .flatMap(ZIO.fromOption(_).orElseFail(ProjectNotFound))
+      }
 
       override def list(params: ProjectListSearchParams): Task[List[ProjectEntity]] = {
         run(

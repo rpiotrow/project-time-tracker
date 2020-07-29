@@ -1,13 +1,10 @@
 package io.github.rpiotrow.ptt.read
 
-import java.util.UUID
-
 import cats.effect.Blocker
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import io.getquill.{idiom => _}
 import io.github.rpiotrow.ptt.read.configuration.DatabaseConfiguration
-import io.github.rpiotrow.ptt.read.entity._
 import zio._
 import zio.blocking.Blocking
 import zio.config.Config
@@ -23,9 +20,6 @@ package object repository {
   type TaskRepository       = Has[TaskRepository.Service]
 
   type Repositories = StatisticsRepository with ProjectRepository with TaskRepository
-
-  def read(owners: List[UUID], range: YearMonthRange): ZIO[StatisticsRepository, Throwable, List[StatisticsEntity]] =
-    ZIO.accessM(_.get.read(owners, range))
 
   def postgreSQL(connectEC: ExecutionContext): ZLayer[RepositoryEnv, Throwable, Repositories] =
     transactorLive(connectEC) >>> repositoriesLive()
