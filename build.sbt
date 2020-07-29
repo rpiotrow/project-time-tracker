@@ -56,11 +56,12 @@ lazy val `read-side` = project
       "org.tpolecat"           %% "doobie-hikari"                   % Versions.doobie,
       "org.tpolecat"           %% "doobie-quill"                    % Versions.doobie,
       "ch.qos.logback"          % "logback-classic"                 % Versions.logback,
-      "org.scalactic"          %% "scalactic"                       % Versions.scalatest      % IntegrationTest,
-      "org.scalatest"          %% "scalatest"                       % Versions.scalatest      % IntegrationTest,
+      "org.scalactic"          %% "scalactic"                       % Versions.scalatest      % "test, it",
+      "org.scalatest"          %% "scalatest"                       % Versions.scalatest      % "test, it",
+      "com.softwaremill.diffx" %% "diffx-scalatest"                 % Versions.diffx          % "test, it",
+      "org.scalamock"          %% "scalamock"                       % "5.0.0"                 % Test,
       "com.dimafeng"           %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
-      "com.dimafeng"           %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest,
-      "com.softwaremill.diffx" %% "diffx-scalatest"                 % Versions.diffx          % IntegrationTest
+      "com.dimafeng"           %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest
     )
   )
   .dependsOn(api)

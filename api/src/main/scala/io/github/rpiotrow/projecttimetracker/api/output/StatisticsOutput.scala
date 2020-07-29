@@ -1,8 +1,14 @@
 package io.github.rpiotrow.projecttimetracker.api.output
 
+import java.time.Duration
+
 case class StatisticsOutput(
   numberOfTasks: Int,
-  averageTaskDuration: Double,
-  averageTaskVolume: Double,
-  volumeWeightedAverageTaskDuration: Double
+  averageTaskDuration: Duration,
+  averageTaskVolume: BigDecimal,
+  volumeWeightedAverageTaskDuration: Duration
 )
+
+object StatisticsOutput {
+  val ZERO = StatisticsOutput(0, Duration.ZERO, 0, Duration.ZERO)
+}
