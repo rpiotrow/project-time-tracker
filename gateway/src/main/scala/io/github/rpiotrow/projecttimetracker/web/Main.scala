@@ -29,7 +29,7 @@ object Main extends IOApp {
 object Server {
 
   def stream[F[_]: ContextShift: ConcurrentEffect: Parallel](implicit T: Timer[F]): Stream[F, Nothing] = {
-    val docs = new SwaggerHttp4s(allEndpoints.toOpenAPI("Project Time Tracker", "1.0").toYaml).routes
+    val docs = new SwaggerHttp4s(allEndpointsWithAuth.toOpenAPI("Project Time Tracker", "1.0").toYaml).routes
     BlazeServerBuilder[F](scala.concurrent.ExecutionContext.global)
       .bindHttp(8080, "0.0.0.0")
       .withHttpApp(loggingHttpApp(true, true)((mockedRoutes <+> docs).orNotFound))
@@ -38,25 +38,20 @@ object Server {
 
   private def mockedRoutes[F[_]: Sync: ContextShift](implicit M: Monad[F]) = {
     val projectList   = projectListEndpoint.toRoutes(_ => {
-      (for {
-        user1Id <- randomUserId
-        user2Id <- randomUserId
-        p1 = ProjectListOutput("p1", LocalDateTime.now(), user1Id)
-        p2 = ProjectListOutput("p2", LocalDateTime.now(), user2Id)
-      } yield List(p1, p2))
-        .leftMap[ApiError](ServerError(_))
-        .pure[F]
+      val user1Id = randomUserId
+      val user2Id = randomUserId
+      val p1      = ProjectOutput("p1", LocalDateTime.now(), user1Id, Duration.ZERO, List())
+      val p2      = ProjectOutput("p2", LocalDateTime.now(), user2Id, Duration.ZERO, List())
+      List(p1, p2).asRight[ApiError].pure[F]
     })
     val projectDetail = projectDetailEndpoint.toRoutes(_ => {
-      (for {
-        ownerId <- randomUserId
-        user1Id <- randomUserId
-        user2Id <- randomUserId
-        t1 = TaskOutput(user1Id, LocalDateTime.now(), Duration.ofHours(12), 8.some, "random comment".some)
-        t2 = TaskOutput(user2Id, LocalDateTime.now(), Duration.ofHours(2), None, None)
-        p  = ProjectDetailOutput("p1", LocalDateTime.now(), ownerId, List(t1, t2))
-      } yield p)
-        .leftMap[ApiError](ServerError(_))
+      val ownerId = randomUserId
+      val user1Id = randomUserId
+      val user2Id = randomUserId
+      val t1      = TaskOutput(user1Id, LocalDateTime.now(), Duration.ofHours(12), 8.some, "random comment".some)
+      val t2      = TaskOutput(user2Id, LocalDateTime.now(), Duration.ofHours(2), None, None)
+      val p       = ProjectOutput("p1", LocalDateTime.now(), ownerId, Duration.ofHours(14), List(t1, t2))
+      p.asRight[ApiError]
         .pure[F]
     })
     val projectCreate = projectCreateEndpoint.toRoutes(_ => projectLocation[F])
@@ -78,7 +73,7 @@ object Server {
 
   }
 
-  private def randomUserId: Either[String, UserId] = refineV[Uuid](UUID.randomUUID().toString())
+  private def randomUserId = UUID.randomUUID()
 
   private def taskLocation[F[_]: Monad] = {
     val location: LocationHeader = "http://localhost:8080/project/124/task/11"

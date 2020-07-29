@@ -19,7 +19,6 @@ package object api {
 
   private val baseEndpoint = endpoint
     .in("projects")
-    .in(auth.bearer[BearerToken])
     .errorOut(
       oneOf[ApiError](
         statusMapping(StatusCode.NotFound, emptyOutput.map(_ => NotFound)(_ => ())),
@@ -38,12 +37,12 @@ package object api {
     .in(query[Option[OrderingDirection]]("orderDirection"))
     .in(query[Option[PageNumber]]("pageNumber"))
     .in(query[Option[PageSize]]("pageSize"))
-    .out(jsonBody[List[ProjectListOutput]])
+    .out(jsonBody[List[ProjectOutput]])
 
   val projectDetailEndpoint = baseEndpoint
     .in(path[ProjectId]("id"))
     .get
-    .out(jsonBody[ProjectDetailOutput])
+    .out(jsonBody[ProjectOutput])
 
   val projectCreateEndpoint = baseEndpoint.post
     .in(jsonBody[ProjectInput])
@@ -94,7 +93,8 @@ package object api {
     .in(query[Option[LocalDateTime]]("to"))   // TODO: new type for format YYYY-MM
     .out(jsonBody[StatisticsOutput])
 
-  val allEndpoints = List(
+  import scala.language.existentials
+  val allEndpointsWithAuth = List(
     projectListEndpoint,
     projectDetailEndpoint,
     projectCreateEndpoint,
@@ -104,6 +104,6 @@ package object api {
     taskUpdateEndpoint,
     taskDeleteEndpoint,
     statisticsEndpoint
-  )
+  ).map(_.in(auth.bearer[BearerToken]))
 
 }

@@ -93,3 +93,5 @@ lazy val compilerOptions = Seq(
   "-Xfatal-warnings"
 //  "-Ymacro-annotations",
 )
+
+addCommandAlias("checks", ";test;it:test")
