@@ -127,6 +127,7 @@ package object api {
       .and(query[YearMonth]("from"))
       .and(query[YearMonth]("to"))
       .mapTo(StatisticsParams)
+      .validate(Validator.custom(input => !input.to.isBefore(input.from), "`from` before or equal `to`"))
 
   val statisticsEndpoint = baseEndpoint
     .in("statistics")

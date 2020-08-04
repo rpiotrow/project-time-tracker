@@ -45,6 +45,11 @@ class StatisticsRoutesSpec extends AnyFunSpec with RoutesSpecBase {
       val params = StatisticsParams(NonEmptyList.of(user1Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
       checkStatistics(url, params)
     }
+    it(s"$statistics?ids=$user1Id&from=2020-01&to=2020-01") {
+      val url    = s"$statistics?ids=$user1Id&from=2020-01&to=2020-01"
+      val params = StatisticsParams(NonEmptyList.of(user1Id), YearMonth.of(2020, 1), YearMonth.of(2020, 1))
+      checkStatistics(url, params)
+    }
     it(s"$statistics?ids=$user1Id&ids=$user2Id&from=2020-01&to=2020-12") {
       val url    = s"$statistics?ids=$user1Id&ids=$user2Id&from=2020-01&to=2020-12"
       val params = StatisticsParams(NonEmptyList.of(user1Id, user2Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
@@ -72,6 +77,17 @@ class StatisticsRoutesSpec extends AnyFunSpec with RoutesSpecBase {
       }
       it(s"$statistics?ids=$user1Id&from=2020-12&to=2020") {
         checkBadRequest(s"$statistics?ids=$user1Id&from=2020-12&to=2020", "to")
+      }
+    }
+    describe("from-to") {
+      it(s"$statistics?ids=$user1Id&from=2020-02&to=2020-01") {
+        val url      = s"$statistics?ids=$user1Id&from=2020-02&to=2020-01"
+        val response = makeRequest(Request(uri = Uri.unsafeFromString(url)))
+
+        response.status should be(Status.BadRequest)
+        decodeFailure(response).message should startWith(
+          "Invalid value (expected value to pass custom validation: `from` before or equal `to`"
+        )
       }
     }
     describe("ids") {
