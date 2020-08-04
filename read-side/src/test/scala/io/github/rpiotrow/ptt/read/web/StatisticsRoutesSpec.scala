@@ -5,9 +5,9 @@ import java.util.UUID
 
 import cats.data.NonEmptyList
 import io.circe.generic.auto._
-import io.github.rpiotrow.projecttimetracker.api.error.ServerError
-import io.github.rpiotrow.projecttimetracker.api.output.StatisticsOutput
-import io.github.rpiotrow.projecttimetracker.api.param.StatisticsParams
+import io.github.rpiotrow.ptt.api.error.ServerError
+import io.github.rpiotrow.ptt.api.output.StatisticsOutput
+import io.github.rpiotrow.ptt.api.param.StatisticsParams
 import io.github.rpiotrow.ptt.read.repository.RepositoryThrowable
 import io.github.rpiotrow.ptt.read.service.StatisticsService
 import org.http4s._

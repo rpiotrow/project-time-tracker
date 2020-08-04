@@ -6,7 +6,7 @@ import doobie.Transactor
 import doobie.implicits._
 import doobie.quill.DoobieContext
 import io.getquill.{idiom => _, _}
-import io.github.rpiotrow.projecttimetracker.api.param.StatisticsParams
+import io.github.rpiotrow.ptt.api.param.StatisticsParams
 import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
 import zio._
 import zio.interop.catz._

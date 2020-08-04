@@ -1,14 +1,14 @@
-package io.github.rpiotrow.projecttimetracker
+package io.github.rpiotrow.ptt
 
 import java.time.format.DateTimeParseException
 import java.time.{LocalDateTime, YearMonth}
 
 import io.circe.generic.auto._
-import io.github.rpiotrow.projecttimetracker.api.error._
-import io.github.rpiotrow.projecttimetracker.api.model._
-import io.github.rpiotrow.projecttimetracker.api.input._
-import io.github.rpiotrow.projecttimetracker.api.output._
-import io.github.rpiotrow.projecttimetracker.api.param._
+import io.github.rpiotrow.ptt.api.error._
+import io.github.rpiotrow.ptt.api.model._
+import io.github.rpiotrow.ptt.api.input._
+import io.github.rpiotrow.ptt.api.output._
+import io.github.rpiotrow.ptt.api.param._
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.codec.enumeratum._
@@ -16,6 +16,9 @@ import sttp.tapir.codec.refined._
 import sttp.tapir.json.circe._
 import cats.implicits._
 import eu.timepit.refined.auto._
+import io.github.rpiotrow.ptt.api.input.{ProjectInput, TaskInput}
+import io.github.rpiotrow.ptt.api.output.{ProjectOutput, StatisticsOutput}
+import io.github.rpiotrow.ptt.api.param.{OrderingDirection, ProjectListParams, ProjectOrderingField, StatisticsParams}
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.codec.cats._
 

@@ -6,9 +6,9 @@ import java.util.UUID
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._
 import eu.timepit.refined.auto._
-import io.github.rpiotrow.projecttimetracker.api.param.OrderingDirection.{Ascending, Descending}
-import io.github.rpiotrow.projecttimetracker.api.param.ProjectListParams
-import io.github.rpiotrow.projecttimetracker.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
+import io.github.rpiotrow.ptt.api.param.OrderingDirection.{Ascending, Descending}
+import io.github.rpiotrow.ptt.api.param.ProjectListParams
+import io.github.rpiotrow.ptt.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should

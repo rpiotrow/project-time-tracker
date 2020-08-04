@@ -5,11 +5,11 @@ import java.time.LocalDateTime
 import cats.implicits._
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
-import io.github.rpiotrow.projecttimetracker.api.error.ServerError
-import io.github.rpiotrow.projecttimetracker.api.output.ProjectOutput
-import io.github.rpiotrow.projecttimetracker.api.param.OrderingDirection.{Ascending, Descending}
-import io.github.rpiotrow.projecttimetracker.api.param.ProjectListParams
-import io.github.rpiotrow.projecttimetracker.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
+import io.github.rpiotrow.ptt.api.error.ServerError
+import io.github.rpiotrow.ptt.api.output.ProjectOutput
+import io.github.rpiotrow.ptt.api.param.OrderingDirection.{Ascending, Descending}
+import io.github.rpiotrow.ptt.api.param.ProjectListParams
+import io.github.rpiotrow.ptt.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
 import io.github.rpiotrow.ptt.read.repository.RepositoryThrowable
 import io.github.rpiotrow.ptt.read.service.ProjectService
 import org.http4s._

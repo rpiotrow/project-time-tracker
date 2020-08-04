@@ -1,4 +1,4 @@
-package io.github.rpiotrow.projecttimetracker.api.param
+package io.github.rpiotrow.ptt.api.param
 
 import enumeratum._
 

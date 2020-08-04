@@ -1,4 +1,4 @@
-package io.github.rpiotrow.projecttimetracker.api
+package io.github.rpiotrow.ptt.api
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._

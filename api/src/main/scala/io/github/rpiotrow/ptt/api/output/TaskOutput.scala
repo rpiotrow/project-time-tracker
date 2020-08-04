@@ -1,8 +1,8 @@
-package io.github.rpiotrow.projecttimetracker.api.output
+package io.github.rpiotrow.ptt.api.output
 
 import java.time.{LocalDateTime, Duration}
 
-import io.github.rpiotrow.projecttimetracker.api.model._
+import io.github.rpiotrow.ptt.api.model._
 
 case class TaskOutput(
   owner: UserId,

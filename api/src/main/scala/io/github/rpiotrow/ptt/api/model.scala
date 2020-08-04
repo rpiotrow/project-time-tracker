@@ -1,4 +1,4 @@
-package io.github.rpiotrow.projecttimetracker.api
+package io.github.rpiotrow.ptt.api
 
 import java.util.UUID
 

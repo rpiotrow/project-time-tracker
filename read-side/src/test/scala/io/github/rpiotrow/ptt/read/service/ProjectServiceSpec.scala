@@ -6,8 +6,8 @@ import java.util.UUID
 import cats.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import eu.timepit.refined.auto._
-import io.github.rpiotrow.projecttimetracker.api.output._
-import io.github.rpiotrow.projecttimetracker.api.param._
+import io.github.rpiotrow.ptt.api.output._
+import io.github.rpiotrow.ptt.api.param._
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
 import io.github.rpiotrow.ptt.read.repository.{EntityNotFound, ProjectRepository, RepositoryFailure, TaskRepository}
 import org.scalamock.scalatest.MockFactory

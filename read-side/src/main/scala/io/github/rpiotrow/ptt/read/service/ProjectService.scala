@@ -1,8 +1,8 @@
 package io.github.rpiotrow.ptt.read.service
 
-import io.github.rpiotrow.projecttimetracker.api.model.ProjectId
-import io.github.rpiotrow.projecttimetracker.api.output.{ProjectOutput, TaskOutput}
-import io.github.rpiotrow.projecttimetracker.api.param.ProjectListParams
+import io.github.rpiotrow.ptt.api.model.ProjectId
+import io.github.rpiotrow.ptt.api.output.{ProjectOutput, TaskOutput}
+import io.github.rpiotrow.ptt.api.param.ProjectListParams
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
 import io.github.rpiotrow.ptt.read.repository.{
   ProjectRepository,

@@ -4,10 +4,10 @@ import doobie.Transactor
 import doobie.implicits._
 import doobie.quill.DoobieContext
 import io.getquill.{idiom => _, _}
-import io.github.rpiotrow.projecttimetracker.api.param.OrderingDirection._
-import io.github.rpiotrow.projecttimetracker.api.param.ProjectOrderingField._
-import io.github.rpiotrow.projecttimetracker.api.param.{ProjectListParams, _}
-import io.github.rpiotrow.projecttimetracker.api._
+import io.github.rpiotrow.ptt.api.param.OrderingDirection._
+import io.github.rpiotrow.ptt.api.param.ProjectOrderingField._
+import io.github.rpiotrow.ptt.api.param.{ProjectListParams, _}
+import io.github.rpiotrow.ptt.api._
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
 import zio.{IO, Task, ZIO}
 import zio.interop.catz._

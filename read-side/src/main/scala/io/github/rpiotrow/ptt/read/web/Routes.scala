@@ -6,11 +6,11 @@ import cats.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection._
-import io.github.rpiotrow.projecttimetracker.api.model._
-import io.github.rpiotrow.projecttimetracker.api._
-import io.github.rpiotrow.projecttimetracker.api.error._
-import io.github.rpiotrow.projecttimetracker.api.output._
-import io.github.rpiotrow.projecttimetracker.api.param._
+import io.github.rpiotrow.ptt.api.model._
+import io.github.rpiotrow.ptt.api._
+import io.github.rpiotrow.ptt.api.error._
+import io.github.rpiotrow.ptt.api.output._
+import io.github.rpiotrow.ptt.api.param._
 import io.github.rpiotrow.ptt.read.repository._
 import io.github.rpiotrow.ptt.read.service._
 import org.http4s.HttpRoutes

@@ -3,8 +3,8 @@ package io.github.rpiotrow.ptt.read.web
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
-import io.github.rpiotrow.projecttimetracker.api.error.DecodeFailure
-import io.github.rpiotrow.projecttimetracker.api.output.{ProjectOutput, StatisticsOutput, TaskOutput}
+import io.github.rpiotrow.ptt.api.error.DecodeFailure
+import io.github.rpiotrow.ptt.api.output.{ProjectOutput, StatisticsOutput, TaskOutput}
 import io.github.rpiotrow.ptt.read.service.{ProjectService, StatisticsService}
 import org.http4s._
 import org.scalamock.scalatest.MockFactory

@@ -2,9 +2,9 @@ package io.github.rpiotrow.ptt.read.web
 
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
-import io.github.rpiotrow.projecttimetracker.api.error.ServerError
-import io.github.rpiotrow.projecttimetracker.api.model.ProjectId
-import io.github.rpiotrow.projecttimetracker.api.output.ProjectOutput
+import io.github.rpiotrow.ptt.api.error.ServerError
+import io.github.rpiotrow.ptt.api.model.ProjectId
+import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.read.repository.{EntityNotFound, RepositoryThrowable}
 import io.github.rpiotrow.ptt.read.service.ProjectService
 import org.http4s._

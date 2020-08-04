@@ -1,4 +1,4 @@
-package io.github.rpiotrow.projecttimetracker.web
+package io.github.rpiotrow.ptt.web
 
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
@@ -10,10 +10,10 @@ import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.string._
 import fs2.Stream
-import io.github.rpiotrow.projecttimetracker.api.error._
-import io.github.rpiotrow.projecttimetracker.api.model.UserId
-import io.github.rpiotrow.projecttimetracker.api.output._
-import io.github.rpiotrow.projecttimetracker.api._
+import io.github.rpiotrow.ptt.api.error._
+import io.github.rpiotrow.ptt.api.model.UserId
+import io.github.rpiotrow.ptt.api.output._
+import io.github.rpiotrow.ptt.api._
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger.{httpApp => loggingHttpApp}

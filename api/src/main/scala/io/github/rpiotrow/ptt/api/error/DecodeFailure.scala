@@ -1,4 +1,4 @@
-package io.github.rpiotrow.projecttimetracker.api.error
+package io.github.rpiotrow.ptt.api.error
 
 import io.circe.generic.auto._
 import sttp.model.StatusCode

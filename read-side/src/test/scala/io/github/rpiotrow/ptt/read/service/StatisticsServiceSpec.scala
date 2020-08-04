@@ -5,8 +5,8 @@ import java.util.UUID
 
 import cats.data.NonEmptyList
 import com.softwaremill.diffx.scalatest.DiffMatcher._
-import io.github.rpiotrow.projecttimetracker.api.output.StatisticsOutput
-import io.github.rpiotrow.projecttimetracker.api.param.StatisticsParams
+import io.github.rpiotrow.ptt.api.output.StatisticsOutput
+import io.github.rpiotrow.ptt.api.param.StatisticsParams
 import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
 import io.github.rpiotrow.ptt.read.repository.StatisticsRepository
 import org.scalamock.scalatest.MockFactory

@@ -7,7 +7,7 @@ import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 import doobie.implicits._
-import io.github.rpiotrow.projecttimetracker.api.param.StatisticsParams
+import io.github.rpiotrow.ptt.api.param.StatisticsParams
 import java.time.YearMonth
 
 import cats.data.NonEmptyList

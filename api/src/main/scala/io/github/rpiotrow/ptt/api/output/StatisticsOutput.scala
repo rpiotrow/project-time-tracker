@@ -1,4 +1,4 @@
-package io.github.rpiotrow.projecttimetracker.api.output
+package io.github.rpiotrow.ptt.api.output
 
 import java.time.Duration
 
