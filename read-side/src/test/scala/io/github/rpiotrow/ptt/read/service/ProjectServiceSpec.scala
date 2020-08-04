@@ -6,9 +6,9 @@ import java.util.UUID
 import cats.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import eu.timepit.refined.auto._
-import io.github.rpiotrow.projecttimetracker.api.output.{ProjectOutput, TaskOutput}
+import io.github.rpiotrow.projecttimetracker.api.output._
+import io.github.rpiotrow.projecttimetracker.api.param._
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
-import io.github.rpiotrow.ptt.read.repository.ProjectRepository.ProjectListSearchParams
 import io.github.rpiotrow.ptt.read.repository.{EntityNotFound, ProjectRepository, RepositoryFailure, TaskRepository}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
@@ -136,11 +136,12 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
       }
     }
     describe("list() should") {
+      val params = ProjectListParams(List(), None, None, None, None, None, 0, 25)
+
       it("return empty list when project repository returns empty list") {
         val projectRepository = mock[ProjectRepository.Service]
         val taskRepository    = mock[TaskRepository.Service]
 
-        val params = ProjectListSearchParams(List(), None, None, None, None, None, 0, 25)
         (projectRepository.list _).expects(params).returning(zio.IO.succeed(List()))
         (taskRepository.read _).expects(List()).returning(zio.IO.succeed(List()))
 
@@ -191,7 +192,6 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           )
         )
 
-        val params = ProjectListSearchParams(List(), None, None, None, None, None, 0, 25)
         (projectRepository.list _).expects(params).returning(zio.IO.succeed(List(p1, p2)))
         (taskRepository.read _).expects(List(p1.dbId, p2.dbId)).returning(zio.IO.succeed(List(t1, t2, t3)))
 
@@ -227,7 +227,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           )
         )
 
-        val params = ProjectListSearchParams(List(), None, None, None, None, None, 0, 25)
+        val params = ProjectListParams(List(), None, None, None, None, None, 0, 25)
         (projectRepository.list _).expects(params).returning(zio.IO.succeed(List(p1, p2)))
         (taskRepository.read _).expects(List(p1.dbId, p2.dbId)).returning(zio.IO.succeed(List(t3)))
 
@@ -255,7 +255,6 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           tasks = List()
         )
 
-        val params = ProjectListSearchParams(List(), None, None, None, None, None, 0, 25)
         (projectRepository.list _).expects(params).returning(zio.IO.succeed(List(p1, p2)))
         (taskRepository.read _).expects(List(p1.dbId, p2.dbId)).returning(zio.IO.succeed(List()))
 

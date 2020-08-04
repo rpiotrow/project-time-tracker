@@ -1,11 +1,11 @@
 package io.github.rpiotrow.projecttimetracker
 
-import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
+import java.time.{LocalDateTime, YearMonth}
 
 import io.circe.generic.auto._
-import io.circe.refined._
-import io.github.rpiotrow.projecttimetracker.api.Errors._
-import io.github.rpiotrow.projecttimetracker.api.Model._
+import io.github.rpiotrow.projecttimetracker.api.error._
+import io.github.rpiotrow.projecttimetracker.api.model._
 import io.github.rpiotrow.projecttimetracker.api.input._
 import io.github.rpiotrow.projecttimetracker.api.output._
 import io.github.rpiotrow.projecttimetracker.api.param._
@@ -14,11 +14,14 @@ import sttp.tapir._
 import sttp.tapir.codec.enumeratum._
 import sttp.tapir.codec.refined._
 import sttp.tapir.json.circe._
+import cats.implicits._
+import eu.timepit.refined.auto._
+import sttp.tapir.CodecFormat.TextPlain
+import sttp.tapir.codec.cats._
 
 package object api {
 
-  private val baseEndpoint = endpoint
-    .in("projects")
+  private val baseEndpoint     = endpoint
     .errorOut(
       oneOf[ApiError](
         statusMapping(StatusCode.NotFound, emptyOutput.map(_ => NotFound)(_ => ())),
@@ -27,70 +30,105 @@ package object api {
         statusMapping(StatusCode.InternalServerError, jsonBody[ServerError].description("server error"))
       )
     )
+  private val projectsEndpoint = baseEndpoint
+    .in("projects")
 
-  val projectListEndpoint = baseEndpoint.get
-    .in(query[List[ProjectId]]("ids"))
-    .in(query[Option[LocalDateTime]]("from"))
-    .in(query[Option[LocalDateTime]]("to"))
-    .in(query[Option[Boolean]]("deleted"))
-    .in(query[Option[ProjectOrderingField]]("orderBy"))
-    .in(query[Option[OrderingDirection]]("orderDirection"))
-    .in(query[Option[PageNumber]]("pageNumber"))
-    .in(query[Option[PageSize]]("pageSize"))
+  private val defaultPageNumber: PageNumber = 0
+  private val defaultPageSize: PageSize     = 25
+
+  private val pageNumberInput: EndpointInput[PageNumber] =
+    query[Option[PageNumber]]("pageNumber")
+      .description(s"Page number ($defaultPageNumber if not provided)")
+      .map(Mapping.from[Option[PageNumber], PageNumber] { pageNumberOption: Option[PageNumber] =>
+        pageNumberOption.getOrElse(defaultPageNumber)
+      } { pageNumber =>
+        pageNumber.some
+      })
+  private val pageSizeInput: EndpointInput[PageSize]     =
+    query[Option[PageSize]]("pageSize")
+      .description(s"Page size ($defaultPageSize if not provided)")
+      .map(Mapping.from[Option[PageSize], PageSize] { pageSizeOption: Option[PageSize] =>
+        pageSizeOption.getOrElse(defaultPageSize)
+      } { pageSize =>
+        pageSize.some
+      })
+
+  private val projectListInput: EndpointInput[ProjectListParams] =
+    query[List[ProjectId]]("ids")
+      .and(query[Option[LocalDateTime]]("from"))
+      .and(query[Option[LocalDateTime]]("to"))
+      .and(query[Option[Boolean]]("deleted"))
+      .and(query[Option[ProjectOrderingField]]("orderBy"))
+      .and(query[Option[OrderingDirection]]("orderDirection"))
+      .and(pageNumberInput)
+      .and(pageSizeInput)
+      .mapTo(ProjectListParams)
+
+  val projectListEndpoint = projectsEndpoint.get
+    .in(projectListInput)
     .out(jsonBody[List[ProjectOutput]])
 
-  val projectDetailEndpoint = baseEndpoint
+  val projectDetailEndpoint = projectsEndpoint
     .in(path[ProjectId]("id"))
     .get
     .out(jsonBody[ProjectOutput])
 
-  val projectCreateEndpoint = baseEndpoint.post
+  val projectCreateEndpoint = projectsEndpoint.post
     .in(jsonBody[ProjectInput])
     .out(header[LocationHeader]("location"))
     .out(statusCode(StatusCode.Created))
 
-  val projectUpdateEndpoint = baseEndpoint
+  val projectUpdateEndpoint = projectsEndpoint
     .in(path[ProjectId]("id"))
     .put
     .in(jsonBody[ProjectInput])
     .out(header[LocationHeader]("location"))
     .out(statusCode(StatusCode.Ok))
 
-  val projectDeleteEndpoint = baseEndpoint
+  val projectDeleteEndpoint = projectsEndpoint
     .in(path[ProjectId]("id"))
     .delete
     .out(statusCode(StatusCode.Ok))
 
-  val taskCreateEndpoint = baseEndpoint
+  private val tasksEndpoint = projectsEndpoint
     .in(path[ProjectId]("id"))
-    .in("task")
-    .post
+    .in("tasks")
+
+  val taskCreateEndpoint = tasksEndpoint.post
     .in(jsonBody[TaskInput])
     .out(header[LocationHeader]("location"))
     .out(statusCode(StatusCode.Created))
 
-  val taskUpdateEndpoint = baseEndpoint
-    .in(path[ProjectId]("id"))
-    .in("task")
+  val taskUpdateEndpoint = tasksEndpoint
     .in(path[TaskId]("id"))
     .put
     .in(jsonBody[TaskInput])
     .out(header[LocationHeader]("location"))
     .out(statusCode(StatusCode.Created))
 
-  val taskDeleteEndpoint = baseEndpoint
-    .in(path[ProjectId]("id"))
-    .in("task")
+  val taskDeleteEndpoint = tasksEndpoint
     .in(path[TaskId]("id"))
     .delete
     .out(statusCode(StatusCode.Ok))
+
+  private def yearMonthDecode(yearMonthString: String): DecodeResult[YearMonth] =
+    try { DecodeResult.Value(YearMonth.parse(yearMonthString)) }
+    catch { case e: DateTimeParseException => DecodeResult.Error(yearMonthString, e) }
+  private def yearMonthEncode(yearMonth: YearMonth): String                     =
+    yearMonth.toString
+  implicit private val yearMonthCodec: Codec[String, YearMonth, TextPlain]      =
+    Codec.string.mapDecode(yearMonthDecode)(yearMonthEncode)
+
+  private val statisticsInput: EndpointInput[StatisticsParams] =
+    query[NonEmptyUserIdList]("ids")
+      .and(query[YearMonth]("from"))
+      .and(query[YearMonth]("to"))
+      .mapTo(StatisticsParams)
 
   val statisticsEndpoint = baseEndpoint
     .in("statistics")
     .get
-    .in(query[List[UserId]]("ids"))
-    .in(query[Option[LocalDateTime]]("from")) // TODO: new type for format YYYY-MM
-    .in(query[Option[LocalDateTime]]("to"))   // TODO: new type for format YYYY-MM
+    .in(statisticsInput)
     .out(jsonBody[StatisticsOutput])
 
   import scala.language.existentials

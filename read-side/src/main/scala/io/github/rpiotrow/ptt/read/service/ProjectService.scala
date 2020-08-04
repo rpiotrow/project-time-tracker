@@ -1,9 +1,9 @@
 package io.github.rpiotrow.ptt.read.service
 
-import io.github.rpiotrow.projecttimetracker.api.Model.ProjectId
+import io.github.rpiotrow.projecttimetracker.api.model.ProjectId
 import io.github.rpiotrow.projecttimetracker.api.output.{ProjectOutput, TaskOutput}
+import io.github.rpiotrow.projecttimetracker.api.param.ProjectListParams
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
-import io.github.rpiotrow.ptt.read.repository.ProjectRepository.ProjectListSearchParams
 import io.github.rpiotrow.ptt.read.repository.{
   ProjectRepository,
   RepositoryFailure,
@@ -15,7 +15,7 @@ import zio.{IO, Task}
 object ProjectService {
   trait Service {
     def one(id: ProjectId): IO[RepositoryFailure, ProjectOutput]
-    def list(params: ProjectListSearchParams): IO[RepositoryThrowable, List[ProjectOutput]]
+    def list(params: ProjectListParams): IO[RepositoryThrowable, List[ProjectOutput]]
   }
   def live(projectRepository: ProjectRepository.Service, taskRepository: TaskRepository.Service): Service =
     new ProjectServiceLive(projectRepository, taskRepository)
@@ -33,7 +33,7 @@ private class ProjectServiceLive(
     } yield toOutput(project, tasks)
   }
 
-  override def list(params: ProjectListSearchParams) = {
+  override def list(params: ProjectListParams) = {
     for {
       projects <- projectRepository.list(params)
       ids = projects.map(_.dbId)

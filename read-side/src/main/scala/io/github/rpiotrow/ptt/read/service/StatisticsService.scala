@@ -6,15 +6,16 @@ import java.util.UUID
 import cats.Monoid
 import cats.implicits._
 import io.github.rpiotrow.projecttimetracker.api.output.StatisticsOutput
+import io.github.rpiotrow.projecttimetracker.api.param.StatisticsParams
 import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
-import io.github.rpiotrow.ptt.read.repository.{RepositoryThrowable, StatisticsRepository, YearMonthRange}
+import io.github.rpiotrow.ptt.read.repository._
 import zio.{IO, Task}
 
 import scala.math.BigDecimal.RoundingMode
 
 object StatisticsService {
   trait Service {
-    def read(owners: List[UUID], range: YearMonthRange): IO[RepositoryThrowable, StatisticsOutput]
+    def read(params: StatisticsParams): IO[RepositoryThrowable, StatisticsOutput]
   }
   def live(statisticsRepository: StatisticsRepository.Service): Service =
     new StatisticsServiceLive(statisticsRepository)
@@ -51,9 +52,9 @@ private object Statistics {
 private class StatisticsServiceLive(private val statisticsRepository: StatisticsRepository.Service)
     extends StatisticsService.Service {
 
-  override def read(owners: List[UUID], range: YearMonthRange) = {
+  override def read(params: StatisticsParams) = {
     for {
-      entities <- statisticsRepository.list(owners, range)
+      entities <- statisticsRepository.list(params)
       statistics = entities.map(toStatistics).combineAll
     } yield toOutput(statistics)
   }

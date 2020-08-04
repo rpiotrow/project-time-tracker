@@ -10,8 +10,8 @@ import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.string._
 import fs2.Stream
-import io.github.rpiotrow.projecttimetracker.api.Errors._
-import io.github.rpiotrow.projecttimetracker.api.Model.UserId
+import io.github.rpiotrow.projecttimetracker.api.error._
+import io.github.rpiotrow.projecttimetracker.api.model.UserId
 import io.github.rpiotrow.projecttimetracker.api.output._
 import io.github.rpiotrow.projecttimetracker.api._
 import org.http4s.implicits._

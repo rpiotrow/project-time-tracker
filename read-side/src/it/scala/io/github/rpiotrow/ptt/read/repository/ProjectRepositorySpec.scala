@@ -7,9 +7,9 @@ import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._
 import eu.timepit.refined.auto._
 import io.github.rpiotrow.projecttimetracker.api.param.OrderingDirection.{Ascending, Descending}
+import io.github.rpiotrow.projecttimetracker.api.param.ProjectListParams
 import io.github.rpiotrow.projecttimetracker.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
-import io.github.rpiotrow.ptt.read.repository.ProjectRepository.ProjectListSearchParams
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 
@@ -28,7 +28,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |;
          |""".stripMargin
 
-  val defaultParams = ProjectListSearchParams(List(), None, None, None, None, None, 0, 25)
+  val defaultParams = ProjectListParams(List(), None, None, None, None, None, 0, 25)
   lazy val p1       = ProjectEntity(
     dbId = 1,
     id = "first",

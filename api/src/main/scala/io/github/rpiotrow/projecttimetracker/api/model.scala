@@ -2,10 +2,11 @@ package io.github.rpiotrow.projecttimetracker.api
 
 import java.util.UUID
 
+import cats.data.NonEmptyList
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 
-object Model {
+object model {
 
   /*
     TODO: consider scala-newtype to have refined without runtime overhead
@@ -23,5 +24,7 @@ object Model {
   type UserId    = UUID
   type ProjectId = String Refined NonEmpty
   type TaskId    = UUID
+
+  type NonEmptyUserIdList = NonEmptyList[UserId]
 
 }

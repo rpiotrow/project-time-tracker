@@ -2,7 +2,7 @@ package io.github.rpiotrow.projecttimetracker.api.output
 
 import java.time.{Duration, LocalDateTime}
 
-import io.github.rpiotrow.projecttimetracker.api.Model.{ProjectId, UserId}
+import io.github.rpiotrow.projecttimetracker.api.model.{ProjectId, UserId}
 
 case class ProjectOutput(
   id: String,

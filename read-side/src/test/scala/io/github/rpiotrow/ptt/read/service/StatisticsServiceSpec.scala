@@ -1,12 +1,14 @@
 package io.github.rpiotrow.ptt.read.service
 
-import java.time.Duration
+import java.time.{Duration, YearMonth}
 import java.util.UUID
 
+import cats.data.NonEmptyList
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import io.github.rpiotrow.projecttimetracker.api.output.StatisticsOutput
+import io.github.rpiotrow.projecttimetracker.api.param.StatisticsParams
 import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
-import io.github.rpiotrow.ptt.read.repository.{StatisticsRepository, YearMonth, YearMonthRange}
+import io.github.rpiotrow.ptt.read.repository.StatisticsRepository
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -15,17 +17,20 @@ import scala.math.BigDecimal.RoundingMode
 
 class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matchers {
 
-  val range = YearMonthRange(YearMonth(2020, 1), YearMonth(2020, 12))
-  val ids   = List(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID())
+  val params = StatisticsParams(
+    NonEmptyList.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()),
+    YearMonth.of(2020, 1),
+    YearMonth.of(2020, 12)
+  )
 
   describe("StatisticsService read() should") {
     it("return zero when repository returns empty list") {
       val statisticsRepository = mock[StatisticsRepository.Service]
       val service              = StatisticsService.live(statisticsRepository)
 
-      (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List()))
+      (statisticsRepository.list _).expects(params).returning(zio.IO.succeed(List()))
       val result =
-        zio.Runtime.default.unsafeRun(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(params))
 
       result should matchTo(StatisticsOutput.ZERO)
     }
@@ -34,7 +39,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val service              = StatisticsService.live(statisticsRepository)
 
       val entity = StatisticsEntity(
-        owner = ids.head,
+        owner = params.ids.head,
         year = 2020,
         month = 1,
         numberOfTasks = 4,
@@ -49,9 +54,9 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         averageTaskVolume = 2.5,
         volumeWeightedAverageTaskDuration = Duration.ofMinutes((3360.0 / 10.0).toInt)
       )
-      (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List(entity)))
+      (statisticsRepository.list _).expects(params).returning(zio.IO.succeed(List(entity)))
       val result =
-        zio.Runtime.default.unsafeRun(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(params))
 
       result should matchTo(output)
     }
@@ -60,7 +65,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val service              = StatisticsService.live(statisticsRepository)
 
       val entity1 = StatisticsEntity(
-        owner = ids.head,
+        owner = params.ids.head,
         year = 2020,
         month = 1,
         numberOfTasks = 2,
@@ -70,7 +75,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         volumeSum = 3.0                        // 2+1
       )
       val entity2 = StatisticsEntity(
-        owner = ids.head,
+        owner = params.ids.head,
         year = 2020,
         month = 1,
         numberOfTasks = 3,
@@ -85,9 +90,9 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         averageTaskVolume = BigDecimal((2 * 1.5 + 3 * 2.6667) / 5.0).setScale(2, RoundingMode.HALF_UP),
         volumeWeightedAverageTaskDuration = Duration.ofMinutes(((300.0 + 1680.0) / (3.0 + 8.0)).toInt)
       )
-      (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List(entity1, entity2)))
+      (statisticsRepository.list _).expects(params).returning(zio.IO.succeed(List(entity1, entity2)))
       val result =
-        zio.Runtime.default.unsafeRun(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(params))
 
       result should matchTo(output)
     }
@@ -96,7 +101,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val service              = StatisticsService.live(statisticsRepository)
 
       val entity1 = StatisticsEntity(
-        owner = ids.head,
+        owner = params.ids.head,
         year = 2020,
         month = 1,
         numberOfTasks = 2,
@@ -106,7 +111,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         volumeSum = 3.0                        // 2+1
       )
       val entity2 = StatisticsEntity(
-        owner = ids.head,
+        owner = params.ids.head,
         year = 2020,
         month = 1,
         numberOfTasks = 3,
@@ -116,7 +121,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         volumeSum = 8.0                         // 2+4+2
       )
       val entity3 = StatisticsEntity(
-        owner = ids(1),
+        owner = params.ids.toList(1),
         year = 2020,
         month = 3,
         numberOfTasks = 4,
@@ -131,9 +136,9 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         averageTaskVolume = BigDecimal((2 * 1.5 + 3 * 2.6667 + 4 * 2.5) / 9.0).setScale(2, RoundingMode.HALF_UP),
         volumeWeightedAverageTaskDuration = Duration.ofMinutes(((300.0 + 1680.0 + 3360.0) / (3.0 + 8.0 + 10.0)).toInt)
       )
-      (statisticsRepository.list _).expects(ids, range).returning(zio.IO.succeed(List(entity1, entity2, entity3)))
+      (statisticsRepository.list _).expects(params).returning(zio.IO.succeed(List(entity1, entity2, entity3)))
       val result =
-        zio.Runtime.default.unsafeRun(service.read(ids, range))
+        zio.Runtime.default.unsafeRun(service.read(params))
 
       result should matchTo(output)
     }

@@ -25,7 +25,7 @@ package object repository {
   case object EntityNotFound                    extends RepositoryFailure
   case class RepositoryThrowable(ex: Throwable) extends RepositoryFailure
 
-  def postgreSQL(connectEC: ExecutionContext): ZLayer[RepositoryEnv, Throwable, Repositories] =
+  def postgreSQLRepositories(connectEC: ExecutionContext): ZLayer[RepositoryEnv, Throwable, Repositories] =
     transactorLive(connectEC) >>> repositoriesLive()
 
   private def transactorLive(
