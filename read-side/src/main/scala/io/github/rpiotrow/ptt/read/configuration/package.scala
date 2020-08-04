@@ -8,10 +8,11 @@ import zio.config.typesafe.TypesafeConfig
 package object configuration {
 
   object Configuration {
-    val appConfigurationDescriptor: ConfigDescriptor[DatabaseConfiguration] =
-      descriptor[DatabaseConfiguration]
-    val live: Layer[Throwable, Config[DatabaseConfiguration]]               =
+    val appConfigurationDescriptor: ConfigDescriptor[AppConfiguration] =
+      descriptor[AppConfiguration]
+    val live: Layer[Throwable, Config[AppConfiguration]]               =
       TypesafeConfig.fromDefaultLoader(appConfigurationDescriptor)
+
   }
 
 }
