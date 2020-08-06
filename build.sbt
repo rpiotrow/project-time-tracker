@@ -1,3 +1,5 @@
+fork := true
+
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
@@ -20,16 +22,24 @@ lazy val api = project
   )
 
 lazy val gateway = project
+  .configs(IntegrationTest)
   .settings(
     commonSettings,
+    Defaults.itSettings,
     libraryDependencies ++= Seq(
-      "org.http4s"                  %% "http4s-blaze-server"      % Versions.http4s,
-      "org.http4s"                  %% "http4s-circe"             % Versions.http4s,
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server"      % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"       % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % Versions.tapir,
-      "ch.qos.logback"               % "logback-classic"          % Versions.logback
+      "com.typesafe.akka"           %% "akka-http"                  % Versions.akkaHttp,
+      "com.typesafe.akka"           %% "akka-stream"                % Versions.akkaStream,
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-akka-http" % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"         % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml"   % Versions.tapir,
+      "com.github.pureconfig"       %% "pureconfig"                 % Versions.pureConfig,
+      "ch.qos.logback"               % "logback-classic"            % Versions.logback,
+      "org.scalamock"               %% "scalamock"                  % Versions.scalamock       % Test,
+      "org.scalactic"               %% "scalactic"                  % Versions.scalatest       % "test, it",
+      "org.scalatest"               %% "scalatest"                  % Versions.scalatest       % "test, it",
+      "com.typesafe.akka"           %% "akka-http-testkit"          % Versions.akkaHttpTestkit % "test, it",
+      "com.typesafe.akka"           %% "akka-stream-testkit"        % Versions.akkaStream      % "test, it",
+      "org.mock-server"              % "mockserver-netty"           % Versions.mockserver      % IntegrationTest
     )
   )
   .dependsOn(api)
@@ -103,3 +113,4 @@ lazy val compilerOptions = Seq(
 )
 
 addCommandAlias("checks", ";test;it:test")
+addCommandAlias("runAll", ";project gateway;bgRun;project read-side;bgRun")
