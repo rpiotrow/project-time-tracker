@@ -9,7 +9,7 @@ import zio.clock.Clock
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio._
-import zio.config.Config
+import zio.config._
 
 object Server {
   trait Service {
@@ -18,7 +18,7 @@ object Server {
 
   def stream: RIO[Server with Clock, Stream[Task, Nothing]] = ZIO.accessM(_.get.stream)
 
-  val live: ZLayer[Routes with Config[WebConfiguration], Throwable, Server] =
+  val live: ZLayer[Routes with ZConfig[WebConfiguration], Throwable, Server] =
     ZLayer.fromServices[Routes.Service, WebConfiguration, Server.Service] { (routes, configuration) =>
       new Service() {
         override def stream: RIO[Clock, Stream[Task, Nothing]] =

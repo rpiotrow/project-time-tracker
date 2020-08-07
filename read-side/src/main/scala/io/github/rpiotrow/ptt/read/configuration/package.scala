@@ -10,7 +10,7 @@ package object configuration {
   object Configuration {
     val appConfigurationDescriptor: ConfigDescriptor[AppConfiguration] =
       descriptor[AppConfiguration]
-    val live: Layer[Throwable, Config[AppConfiguration]]               =
+    val live: Layer[Throwable, ZConfig[AppConfiguration]]              =
       TypesafeConfig.fromDefaultLoader(appConfigurationDescriptor)
 
   }

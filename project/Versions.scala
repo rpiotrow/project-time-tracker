@@ -9,13 +9,13 @@ object Versions {
   val jwt        = "4.2.0"
   val enumeratum = "1.6.1"
   val refined    = "0.9.15"
-  val tapir      = "0.16.1"
+  val tapir      = "0.16.10"
   val doobie     = "0.8.8"
   val logback    = "1.2.3"
 
-  val zio            = "1.0.0-RC21-2"
-  val zioConfig      = "1.0.0-RC23-1"
-  val zioInteropCats = "2.1.3.0-RC16"
+  val zio            = "1.0.0"
+  val zioConfig      = "1.0.0-RC26"
+  val zioInteropCats = "2.1.4.0"
 
   val specs2          = "4.8.3"
   val scalamock       = "5.0.0"

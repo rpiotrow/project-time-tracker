@@ -1,20 +1,20 @@
 package io.github.rpiotrow.ptt.read
 
-import cats.effect.Blocker
+import cats.effect._
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import io.getquill.{idiom => _}
 import io.github.rpiotrow.ptt.read.configuration.DatabaseConfiguration
 import zio._
 import zio.blocking.Blocking
-import zio.config.Config
+import zio.config._
 import zio.interop.catz._
 
 import scala.concurrent.ExecutionContext
 
 package object repository {
 
-  type RepositoryEnv        = Blocking with Config[DatabaseConfiguration]
+  type RepositoryEnv        = Blocking with ZConfig[DatabaseConfiguration]
   type StatisticsRepository = Has[StatisticsRepository.Service]
   type ProjectRepository    = Has[ProjectRepository.Service]
   type TaskRepository       = Has[TaskRepository.Service]

@@ -20,7 +20,7 @@ import io.github.rpiotrow.ptt.api.input.{ProjectInput, TaskInput}
 import io.github.rpiotrow.ptt.api.output.{ProjectOutput, StatisticsOutput}
 import io.github.rpiotrow.ptt.api.param.{OrderingDirection, ProjectListParams, ProjectOrderingField, StatisticsParams}
 import sttp.tapir.CodecFormat.TextPlain
-import sttp.tapir.codec.cats._
+import sttp.tapir.integ.cats.codec._
 
 package object api {
 
