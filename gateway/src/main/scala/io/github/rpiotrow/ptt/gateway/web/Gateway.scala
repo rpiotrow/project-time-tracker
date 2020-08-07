@@ -15,8 +15,9 @@ object Gateway extends App {
 
   private val readSideProxy  = new ServiceProxyLive(config.readSideService.host, config.readSideService.port)
   private val writeSideProxy = new ServiceProxyLive(config.writeSideService.host, config.writeSideService.port)
+  private val authorization  = new AuthorizationLive(config.authorization)
 
-  private val routes = Routes.docsRoute ~ Routes.serviceRoute(readSideProxy, writeSideProxy)
+  private val routes = Routes.docsRoute ~ Routes.serviceRoute(authorization, readSideProxy, writeSideProxy)
 
   Http(system).bindAndHandle(handler = routes, interface = config.host, port = config.port)
 }

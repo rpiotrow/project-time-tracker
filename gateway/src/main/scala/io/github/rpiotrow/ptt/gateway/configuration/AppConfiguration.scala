@@ -5,15 +5,18 @@ import pureconfig.generic.auto._
 
 case class ServiceConfiguration(host: String, port: Int)
 
+case class AuthorizationConfig(jwtSecret: String, jwtAlgorithm: String)
+
 case class AppConfiguration(
   host: String,
   port: Int,
+  authorization: AuthorizationConfig,
   readSideService: ServiceConfiguration,
   writeSideService: ServiceConfiguration
 )
 
 object AppConfiguration {
-  def readOrThrow() = {
+  def readOrThrow(): AppConfiguration = {
     ConfigSource.default.load[AppConfiguration] match {
       case Left(configReaderFailures) => {
         println(configReaderFailures.prettyPrint())
@@ -22,5 +25,4 @@ object AppConfiguration {
       case Right(config)              => config
     }
   }
-
 }

@@ -6,6 +6,7 @@ object Versions {
   val pureConfig = "0.13.0"
 
   val circe      = "0.13.0"
+  val jwt        = "4.2.0"
   val enumeratum = "1.6.1"
   val refined    = "0.9.15"
   val tapir      = "0.16.1"

@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.gateway.web
 
 import akka.http.scaladsl.model.HttpMethods
-import akka.http.scaladsl.model.StatusCodes.{NotFound, MethodNotAllowed}
+import akka.http.scaladsl.model.StatusCodes.{MethodNotAllowed, NotFound}
 import akka.http.scaladsl.server.Route
 import io.github.rpiotrow.ptt.api.allEndpointsWithAuth
 import sttp.tapir.docs.openapi._
@@ -14,35 +14,37 @@ object Routes {
     new SwaggerAkka(openapi.toYaml).routes
   }
 
-  def serviceRoute(readSideProxy: ServiceProxy, writeSideProxy: ServiceProxy): Route = {
+  def serviceRoute(authorization: Authorization, readSideProxy: ServiceProxy, writeSideProxy: ServiceProxy): Route = {
     val writeMethods = List(HttpMethods.POST, HttpMethods.PUT, HttpMethods.DELETE)
-    Route { context =>
-      val uriPath = context.request.uri.path.toString()
+    Route {
+      authorization.check { _ => context =>
+        val uriPath = context.request.uri.path.toString()
 
-      def handleProjectsRequest = {
-        if (context.request.method == HttpMethods.GET) {
-          context.complete(readSideProxy.queueRequest(context.request))
-        } else if (writeMethods.contains(context.request.method)) {
-          context.complete(writeSideProxy.queueRequest(context.request))
-        } else {
-          context.complete(MethodNotAllowed)
+        def handleProjectsRequest = {
+          if (context.request.method == HttpMethods.GET) {
+            context.complete(readSideProxy.queueRequest(context.request))
+          } else if (writeMethods.contains(context.request.method)) {
+            context.complete(writeSideProxy.queueRequest(context.request))
+          } else {
+            context.complete(MethodNotAllowed)
+          }
         }
-      }
 
-      def handleStatisticsRequest = {
-        if (context.request.method == HttpMethods.GET) {
-          context.complete(readSideProxy.queueRequest(context.request))
-        } else {
-          context.complete(MethodNotAllowed)
+        def handleStatisticsRequest = {
+          if (context.request.method == HttpMethods.GET) {
+            context.complete(readSideProxy.queueRequest(context.request))
+          } else {
+            context.complete(MethodNotAllowed)
+          }
         }
-      }
 
-      if (uriPath.startsWith("/projects")) {
-        handleProjectsRequest
-      } else if (uriPath.startsWith("/statistics")) {
-        handleStatisticsRequest
-      } else {
-        context.complete(NotFound)
+        if (uriPath.startsWith("/projects")) {
+          handleProjectsRequest
+        } else if (uriPath.startsWith("/statistics")) {
+          handleStatisticsRequest
+        } else {
+          context.complete(NotFound)
+        }
       }
     }
   }

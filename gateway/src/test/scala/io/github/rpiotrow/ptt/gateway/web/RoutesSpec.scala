@@ -1,8 +1,12 @@
 package io.github.rpiotrow.ptt.gateway.web
 
+import java.util.UUID
+
 import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.Directives.provide
+import akka.http.scaladsl.server.{Directive1, Route}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import io.github.rpiotrow.ptt.api.model.UserId
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -63,7 +67,11 @@ class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest wit
     }
   }
 
-  private def noOpRoutes(): Route = Routes.serviceRoute(mock[ServiceProxy], mock[ServiceProxy])
+  private val noOpAuthorization = new Authorization {
+    override def check: Directive1[UserId] = provide(UUID.randomUUID())
+  }
+
+  private def noOpRoutes(): Route = Routes.serviceRoute(noOpAuthorization, mock[ServiceProxy], mock[ServiceProxy])
 
   private def checkRouteViaProxy(request: HttpRequest) = {
     val readSide  = mock[ServiceProxy]
@@ -73,7 +81,7 @@ class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest wit
     (proxy.queueRequest _)
       .expects(request)
       .returning(Future.successful(HttpResponse(entity = HttpEntity("test"))))
-    val routes = Routes.serviceRoute(readSide, writeSide)
+    val routes = Routes.serviceRoute(noOpAuthorization, readSide, writeSide)
 
     request ~> routes ~> check {
       status shouldEqual StatusCodes.OK

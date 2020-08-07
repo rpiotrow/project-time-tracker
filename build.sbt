@@ -33,6 +33,7 @@ lazy val gateway = project
       "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"         % Versions.tapir,
       "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml"   % Versions.tapir,
       "com.github.pureconfig"       %% "pureconfig"                 % Versions.pureConfig,
+      "com.pauldijou"               %% "jwt-circe"                  % Versions.jwt,
       "ch.qos.logback"               % "logback-classic"            % Versions.logback,
       "org.scalamock"               %% "scalamock"                  % Versions.scalamock       % Test,
       "org.scalactic"               %% "scalactic"                  % Versions.scalatest       % "test, it",
