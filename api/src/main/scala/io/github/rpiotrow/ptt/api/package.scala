@@ -2,8 +2,10 @@ package io.github.rpiotrow.ptt
 
 import java.time.format.DateTimeParseException
 import java.time.{LocalDateTime, YearMonth}
+import java.net.URL
 
 import io.circe.generic.auto._
+import io.circe.refined._
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.input._
@@ -75,6 +77,14 @@ package object api {
     .in(path[ProjectId]("id"))
     .get
     .out(jsonBody[ProjectOutput])
+
+  private def urlDecode(urlString: String): DecodeResult[URL]  =
+    try { DecodeResult.Value(new URL(urlString)) }
+    catch { case e: Exception => DecodeResult.Error(urlString, e) }
+  private def urlEncode(url: URL): String                      =
+    url.toString
+  implicit private val urlCodec: Codec[String, URL, TextPlain] =
+    Codec.string.mapDecode(urlDecode)(urlEncode)
 
   val projectCreateEndpoint = projectsEndpoint.post
     .in(jsonBody[ProjectInput])

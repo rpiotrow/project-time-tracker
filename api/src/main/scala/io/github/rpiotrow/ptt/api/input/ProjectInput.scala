@@ -1,3 +1,5 @@
 package io.github.rpiotrow.ptt.api.input
 
-case class ProjectInput(projectId: String)
+import io.github.rpiotrow.ptt.api.model.ProjectId
+
+case class ProjectInput(projectId: ProjectId)
