@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS ptt_read_model.projects(
   updated_at TIMESTAMP NOT NULL CONSTRAINT updated_not_before_created CHECK (updated_at >= created_at),
   id VARCHAR UNIQUE CONSTRAINT id_not_empty CHECK(id != ''),
   owner UUID NOT NULL,
-  duration_sum INTERVAL NOT NULL
-    CONSTRAINT duration_sum_positive CHECK(duration_sum >= interval '0 seconds')
+  duration_sum BIGINT NOT NULL
+    CONSTRAINT duration_sum_positive CHECK(duration_sum >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS ptt_read_model.tasks(
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS ptt_read_model.tasks(
   project_id BIGINT NOT NULL REFERENCES ptt_read_model.projects(db_id),
   owner UUID NOT NULL,
   started_at TIMESTAMP NOT NULL,
-  duration INTERVAL NOT NULL CONSTRAINT duration_positive CHECK (duration >= interval '0 seconds'),
+  duration BIGINT NOT NULL CONSTRAINT duration_positive CHECK (duration >= 0),
   volume INT CONSTRAINT volume_positive CHECK (volume >= 0),
   comment TEXT
 );
@@ -45,6 +45,15 @@ CREATE TABLE IF NOT EXISTS ptt_read_model.statistics(
 
 -- write-side model
 
+CREATE TABLE IF NOT EXISTS ptt.projects(
+  db_id SERIAL PRIMARY KEY,
+  deleted_at TIMESTAMP CONSTRAINT deleted_not_before_updated CHECK (deleted_at >= updated_at),
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL CONSTRAINT updated_not_before_created CHECK (updated_at >= created_at),
+  id VARCHAR UNIQUE CONSTRAINT id_not_empty CHECK(id != ''),
+  owner UUID NOT NULL
+);
+
 -- TBD
 
 -- create users
@@ -57,7 +66,8 @@ GRANT SELECT ON ALL TABLES IN SCHEMA ptt_read_model to reader;
 CREATE USER writer WITH PASSWORD 'writer';
 
 GRANT USAGE ON SCHEMA ptt TO writer;
-GRANT SELECT,INSERT ON ALL TABLES IN SCHEMA ptt to writer;
+GRANT SELECT,INSERT,UPDATE ON ALL TABLES IN SCHEMA ptt to writer;
+GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA ptt to writer;
 
 GRANT USAGE ON SCHEMA ptt_read_model TO writer;
 GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA ptt_read_model to writer;

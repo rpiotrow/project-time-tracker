@@ -19,9 +19,9 @@ trait TaskRepositorySpec {
   val insertTasks =
     sql"""
          |INSERT INTO ptt_read_model.tasks(project_id, deleted_at, owner, started_at, duration, volume, comment)
-         |  VALUES (1, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', '2 hours', NULL, 'first task'),
-         |    (1, '2020-07-22 17:10:00', '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', '2 hours', NULL, 'deleted task'),
-         |    (2, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-23 17:00:00', '2 hours', 8, 'high volume different project')
+         |  VALUES (1, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', 120, NULL, 'first task'),
+         |    (1, '2020-07-22 17:10:00', '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', 120, NULL, 'deleted task'),
+         |    (2, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-23 17:00:00', 120, 8, 'high volume different project')
          |;
          |""".stripMargin
 

@@ -22,9 +22,9 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   val insertProjects =
     sql"""
          |INSERT INTO ptt_read_model.projects(db_id, id, created_at, updated_at, deleted_at, owner, duration_sum)
-         |  VALUES (1, 'first', '2020-07-22 15:00:00', '2020-07-22 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '4 hours'),
-         |    (2, 'second', '2020-07-22 15:10:00', '2020-07-22 17:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '0 hours'),
-         |    (3, 'deleted', '2020-07-31 15:00:00', '2020-07-31 18:00:00', '2020-07-31 18:00:00', '41a854e4-4262-4672-a7df-c781f535d6ee', '0 hours')
+         |  VALUES (1, 'first', '2020-07-22 15:00:00', '2020-07-22 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
+         |    (2, 'second', '2020-07-22 15:10:00', '2020-07-22 17:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 0),
+         |    (3, 'deleted', '2020-07-31 15:00:00', '2020-07-31 18:00:00', '2020-07-31 18:00:00', '41a854e4-4262-4672-a7df-c781f535d6ee', 0)
          |;
          |""".stripMargin
 
@@ -45,7 +45,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     updatedAt = LocalDateTime.of(2020, 7, 22, 17, 0),
     deletedAt = None,
     owner = owner1Id,
-    durationSum = Duration.ofHours(0)
+    durationSum = Duration.ZERO
   )
   lazy val p3       = ProjectEntity(
     dbId = 3,
@@ -54,7 +54,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     updatedAt = LocalDateTime.of(2020, 7, 31, 18, 0),
     deletedAt = Some(LocalDateTime.of(2020, 7, 31, 18, 0)),
     owner = owner1Id,
-    durationSum = Duration.ofHours(0)
+    durationSum = Duration.ZERO
   )
 
   describe("ProjectRepository") {
