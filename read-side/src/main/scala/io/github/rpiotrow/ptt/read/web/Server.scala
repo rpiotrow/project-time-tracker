@@ -28,7 +28,6 @@ object Server {
             ZIO.descriptor.map { d =>
               val server = BlazeServerBuilder[Task](d.executor.asEC)
                 .bindHttp(configuration.port, configuration.host)
-                .bindHttp(8081, "0.0.0.0")
                 .withHttpApp(httpAppWithLogging)
                 .serve
               server.drain

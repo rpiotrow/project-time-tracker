@@ -57,6 +57,7 @@ package object repository {
     hikariConfig.setUsername(configuration.dbUsername)
     hikariConfig.setPassword(configuration.dbPassword)
     hikariConfig.setSchema(configuration.schema)
+    hikariConfig.setReadOnly(true)
 
     HikariTransactor
       .fromHikariConfig[Task](hikariConfig, connectEC, Blocker.liftExecutionContext(transactEC))
