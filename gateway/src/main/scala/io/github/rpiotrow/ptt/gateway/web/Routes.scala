@@ -1,7 +1,8 @@
 package io.github.rpiotrow.ptt.gateway.web
 
-import akka.http.scaladsl.model.HttpMethods
+import akka.http.scaladsl.model.{HttpMethods, HttpRequest}
 import akka.http.scaladsl.model.StatusCodes.{MethodNotAllowed, NotFound}
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Route
 import io.github.rpiotrow.ptt.api.allEndpointsWithAuth
 import sttp.tapir.docs.openapi._
@@ -17,14 +18,15 @@ object Routes {
   def serviceRoute(authorization: Authorization, readSideProxy: ServiceProxy, writeSideProxy: ServiceProxy): Route = {
     val writeMethods = List(HttpMethods.POST, HttpMethods.PUT, HttpMethods.DELETE)
     Route {
-      authorization.check { _ => context =>
+      authorization.check { userId => context =>
         val uriPath = context.request.uri.path.toString()
 
         def handleProjectsRequest = {
           if (context.request.method == HttpMethods.GET) {
             context.complete(readSideProxy.queueRequest(context.request))
           } else if (writeMethods.contains(context.request.method)) {
-            context.complete(writeSideProxy.queueRequest(context.request))
+            val withAuthHeader = context.request.withHeaders(RawHeader("X-Authorization", userId.toString))
+            context.complete(writeSideProxy.queueRequest(withAuthHeader))
           } else {
             context.complete(MethodNotAllowed)
           }

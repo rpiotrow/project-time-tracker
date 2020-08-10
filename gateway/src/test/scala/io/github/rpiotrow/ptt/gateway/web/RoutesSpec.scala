@@ -2,6 +2,7 @@ package io.github.rpiotrow.ptt.gateway.web
 
 import java.util.UUID
 
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives.provide
 import akka.http.scaladsl.server.{Directive1, Route}
@@ -67,19 +68,23 @@ class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest wit
     }
   }
 
+  val userId                    = UUID.randomUUID()
   private val noOpAuthorization = new Authorization {
-    override def check: Directive1[UserId] = provide(UUID.randomUUID())
+    override def check: Directive1[UserId] = provide(userId)
   }
 
   private def noOpRoutes(): Route = Routes.serviceRoute(noOpAuthorization, mock[ServiceProxy], mock[ServiceProxy])
 
   private def checkRouteViaProxy(request: HttpRequest) = {
-    val readSide  = mock[ServiceProxy]
-    val writeSide = mock[ServiceProxy]
-    val proxy     = if (request.method == HttpMethods.GET) readSide else writeSide
+    val readSide     = mock[ServiceProxy]
+    val writeSide    = mock[ServiceProxy]
+    val proxy        = if (request.method == HttpMethods.GET) readSide else writeSide
+    val proxyRequest =
+      if (request.method == HttpMethods.GET) request
+      else request.withHeaders(RawHeader("X-Authorization", userId.toString))
 
     (proxy.queueRequest _)
-      .expects(request)
+      .expects(proxyRequest)
       .returning(Future.successful(HttpResponse(entity = HttpEntity("test"))))
     val routes = Routes.serviceRoute(noOpAuthorization, readSide, writeSide)
 
