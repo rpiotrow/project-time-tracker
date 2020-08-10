@@ -2,11 +2,13 @@ package io.github.rpiotrow.ptt.api.write.web
 
 import io.github.rpiotrow.ptt.api._
 import io.github.rpiotrow.ptt.api.error._
-import io.github.rpiotrow.ptt.api.input.ProjectInput
+import io.github.rpiotrow.ptt.api.input._
+import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output._
-import io.github.rpiotrow.ptt.api.write.configuration.{AppConfiguration, GatewayConfiguration}
+import io.github.rpiotrow.ptt.api.write.configuration.GatewayConfiguration
 import io.github.rpiotrow.ptt.api.write.service._
 import org.http4s.HttpRoutes
+import sttp.tapir._
 import sttp.tapir.server.http4s._
 import zio._
 import zio.config.ZConfig
@@ -32,15 +34,20 @@ private class RoutesLive(private val gatewayAddress: String, private val project
     Http4sServerOptions.default[Task].copy(decodeFailureHandler = DecodeFailure.decodeFailureHandler)
 
   override def readSideRoutes(): HttpRoutes[Task] = {
-    projectCreateEndpoint.toRoutes { params =>
-      projectCreate(params)
-    }
+    projectCreateEndpoint
+      .in(header[UserId]("X-Authorization"))
+      .toRoutes { case (params, userId) => projectCreate(params, userId) }
   }
 
-  private def projectCreate(params: ProjectInput): Task[Either[ApiError, LocationHeader]] = {
+  private def projectCreate(input: ProjectInput, userId: UserId): Task[Either[ApiError, LocationHeader]] = {
     projectService
-      .create(params)
-      .map(p => new java.net.URL(s"$gatewayAddress/projects/${p.id}"))
+      .create(input, userId)
+      .map(p => new LocationHeader(s"$gatewayAddress/projects/${p.id}"))
+      .catchAll {
+        case EntityNotFound(_) => ZIO.fail(NotFound)
+        case NotUnique(m)      => ZIO.fail(InputNotValid(m))
+        case AppThrowable(_)   => ZIO.fail(ServerError("server.error"))
+      }
       .either
   }
 

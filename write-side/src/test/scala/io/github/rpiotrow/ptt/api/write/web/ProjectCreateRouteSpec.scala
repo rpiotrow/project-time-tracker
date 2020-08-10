@@ -5,13 +5,12 @@ import java.util.UUID
 
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
-import io.circe.syntax._
 import io.circe.refined._
-import io.github.rpiotrow.ptt.api.error.InputNotValid
+import io.circe.syntax._
 import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.api.write.configuration.GatewayConfiguration
-import io.github.rpiotrow.ptt.api.write.service.ProjectService
+import io.github.rpiotrow.ptt.api.write.service.{NotUnique, ProjectService}
 import org.http4s._
 import org.http4s.headers.Location
 import org.http4s.util.CaseInsensitiveString
@@ -50,10 +49,11 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
     }
   }
 
+  private val ownerId: UUID = UUID.randomUUID()
   private val projectInput  = ProjectInput(projectId = "project1")
   private val projectOutput = ProjectOutput(
     id = "project1",
-    owner = UUID.randomUUID(),
+    owner = ownerId,
     createdAt = LocalDateTime.now(),
     durationSum = Duration.ZERO,
     tasks = List()
@@ -61,12 +61,14 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
 
   private def project() = {
     val projectService = mock[ProjectService.Service]
-    (projectService.create _).expects(projectInput).returning(zio.IO.succeed(projectOutput))
+    (projectService.create _).expects(projectInput, ownerId).returning(zio.IO.succeed(projectOutput))
     projectService
   }
   private def noProject() = {
     val projectService = mock[ProjectService.Service]
-    (projectService.create _).expects(projectInput).returning(zio.IO.fail(InputNotValid("project id is not unique")))
+    (projectService.create _)
+      .expects(projectInput, ownerId)
+      .returning(zio.IO.fail(NotUnique("project id is not unique")))
     projectService
   }
 
@@ -74,9 +76,10 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
     request: Request[Task],
     projectService: ProjectService.Service = mock[ProjectService.Service]
   ): Response[Task] = {
-    val app = for {
+    val requestWithAuth = request.withHeaders(Header.Raw(CaseInsensitiveString("X-Authorization"), ownerId.toString))
+    val app             = for {
       routes   <- Routes.readSideRoutes()
-      response <- routes.run(request).value
+      response <- routes.run(requestWithAuth).value
     } yield response.getOrElse(Response.notFound)
 
     val services =
