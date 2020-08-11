@@ -5,7 +5,7 @@ import java.util.UUID
 
 case class ProjectEntity(
   dbId: Long,
-  id: String,
+  projectId: String,
   createdAt: LocalDateTime,
   updatedAt: LocalDateTime,
   deletedAt: Option[LocalDateTime],

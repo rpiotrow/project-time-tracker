@@ -30,7 +30,7 @@ private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends P
   private val projects = quote { querySchema[ProjectEntity]("projects") }
 
   override def one(id: String) = {
-    run(projects.filter(_.id == lift(id)))
+    run(projects.filter(_.projectId == lift(id)))
       .map(_.headOption)
       .transact(tnx)
       .mapError(RepositoryThrowable)
@@ -43,7 +43,7 @@ private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends P
     val pageSize   = params.pageSize
     run(
       projects.dynamic
-        .filterIf(params.ids.nonEmpty)(p => quote(liftQuery(projectIds).contains(p.id)))
+        .filterIf(params.ids.nonEmpty)(p => quote(liftQuery(projectIds).contains(p.projectId)))
         .filterIf(params.deleted.contains(true))(p => quote(p.deletedAt.isDefined))
         .filterIf(params.deleted.contains(false))(p => quote(p.deletedAt.isEmpty))
         .filterOpt(params.from)((p, from) => quote(p.createdAt >= from))

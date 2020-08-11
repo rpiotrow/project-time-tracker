@@ -54,7 +54,7 @@ private class ProjectServiceLive(
 
   private def toOutput(project: ProjectEntity, tasks: List[TaskEntity]): ProjectOutput =
     ProjectOutput(
-      id = project.id,
+      id = project.projectId,
       createdAt = project.createdAt,
       owner = project.owner,
       durationSum = project.durationSum,

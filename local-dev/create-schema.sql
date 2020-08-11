@@ -7,10 +7,10 @@ CREATE SCHEMA IF NOT EXISTS ptt_read_model;
 
 CREATE TABLE IF NOT EXISTS ptt_read_model.projects(
   db_id SERIAL PRIMARY KEY,
+  project_id VARCHAR NOT NULL UNIQUE CONSTRAINT id_not_empty CHECK(project_id != ''),
   deleted_at TIMESTAMP CONSTRAINT deleted_not_before_updated CHECK (deleted_at >= updated_at),
   created_at TIMESTAMP NOT NULL,
   updated_at TIMESTAMP NOT NULL CONSTRAINT updated_not_before_created CHECK (updated_at >= created_at),
-  id VARCHAR UNIQUE CONSTRAINT id_not_empty CHECK(id != ''),
   owner UUID NOT NULL,
   duration_sum BIGINT NOT NULL
     CONSTRAINT duration_sum_positive CHECK(duration_sum >= 0)
@@ -47,10 +47,10 @@ CREATE TABLE IF NOT EXISTS ptt_read_model.statistics(
 
 CREATE TABLE IF NOT EXISTS ptt.projects(
   db_id SERIAL PRIMARY KEY,
+  project_id VARCHAR NOT NULL UNIQUE CONSTRAINT id_not_empty CHECK(project_id != ''),
   deleted_at TIMESTAMP CONSTRAINT deleted_not_before_updated CHECK (deleted_at >= updated_at),
   created_at TIMESTAMP NOT NULL,
   updated_at TIMESTAMP NOT NULL CONSTRAINT updated_not_before_created CHECK (updated_at >= created_at),
-  id VARCHAR UNIQUE CONSTRAINT id_not_empty CHECK(id != ''),
   owner UUID NOT NULL
 );
 

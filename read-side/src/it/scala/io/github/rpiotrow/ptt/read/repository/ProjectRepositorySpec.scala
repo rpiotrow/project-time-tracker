@@ -21,7 +21,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   val insertProjects =
     sql"""
-         |INSERT INTO ptt_read_model.projects(db_id, id, created_at, updated_at, deleted_at, owner, duration_sum)
+         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, updated_at, deleted_at, owner, duration_sum)
          |  VALUES (1, 'first', '2020-07-22 15:00:00', '2020-07-22 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
          |    (2, 'second', '2020-07-22 15:10:00', '2020-07-22 17:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 0),
          |    (3, 'deleted', '2020-07-31 15:00:00', '2020-07-31 18:00:00', '2020-07-31 18:00:00', '41a854e4-4262-4672-a7df-c781f535d6ee', 0)
@@ -31,7 +31,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   val defaultParams = ProjectListParams(List(), None, None, None, None, None, 0, 25)
   lazy val p1       = ProjectEntity(
     dbId = 1,
-    id = "first",
+    projectId = "first",
     createdAt = LocalDateTime.of(2020, 7, 22, 15, 0),
     updatedAt = LocalDateTime.of(2020, 7, 22, 18, 0),
     deletedAt = None,
@@ -40,7 +40,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   lazy val p2       = ProjectEntity(
     dbId = 2,
-    id = "second",
+    projectId = "second",
     createdAt = LocalDateTime.of(2020, 7, 22, 15, 10),
     updatedAt = LocalDateTime.of(2020, 7, 22, 17, 0),
     deletedAt = None,
@@ -49,7 +49,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   lazy val p3       = ProjectEntity(
     dbId = 3,
-    id = "deleted",
+    projectId = "deleted",
     createdAt = LocalDateTime.of(2020, 7, 31, 15, 0),
     updatedAt = LocalDateTime.of(2020, 7, 31, 18, 0),
     deletedAt = Some(LocalDateTime.of(2020, 7, 31, 18, 0)),
