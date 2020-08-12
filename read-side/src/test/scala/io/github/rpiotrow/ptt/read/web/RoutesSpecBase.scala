@@ -24,7 +24,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
 
   val owner1Id                           = UUID.randomUUID()
   val projectOutput1                     = ProjectOutput(
-    id = "project one",
+    projectId = "project one",
     createdAt = LocalDateTime.now(),
     owner = owner1Id,
     durationSum = Duration.ofHours(3),
@@ -46,7 +46,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
     )
   )
   val projectOutput2                     = ProjectOutput(
-    id = "project without tasks",
+    projectId = "project without tasks",
     owner = owner1Id,
     createdAt = LocalDateTime.now(),
     durationSum = Duration.ZERO,

@@ -55,7 +55,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
   private val ownerId: UUID = UUID.randomUUID()
   private val projectInput  = ProjectInput(projectId = "project1")
   private val projectOutput = ProjectOutput(
-    id = "project1",
+    projectId = "project1",
     owner = ownerId,
     createdAt = LocalDateTime.now(),
     durationSum = Duration.ZERO,
