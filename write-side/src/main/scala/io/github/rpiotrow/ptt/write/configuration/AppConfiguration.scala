@@ -1,6 +1,5 @@
 package io.github.rpiotrow.ptt.write.configuration
 
-import cats.effect.IO
 import org.slf4j.LoggerFactory
 import pureconfig.{CamelCase, ConfigFieldMapping, ConfigSource, KebabCase}
 import pureconfig.generic.ProductHint
@@ -20,7 +19,7 @@ case class GatewayConfiguration(address: String)
 
 object AppConfiguration {
 
-  val live: IO[AppConfiguration] = IO {
+  lazy val live: AppConfiguration = {
 
     implicit def hint[A] = ProductHint[A](ConfigFieldMapping(CamelCase, CamelCase))
 

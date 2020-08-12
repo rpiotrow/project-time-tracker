@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.web
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.{Blocker, ContextShift, IO}
 import io.github.rpiotrow.ptt.api._
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.input._
@@ -12,17 +12,20 @@ import org.http4s.HttpRoutes
 import sttp.tapir._
 import sttp.tapir.server.http4s._
 
+import scala.concurrent.ExecutionContext
+
 trait Routes {
   def writeSideRoutes(): HttpRoutes[IO]
 }
 
 object Routes {
 
-  def live(implicit contextShift: ContextShift[IO]): IO[Routes] =
+  def live(implicit contextShift: ContextShift[IO]): IO[Routes] = {
+    val config = AppConfiguration.live
     for {
-      config         <- AppConfiguration.live
       projectService <- ProjectService.live
     } yield new RoutesLive(config.gatewayConfiguration.address, projectService)
+  }
 
   def test(gatewayAddress: String, projectService: ProjectService)(implicit contextShift: ContextShift[IO]): Routes =
     new RoutesLive(gatewayAddress, projectService)
@@ -46,11 +49,9 @@ private class RoutesLive(private val gatewayAddress: String, private val project
       .create(input, userId)
       .bimap(
         {
-          case EntityNotFound(_) => NotFound
-          case NotUnique(m)      => InputNotValid(m)
-          case AppThrowable(_)   => ServerError("server.error")
+          case NotUnique(m) => InputNotValid(m)
         },
-        p => new LocationHeader(s"$gatewayAddress/projects/${p.id}")
+        p => new LocationHeader(s"$gatewayAddress/projects/${p.projectId}")
       )
       .value
   }

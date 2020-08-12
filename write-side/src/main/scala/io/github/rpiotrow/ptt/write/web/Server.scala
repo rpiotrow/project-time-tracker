@@ -11,10 +11,9 @@ import scala.concurrent.ExecutionContext
 
 object Server {
 
-  def stream(implicit CS: ContextShift[IO], C: Concurrent[IO], T: Timer[IO]): IO[Stream[IO, Nothing]] = {
+  def stream(implicit contextShift: ContextShift[IO], C: Concurrent[IO], T: Timer[IO]): IO[Stream[IO, Nothing]] = {
+    val webConfiguration = AppConfiguration.live.webConfiguration
     for {
-      config <- AppConfiguration.live
-      webConfiguration = config.webConfiguration
       routes <- Routes.live
 
       httpApp        = routes.writeSideRoutes().orNotFound
