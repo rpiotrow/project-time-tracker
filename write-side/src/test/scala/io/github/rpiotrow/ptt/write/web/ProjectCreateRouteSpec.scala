@@ -1,16 +1,20 @@
-package io.github.rpiotrow.ptt.api.write.web
+package io.github.rpiotrow.ptt.write.web
 
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
+import cats.data.EitherT
+import cats.effect.{ContextShift, IO}
 import eu.timepit.refined.auto._
+import fs2.Stream
+import io.circe.Encoder._
 import io.circe.generic.auto._
 import io.circe.refined._
 import io.circe.syntax._
 import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
-import io.github.rpiotrow.ptt.api.write.configuration.GatewayConfiguration
-import io.github.rpiotrow.ptt.api.write.service.{NotUnique, ProjectService}
+import io.github.rpiotrow.ptt.write.service.{NotUnique, ProjectService}
+import io.github.rpiotrow.ptt.write.service.ProjectService
 import org.http4s._
 import org.http4s.headers.Location
 import org.http4s.util.CaseInsensitiveString
@@ -18,16 +22,15 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 import sttp.model.HeaderNames
-import zio.Runtime.default.unsafeRun
-import zio._
-import zio.config._
-import zio.config.magnolia.DeriveConfigDescriptor.descriptor
 
 class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Matchers {
+
+  implicit val contextShift: ContextShift[IO] = IO.contextShift(scala.concurrent.ExecutionContext.global)
+
   describe("POST /projects") {
     it("successful") {
       val url      = s"/projects"
-      val body     = fs2.Stream.evalSeq(zio.Task { projectInput.asJson.toString().getBytes.toSeq })
+      val body     = Stream.evalSeq(IO { projectInput.asJson.toString().getBytes.toSeq })
       val response =
         makeRequest(Request(method = Method.POST, uri = Uri.unsafeFromString(url), body = body), project())
 
@@ -39,7 +42,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
     describe("failure") {
       it("when id is not unique") {
         val url      = s"/projects"
-        val body     = fs2.Stream.evalSeq(zio.Task { projectInput.asJson.toString().getBytes.toSeq })
+        val body     = Stream.evalSeq(IO { projectInput.asJson.toString().getBytes.toSeq })
         val response =
           makeRequest(Request(method = Method.POST, uri = Uri.unsafeFromString(url), body = body), noProject())
 
@@ -60,33 +63,28 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
   )
 
   private def project() = {
-    val projectService = mock[ProjectService.Service]
-    (projectService.create _).expects(projectInput, ownerId).returning(zio.IO.succeed(projectOutput))
+    val projectService = mock[ProjectService]
+    (projectService.create _).expects(projectInput, ownerId).returning(EitherT.right(IO(projectOutput)))
     projectService
   }
   private def noProject() = {
-    val projectService = mock[ProjectService.Service]
+    val projectService = mock[ProjectService]
     (projectService.create _)
       .expects(projectInput, ownerId)
-      .returning(zio.IO.fail(NotUnique("project id is not unique")))
+      .returning(EitherT.left(IO(NotUnique("project id is not unique"))))
     projectService
   }
 
-  private def makeRequest(
-    request: Request[Task],
-    projectService: ProjectService.Service = mock[ProjectService.Service]
-  ): Response[Task] = {
+  private def makeRequest(request: Request[IO], projectService: ProjectService = mock[ProjectService]): Response[IO] = {
     val requestWithAuth = request.withHeaders(Header.Raw(CaseInsensitiveString("X-Authorization"), ownerId.toString))
-    val app             = for {
-      routes   <- Routes.readSideRoutes()
-      response <- routes.run(requestWithAuth).value
-    } yield response.getOrElse(Response.notFound)
+    val routes          = Routes.test("http://gateway.live", projectService)
 
-    val services =
-      ZLayer.fromFunction[Any, ProjectService.Service](_ => projectService)
-    val config   =
-      ZConfig.fromMap(Map("address" -> "http://gateway.live"), descriptor[GatewayConfiguration])
-    unsafeRun(app.provideLayer(services ++ config >>> Routes.live))
+    routes
+      .writeSideRoutes()
+      .run(requestWithAuth)
+      .value
+      .map(_.getOrElse(Response.notFound))
+      .unsafeRunSync()
   }
 
 }

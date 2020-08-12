@@ -4,6 +4,7 @@ object Versions {
   val akkaHttp   = "10.1.12"
   val akkaStream = "2.6.8"
   val pureConfig = "0.13.0"
+  val cats       = "2.1.1"
 
   val circe      = "0.13.0"
   val jwt        = "4.2.0"

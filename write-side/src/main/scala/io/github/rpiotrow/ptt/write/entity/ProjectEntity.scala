@@ -1,4 +1,4 @@
-package io.github.rpiotrow.ptt.api.write.entity
+package io.github.rpiotrow.ptt.write.entity
 
 import java.time.LocalDateTime
 import java.util.UUID

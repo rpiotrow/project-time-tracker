@@ -1,4 +1,4 @@
-package io.github.rpiotrow.ptt.api.write.repository
+package io.github.rpiotrow.ptt.write.repository
 
 import java.time.Duration
 

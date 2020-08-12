@@ -78,7 +78,7 @@ lazy val `read-side` = project
       "org.scalactic"               %% "scalactic"                       % Versions.scalatest      % "test, it",
       "org.scalatest"               %% "scalatest"                       % Versions.scalatest      % "test, it",
       "com.softwaremill.diffx"      %% "diffx-scalatest"                 % Versions.diffx          % "test, it",
-      "org.scalamock"               %% "scalamock"                       % "5.0.0"                 % Test,
+      "org.scalamock"               %% "scalamock"                       % Versions.scalamock      % Test,
       "com.dimafeng"                %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
       "com.dimafeng"                %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest
     )
@@ -94,11 +94,8 @@ lazy val `write-side` = project
       "eu.timepit"                  %% "refined"                         % Versions.refined,
       "com.beachape"                %% "enumeratum"                      % Versions.enumeratum,
       "com.beachape"                %% "enumeratum-circe"                % Versions.enumeratum,
-      "dev.zio"                     %% "zio"                             % Versions.zio,
-      "dev.zio"                     %% "zio-config"                      % Versions.zioConfig,
-      "dev.zio"                     %% "zio-config-magnolia"             % Versions.zioConfig,
-      "dev.zio"                     %% "zio-config-typesafe"             % Versions.zioConfig,
-      "dev.zio"                     %% "zio-interop-cats"                % Versions.zioInteropCats,
+      "org.typelevel"               %% "cats-core"                       % Versions.cats,
+      "com.github.pureconfig"       %% "pureconfig"                      % Versions.pureConfig,
       "com.softwaremill.sttp.tapir" %% "tapir-core"                      % Versions.tapir,
       "com.softwaremill.sttp.tapir" %% "tapir-json-circe"                % Versions.tapir,
       "com.softwaremill.sttp.tapir" %% "tapir-enumeratum"                % Versions.tapir,
@@ -118,7 +115,7 @@ lazy val `write-side` = project
       "org.scalactic"               %% "scalactic"                       % Versions.scalatest      % "test, it",
       "org.scalatest"               %% "scalatest"                       % Versions.scalatest      % "test, it",
       "com.softwaremill.diffx"      %% "diffx-scalatest"                 % Versions.diffx          % "test, it",
-      "org.scalamock"               %% "scalamock"                       % "5.0.0"                 % Test,
+      "org.scalamock"               %% "scalamock"                       % Versions.scalamock      % Test,
       "com.dimafeng"                %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
       "com.dimafeng"                %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest
     )
