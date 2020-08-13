@@ -1,10 +1,9 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import java.time.Duration
 import java.util.UUID
 
 import cats.effect.Blocker
-import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
+import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import doobie.Transactor
 import doobie.implicits._
@@ -15,6 +14,7 @@ import org.scalatest.matchers._
 import zio._
 import zio.interop.catz._
 
+import scala.concurrent.duration.DurationInt
 import scala.io.Source
 
 class AllRepositoriesSpec
@@ -25,7 +25,9 @@ class AllRepositoriesSpec
     with ProjectRepositorySpec
     with TaskRepositorySpec {
 
-  override val container = PostgreSQLContainer()
+  override val container = new PostgreSQLContainer(
+    commonJdbcParams = JdbcDatabaseContainer.CommonParams(startupTimeout = 240.seconds, connectTimeout = 240.seconds)
+  )
 
   override val owner1Id = UUID.fromString("41a854e4-4262-4672-a7df-c781f535d6ee")
   override val owner2Id = UUID.fromString("66ffc00e-083b-48aa-abb5-8ef46ac0e06e")

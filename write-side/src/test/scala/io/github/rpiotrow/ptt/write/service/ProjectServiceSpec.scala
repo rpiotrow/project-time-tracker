@@ -33,15 +33,15 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     Strategy.void
   )
 
-  describe("create project should") {
+  describe("create should") {
     it("create new project") {
       val projectRepository         = mock[ProjectRepository]
       val projectReadSideRepository = mock[ProjectReadSideRepository]
       val service                   = new ProjectServiceLive(projectRepository, projectReadSideRepository, tnx)
 
       (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[ConnectionIO])
-      (projectRepository.create _).expects(projectId.value, ownerId).returning(entity.pure[ConnectionIO])
-      (projectReadSideRepository.newProject _).expects(entity).returning(readSideEntity.pure[ConnectionIO])
+      (projectRepository.create _).expects(projectId.value, ownerId).returning(project.pure[ConnectionIO])
+      (projectReadSideRepository.newProject _).expects(project).returning(projectReadModel.pure[ConnectionIO])
 
       val result = service.create(projectInput, ownerId).value.unsafeRunSync()
 
@@ -52,12 +52,52 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
       val projectReadSideRepository = mock[ProjectReadSideRepository]
       val service                   = new ProjectServiceLive(projectRepository, projectReadSideRepository, tnx)
 
-      (projectRepository.get _).expects(projectId.value).returning(Option(entity).pure[ConnectionIO])
+      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[ConnectionIO])
 
       val result = service.create(projectInput, ownerId).value.unsafeRunSync()
 
       result should be(NotUnique("project with given projectId already exists").asLeft[ProjectOutput])
     }
+  }
+  describe("delete should") {
+    it("soft delete project on write and read side") {
+      val projectRepository         = mock[ProjectRepository]
+      val projectReadSideRepository = mock[ProjectReadSideRepository]
+      val service                   = new ProjectServiceLive(projectRepository, projectReadSideRepository, tnx)
+
+      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[ConnectionIO])
+      (projectRepository.delete _).expects(project).returning(project.pure[ConnectionIO])
+      (projectReadSideRepository.deletedProject _).expects(project).returning(projectReadModel.pure[ConnectionIO])
+
+      val result = service.delete(projectId, ownerId).value.unsafeRunSync()
+
+      result should be(().asRight[AppFailure])
+    }
+    it("return error when project with given id does not exist") {
+      val projectRepository         = mock[ProjectRepository]
+      val projectReadSideRepository = mock[ProjectReadSideRepository]
+      val service                   = new ProjectServiceLive(projectRepository, projectReadSideRepository, tnx)
+
+      (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[ConnectionIO])
+
+      val result = service.delete(projectId, ownerId).value.unsafeRunSync()
+
+      result should be(EntityNotFound("project with given projectId does not exists").asLeft[Unit])
+    }
+    it("return error when not owner of the project wants to delete it") {
+      val projectRepository         = mock[ProjectRepository]
+      val projectReadSideRepository = mock[ProjectReadSideRepository]
+      val service                   = new ProjectServiceLive(projectRepository, projectReadSideRepository, tnx)
+
+      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[ConnectionIO])
+
+      val notOwnerId = UUID.randomUUID()
+      val result     = service.delete(projectId, notOwnerId).value.unsafeRunSync()
+
+      result should be(NotOwner("only owner can delete project").asLeft[Unit])
+    }
+    // TODO: "delete all tasks of project on read and write side"
+    // TODO: "update statistics"
   }
 
   private val now                  = LocalDateTime.now()
@@ -73,7 +113,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
       tasks = List()
     )
 
-  private val entity         =
+  private val project          =
     ProjectEntity(
       dbId = 1,
       projectId = projectId.value,
@@ -82,7 +122,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
       deletedAt = None,
       owner = ownerId
     )
-  private val readSideEntity = ProjectReadSideEntity(
+  private val projectReadModel = ProjectReadSideEntity(
     dbId = 1,
     projectId = projectId.value,
     createdAt = now,

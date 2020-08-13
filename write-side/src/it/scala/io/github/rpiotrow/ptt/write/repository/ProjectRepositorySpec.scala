@@ -5,7 +5,7 @@ import java.util.UUID
 
 import cats.effect.IO
 import cats.implicits._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffMatcher.{matchTo, _}
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
@@ -58,6 +58,22 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val entity    = projectRepo.get(projectId).transact(tnx).unsafeRunSync()
 
         entity should be(None)
+      }
+    }
+    describe("delete should") {
+      it("soft delete existing project") {
+        val projectId = "projectD1"
+        val entity    = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
+
+        projectRepo.delete(entity).transact(tnx).unsafeRunSync()
+        readProjectByDbId(entity.dbId) should matchTo(entity.copy(deletedAt = now.some).some)
+      }
+      it("return soft deleted entity") {
+        val projectId = "projectD2"
+        val entity    = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
+
+        val deleted = projectRepo.delete(entity).transact(tnx).unsafeRunSync()
+        deleted should matchTo(entity.copy(deletedAt = now.some))
       }
     }
   }

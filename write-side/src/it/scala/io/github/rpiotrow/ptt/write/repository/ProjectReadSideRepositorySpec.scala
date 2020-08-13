@@ -66,6 +66,26 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         readProjectByProjectId(projectId) should matchTo(expected(projectId).some)
       }
     }
+    describe("deletedProject should") {
+      it("soft delete project from read model") {
+        val now            = LocalDateTime.now()
+        val projectId      = "projectD1"
+        val project        = entity(12, projectId).copy(deletedAt = now.some)
+        val readSideEntity = projectReadSideRepo.newProject(project).transact(tnx).unsafeRunSync()
+
+        projectReadSideRepo.deletedProject(project).transact(tnx).unsafeRunSync()
+        readProjectByDbId(readSideEntity.dbId) should matchTo(readSideEntity.copy(deletedAt = now.some).some)
+      }
+      it("return soft deleted read model") {
+        val now            = LocalDateTime.now()
+        val projectId      = "projectD2"
+        val project        = entity(12, projectId).copy(deletedAt = now.some)
+        val readSideEntity = projectReadSideRepo.newProject(project).transact(tnx).unsafeRunSync()
+
+        val result = projectReadSideRepo.deletedProject(project).transact(tnx).unsafeRunSync()
+        result should matchTo(readSideEntity.copy(deletedAt = now.some))
+      }
+    }
   }
 
   private val projects = liveContext.quote { liveContext.querySchema[ProjectReadSideEntity]("ptt_read_model.projects") }

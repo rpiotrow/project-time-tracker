@@ -3,13 +3,14 @@ package io.github.rpiotrow.ptt.write.repository
 import java.time.{Clock, LocalDateTime}
 import java.util.UUID
 
-import doobie.ConnectionIO
+import cats.implicits._
 import io.getquill.{idiom => _}
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
 
 trait ProjectRepository {
-  def create(projectId: String, owner: UUID): ConnectionIO[ProjectEntity]
-  def get(projectId: String): ConnectionIO[Option[ProjectEntity]]
+  def create(projectId: String, owner: UUID): DBResult[ProjectEntity]
+  def get(projectId: String): DBResult[Option[ProjectEntity]]
+  def delete(projectEntity: ProjectEntity): DBResult[ProjectEntity]
 }
 
 object ProjectRepository {
@@ -25,15 +26,25 @@ private[repository] class ProjectRepositoryLive(
 
   private val projects = quote { querySchema[ProjectEntity]("ptt.projects") }
 
-  override def create(projectId: String, owner: UUID): ConnectionIO[ProjectEntity] = {
+  override def create(projectId: String, owner: UUID): DBResult[ProjectEntity] = {
     val now    = LocalDateTime.now(clock)
     val entity = ProjectEntity(projectId = projectId, createdAt = now, updatedAt = now, deletedAt = None, owner = owner)
     run(quote { projects.insert(lift(entity)).returningGenerated(_.dbId) })
       .map(dbId => entity.copy(dbId = dbId))
   }
 
-  override def get(projectId: String): ConnectionIO[Option[ProjectEntity]] = {
+  override def get(projectId: String): DBResult[Option[ProjectEntity]] = {
     run(quote { projects.filter(_.projectId == lift(projectId)) }).map(_.headOption)
+  }
+
+  override def delete(project: ProjectEntity): DBResult[ProjectEntity] = {
+    val now = LocalDateTime.now(clock)
+    run(quote {
+      projects
+        .filter(e => e.projectId == lift(project.projectId) && e.deletedAt.isEmpty)
+        .update(_.deletedAt -> lift(now.some), _.updatedAt -> lift(now))
+    }).map(_ => project.copy(deletedAt = now.some, updatedAt = now))
+
   }
 
 }

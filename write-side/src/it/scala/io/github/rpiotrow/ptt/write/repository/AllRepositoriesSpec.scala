@@ -4,7 +4,7 @@ import java.time.{Clock, LocalDateTime, ZoneOffset}
 import java.util.UUID
 
 import cats.effect._
-import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
+import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import doobie.Transactor
 import doobie.implicits._
@@ -13,6 +13,7 @@ import doobie.util.update.Update0
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers._
 
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.io.Source
 
 class AllRepositoriesSpec
@@ -24,7 +25,9 @@ class AllRepositoriesSpec
 
   implicit val contextShift: ContextShift[IO] = IO.contextShift(scala.concurrent.ExecutionContext.global)
 
-  override val container = PostgreSQLContainer()
+  override val container = new PostgreSQLContainer(
+    commonJdbcParams = JdbcDatabaseContainer.CommonParams(startupTimeout = 240.seconds, connectTimeout = 240.seconds)
+  )
 
   override val owner1Id = UUID.fromString("41a854e4-4262-4672-a7df-c781f535d6ee")
 

@@ -1,6 +1,7 @@
 package io.github.rpiotrow.ptt.write.web
 
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.implicits._
+import cats.effect.{ContextShift, IO}
 import io.github.rpiotrow.ptt.api._
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.input._
@@ -39,9 +40,14 @@ private class RoutesLive(private val gatewayAddress: String, private val project
     Http4sServerOptions.default[IO].copy(decodeFailureHandler = DecodeFailure.decodeFailureHandler)
 
   override def writeSideRoutes(): HttpRoutes[IO] = {
-    projectCreateEndpoint
+    val projectCreateRoute = projectCreateEndpoint
       .in(header[UserId]("X-Authorization"))
       .toRoutes { case (params, userId) => projectCreate(params, userId) }
+    val projectDeleteRoute = projectDeleteEndpoint
+      .in(header[UserId]("X-Authorization"))
+      .toRoutes { case (projectId, userId) => projectDelete(projectId, userId) }
+
+    projectCreateRoute <+> projectDeleteRoute
   }
 
   private def projectCreate(input: ProjectInput, userId: UserId): IO[Either[ApiError, LocationHeader]] = {
@@ -53,6 +59,17 @@ private class RoutesLive(private val gatewayAddress: String, private val project
         },
         p => new LocationHeader(s"$gatewayAddress/projects/${p.projectId}")
       )
+      .value
+  }
+
+  private def projectDelete(projectId: ProjectId, userId: UserId): IO[Either[ApiError, Unit]] = {
+    projectService
+      .delete(projectId, userId)
+      .leftMap({
+        case NotUnique(m)      => InputNotValid(m)
+        case NotOwner(m)       => Forbidden(m)
+        case EntityNotFound(_) => NotFound
+      })
       .value
   }
 
