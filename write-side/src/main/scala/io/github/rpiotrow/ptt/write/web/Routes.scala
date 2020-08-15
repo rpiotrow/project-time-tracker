@@ -55,7 +55,9 @@ private class RoutesLive(private val gatewayAddress: String, private val project
       .create(input, userId)
       .bimap(
         {
-          case NotUnique(m) => InputNotValid(m)
+          case NotUnique(m)      => InputNotValid(m)
+          case NotOwner(m)       => Forbidden(m)
+          case EntityNotFound(_) => NotFound
         },
         p => new LocationHeader(s"$gatewayAddress/projects/${p.projectId}")
       )

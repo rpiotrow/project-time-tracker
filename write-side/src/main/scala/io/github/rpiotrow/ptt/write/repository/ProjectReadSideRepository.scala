@@ -5,7 +5,7 @@ import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity
 
 trait ProjectReadSideRepository {
   def newProject(project: ProjectEntity): DBResult[ProjectReadSideEntity]
-  def deletedProject(project: ProjectEntity): DBResult[ProjectReadSideEntity]
+  def deleteProject(project: ProjectEntity): DBResult[ProjectReadSideEntity]
 }
 
 object ProjectReadSideRepository {
@@ -24,7 +24,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
       .map(dbId => entity.copy(dbId = dbId))
   }
 
-  override def deletedProject(project: ProjectEntity): DBResult[ProjectReadSideEntity] = {
+  override def deleteProject(project: ProjectEntity): DBResult[ProjectReadSideEntity] = {
     val entity = ProjectReadSideEntity(project)
     run(quote {
       projectsReadSide

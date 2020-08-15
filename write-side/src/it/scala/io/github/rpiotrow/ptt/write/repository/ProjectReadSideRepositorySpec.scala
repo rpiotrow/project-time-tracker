@@ -73,7 +73,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val project        = entity(12, projectId).copy(deletedAt = now.some)
         val readSideEntity = projectReadSideRepo.newProject(project).transact(tnx).unsafeRunSync()
 
-        projectReadSideRepo.deletedProject(project).transact(tnx).unsafeRunSync()
+        projectReadSideRepo.deleteProject(project).transact(tnx).unsafeRunSync()
         readProjectByDbId(readSideEntity.dbId) should matchTo(readSideEntity.copy(deletedAt = now.some).some)
       }
       it("return soft deleted read model") {
@@ -82,7 +82,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val project        = entity(12, projectId).copy(deletedAt = now.some)
         val readSideEntity = projectReadSideRepo.newProject(project).transact(tnx).unsafeRunSync()
 
-        val result = projectReadSideRepo.deletedProject(project).transact(tnx).unsafeRunSync()
+        val result = projectReadSideRepo.deleteProject(project).transact(tnx).unsafeRunSync()
         result should matchTo(readSideEntity.copy(deletedAt = now.some))
       }
     }

@@ -15,14 +15,14 @@ import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity
 import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectReadSideRepository, ProjectRepository}
 
 trait ProjectService {
-  def create(input: ProjectInput, owner: UserId): EitherT[IO, NotUnique, ProjectOutput]
+  def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput]
   def delete(projectId: ProjectId, user: UserId): EitherT[IO, AppFailure, Unit]
 }
 
 object ProjectService {
   def live(implicit contextShift: ContextShift[IO]): IO[ProjectService] = {
     createTransactor(AppConfiguration.live.databaseConfiguration)
-      .use(tnx => IO(new ProjectServiceLive(ProjectRepository.live, ProjectReadSideRepository.live, tnx)))
+      .use(tnx => IO(new ProjectServiceLive(ProjectRepository.live, ReadSideService.live, tnx)))
   }
 
   private def createTransactor(
@@ -46,18 +46,18 @@ object ProjectService {
 
 private[service] class ProjectServiceLive(
   private val projectRepository: ProjectRepository,
-  private val projectReadSideRepository: ProjectReadSideRepository,
+  private val readSideService: ReadSideService,
   private val tnx: Transactor[IO]
 ) extends ProjectService {
 
-  override def create(input: ProjectInput, owner: UserId): EitherT[IO, NotUnique, ProjectOutput] = {
+  override def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput] = {
     val projectId = input.projectId.value
     (for {
-      existingOption <- EitherT.right[NotUnique](projectRepository.get(projectId))
-      _              <- checkUniqueness(existingOption)
-      entity         <- EitherT.right[NotUnique](projectRepository.create(projectId, owner))
-      readSideEntity <- EitherT.right[NotUnique](projectReadSideRepository.newProject(entity))
-    } yield toOutput(readSideEntity)).transact(tnx)
+      existingOption    <- EitherT.right[AppFailure](projectRepository.get(projectId))
+      _                 <- checkUniqueness(existingOption)
+      project           <- EitherT.right[AppFailure](projectRepository.create(projectId, owner))
+      projectSideEntity <- readSideService.projectCreated(project)
+    } yield toOutput(projectSideEntity)).transact(tnx)
   }
 
   override def delete(projectId: ProjectId, user: UserId): EitherT[IO, AppFailure, Unit] = {
@@ -65,10 +65,9 @@ private[service] class ProjectServiceLive(
       existingOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project        <- checkExists(existingOption)
       _              <- checkOwner(project, user)
-      entity         <- EitherT.right[AppFailure](projectRepository.delete(project))
-      _              <- EitherT.right[AppFailure](projectReadSideRepository.deletedProject(entity))
-      // TODO: delete all tasks related to project on write and read side
-      // TODO: update statistics
+      deleted        <- EitherT.right[AppFailure](projectRepository.delete(project))
+      _              <- readSideService.projectDeleted(deleted)
+      // TODO: delete all tasks related to project on the write side
     } yield ()).transact(tnx)
   }
 
@@ -93,12 +92,12 @@ private[service] class ProjectServiceLive(
     EitherT.cond[DBResult](project.owner == user, (), NotOwner("only owner can delete project"))
   }
 
-  private def toOutput(readSideEntity: ProjectReadSideEntity) =
+  private def toOutput(project: ProjectReadSideEntity) =
     ProjectOutput(
-      projectId = readSideEntity.projectId,
-      createdAt = readSideEntity.createdAt,
-      owner = readSideEntity.owner,
-      durationSum = readSideEntity.durationSum,
+      projectId = project.projectId,
+      createdAt = project.createdAt,
+      owner = project.owner,
+      durationSum = project.durationSum,
       tasks = List()
     )
 }
