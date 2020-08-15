@@ -1,10 +1,9 @@
 package io.github.rpiotrow.ptt.write.web
 
 import java.time.{Duration, LocalDateTime}
-import java.util.UUID
 
 import cats.data.EitherT
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
 import eu.timepit.refined.auto._
 import fs2.Stream
 import io.circe.Encoder._
@@ -14,7 +13,6 @@ import io.circe.syntax._
 import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.service.{NotUnique, ProjectService}
-import io.github.rpiotrow.ptt.write.service.ProjectService
 import org.http4s._
 import org.http4s.headers.Location
 import org.http4s.util.CaseInsensitiveString
@@ -23,9 +21,7 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 import sttp.model.HeaderNames
 
-class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Matchers {
-
-  implicit val contextShift: ContextShift[IO] = IO.contextShift(scala.concurrent.ExecutionContext.global)
+class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
 
   describe("POST /projects") {
     it("successful") {
@@ -52,7 +48,6 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
     }
   }
 
-  private val ownerId: UUID = UUID.randomUUID()
   private val projectInput  = ProjectInput(projectId = "project1")
   private val projectOutput = ProjectOutput(
     projectId = "project1",
@@ -73,18 +68,6 @@ class ProjectCreateRouteSpec extends AnyFunSpec with MockFactory with should.Mat
       .expects(projectInput, ownerId)
       .returning(EitherT.left(IO(NotUnique("project id is not unique"))))
     projectService
-  }
-
-  private def makeRequest(request: Request[IO], projectService: ProjectService = mock[ProjectService]): Response[IO] = {
-    val requestWithAuth = request.withHeaders(Header.Raw(CaseInsensitiveString("X-Authorization"), ownerId.toString))
-    val routes          = Routes.test("http://gateway.live", projectService)
-
-    routes
-      .writeSideRoutes()
-      .run(requestWithAuth)
-      .value
-      .map(_.getOrElse(Response.notFound))
-      .unsafeRunSync()
   }
 
 }

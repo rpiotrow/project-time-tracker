@@ -32,6 +32,7 @@ package object api {
         statusMapping(StatusCode.NotFound, emptyOutput.map(_ => NotFound)(_ => ())),
         statusMapping(StatusCode.Unauthorized, emptyOutput.map(_ => Unauthorized)(_ => ())),
         statusMapping(StatusCode.BadRequest, jsonBody[InputNotValid]),
+        statusMapping(StatusCode.Forbidden, jsonBody[Forbidden]),
         statusMapping(StatusCode.InternalServerError, jsonBody[ServerError].description("server error"))
       )
     )
