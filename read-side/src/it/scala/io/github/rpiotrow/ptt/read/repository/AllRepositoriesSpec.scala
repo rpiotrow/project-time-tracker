@@ -32,6 +32,7 @@ class AllRepositoriesSpec
   override val owner1Id = UUID.fromString("41a854e4-4262-4672-a7df-c781f535d6ee")
   override val owner2Id = UUID.fromString("66ffc00e-083b-48aa-abb5-8ef46ac0e06e")
 
+  // use HikariConfig and HikariDataSource since it is not possible to set schema in Transactor
   private lazy val hikariConfig = {
     val hc = new HikariConfig()
     hc.setDriverClassName("org.postgresql.Driver")

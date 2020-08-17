@@ -1,11 +1,13 @@
 package io.github.rpiotrow.ptt.write.repository
 
 import io.getquill.{idiom => _}
-import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
+import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity}
 
 trait ProjectReadSideRepository {
   def newProject(project: ProjectEntity): DBResult[ProjectReadSideEntity]
-  def deleteProject(project: ProjectEntity): DBResult[ProjectReadSideEntity]
+  def deleteProject(project: ProjectEntity): DBResult[Unit]
+
+  def addToProjectDuration(taskReadModel: TaskEntity): DBResult[Unit]
 }
 
 object ProjectReadSideRepository {
@@ -24,13 +26,20 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
       .map(dbId => entity.copy(dbId = dbId))
   }
 
-  override def deleteProject(project: ProjectEntity): DBResult[ProjectReadSideEntity] = {
-    val entity = ProjectReadSideEntity(project)
+  override def deleteProject(project: ProjectEntity): DBResult[Unit] = {
     run(quote {
       projectsReadSide
-        .filter(e => e.projectId == lift(project.projectId) && e.deletedAt.isEmpty)
-        .update(_.deletedAt -> lift(entity.deletedAt), _.updatedAt -> lift(entity.updatedAt))
-    }).map(_ => entity)
+        .filter(_.projectId == lift(project.projectId))
+        .update(_.deletedAt -> lift(project.deletedAt), _.updatedAt -> lift(project.updatedAt))
+    }).map(_ => ())
+  }
+
+  override def addToProjectDuration(taskReadModel: TaskEntity): DBResult[Unit] = {
+    run(quote {
+      projectsReadSide
+        .filter(_.dbId == lift(taskReadModel.projectDbId))
+        .update(e => e.durationSum -> (e.durationSum + lift(taskReadModel.duration)))
+    }).map(_ => ())
   }
 
 }

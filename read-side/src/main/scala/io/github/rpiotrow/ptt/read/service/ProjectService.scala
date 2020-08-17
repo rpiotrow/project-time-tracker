@@ -38,13 +38,14 @@ private class ProjectServiceLive(
       projects <- projectRepository.list(params)
       ids = projects.map(_.dbId)
       tasks <- taskRepository.read(ids)
-      grouped = tasks.groupBy(_.projectId)
+      grouped = tasks.groupBy(_.projectDbId)
       outputs = projects.map(project => toOutput(project, grouped.get(project.dbId).toList.flatten))
     } yield outputs
   }
 
   private def toOutput(task: TaskEntity): TaskOutput =
     TaskOutput(
+      taskId = task.taskId,
       owner = task.owner,
       startedAt = task.startedAt,
       duration = task.duration,

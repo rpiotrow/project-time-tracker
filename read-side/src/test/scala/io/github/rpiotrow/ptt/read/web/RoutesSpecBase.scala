@@ -30,6 +30,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
     durationSum = Duration.ofHours(3),
     tasks = List(
       TaskOutput(
+        taskId = UUID.randomUUID(),
         owner = owner1Id,
         startedAt = LocalDateTime.now(),
         duration = Duration.ofHours(2),
@@ -37,6 +38,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
         comment = Some("first task")
       ),
       TaskOutput(
+        taskId = UUID.randomUUID(),
         owner = owner1Id,
         startedAt = LocalDateTime.now(),
         duration = Duration.ofHours(1),

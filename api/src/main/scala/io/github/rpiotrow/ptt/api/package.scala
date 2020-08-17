@@ -4,6 +4,7 @@ import java.time.format.DateTimeParseException
 import java.time.{LocalDateTime, YearMonth}
 import java.net.URL
 
+import io.circe.syntax._
 import io.circe.generic.auto._
 import io.circe.refined._
 import io.github.rpiotrow.ptt.api.error._
@@ -29,9 +30,10 @@ package object api {
   private val baseEndpoint     = endpoint
     .errorOut(
       oneOf[ApiError](
-        statusMapping(StatusCode.NotFound, emptyOutput.map(_ => NotFound)(_ => ())),
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound]),
         statusMapping(StatusCode.Unauthorized, emptyOutput.map(_ => Unauthorized)(_ => ())),
-        statusMapping(StatusCode.BadRequest, jsonBody[InputNotValid]),
+        statusMapping(StatusCode.BadRequest, jsonBody[InvalidInput]),
+        statusMapping(StatusCode.Conflict, jsonBody[Conflict]),
         statusMapping(StatusCode.Forbidden, jsonBody[Forbidden]),
         statusMapping(StatusCode.InternalServerError, jsonBody[ServerError].description("server error"))
       )

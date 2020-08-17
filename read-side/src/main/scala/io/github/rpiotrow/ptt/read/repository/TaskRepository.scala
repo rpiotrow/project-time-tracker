@@ -21,7 +21,7 @@ object TaskRepository {
 
       override def read(projectIds: List[Long]) = {
         run(quote {
-          tasks.filter(e => liftQuery(projectIds).contains(e.projectId))
+          tasks.filter(e => liftQuery(projectIds).contains(e.projectDbId))
         })
           .transact(tnx)
           .mapError(RepositoryThrowable)

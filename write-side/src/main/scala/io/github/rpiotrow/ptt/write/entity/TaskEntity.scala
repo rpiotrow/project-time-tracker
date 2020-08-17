@@ -1,10 +1,13 @@
-package io.github.rpiotrow.ptt.read.entity
+package io.github.rpiotrow.ptt.write.entity
 
 import java.time.{Duration, LocalDateTime}
 
 import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 
+import scala.concurrent.duration.FiniteDuration
+
 case class TaskEntity(
+  dbId: Long,
   taskId: TaskId,
   projectDbId: Long,
   deletedAt: Option[LocalDateTime],

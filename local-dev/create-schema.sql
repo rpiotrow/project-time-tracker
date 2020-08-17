@@ -18,8 +18,9 @@ CREATE TABLE IF NOT EXISTS ptt_read_model.projects(
 
 CREATE TABLE IF NOT EXISTS ptt_read_model.tasks(
   db_id SERIAL PRIMARY KEY,
+  task_id UUID NOT NULL UNIQUE,
   deleted_at TIMESTAMP,
-  project_id BIGINT NOT NULL REFERENCES ptt_read_model.projects(db_id),
+  project_db_id BIGINT NOT NULL REFERENCES ptt_read_model.projects(db_id),
   owner UUID NOT NULL,
   started_at TIMESTAMP NOT NULL,
   duration BIGINT NOT NULL CONSTRAINT duration_positive CHECK (duration >= 0),
@@ -54,7 +55,17 @@ CREATE TABLE IF NOT EXISTS ptt.projects(
   owner UUID NOT NULL
 );
 
--- TBD
+CREATE TABLE IF NOT EXISTS ptt.tasks(
+  db_id SERIAL PRIMARY KEY,
+  task_id UUID NOT NULL UNIQUE,
+  deleted_at TIMESTAMP,
+  project_db_id BIGINT NOT NULL REFERENCES ptt.projects(db_id),
+  owner UUID NOT NULL,
+  started_at TIMESTAMP NOT NULL,
+  duration BIGINT NOT NULL CONSTRAINT duration_positive CHECK (duration >= 0),
+  volume INT CONSTRAINT volume_positive CHECK (volume >= 0),
+  comment TEXT
+);
 
 -- create users
 

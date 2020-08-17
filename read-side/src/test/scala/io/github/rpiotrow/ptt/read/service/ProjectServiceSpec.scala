@@ -39,7 +39,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     durationSum = Duration.ofHours(4)
   )
   val t1 = TaskEntity(
-    projectId = p1.dbId,
+    taskId = UUID.randomUUID(),
+    projectDbId = p1.dbId,
     deletedAt = None,
     owner = owner1Id,
     startedAt = LocalDateTime.of(2020, 7, 29, 17, 0),
@@ -48,7 +49,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     comment = Some("first task")
   )
   val t2 = TaskEntity(
-    projectId = p1.dbId,
+    taskId = UUID.randomUUID(),
+    projectDbId = p1.dbId,
     deletedAt = None,
     owner = owner1Id,
     startedAt = LocalDateTime.of(2020, 7, 29, 18, 0),
@@ -57,7 +59,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     comment = Some("second task")
   )
   val t3 = TaskEntity(
-    projectId = p2.dbId,
+    taskId = UUID.randomUUID(),
+    projectDbId = p2.dbId,
     deletedAt = None,
     owner = owner2Id,
     startedAt = LocalDateTime.of(2020, 7, 30, 18, 0),
@@ -79,6 +82,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           durationSum = Duration.ofHours(3),
           tasks = List(
             TaskOutput(
+              taskId = t1.taskId,
               owner = owner1Id,
               startedAt = LocalDateTime.of(2020, 7, 29, 17, 0),
               duration = Duration.ofHours(2),
@@ -86,6 +90,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
               comment = Some("first task")
             ),
             TaskOutput(
+              taskId = t2.taskId,
               owner = owner1Id,
               startedAt = LocalDateTime.of(2020, 7, 29, 18, 0),
               duration = Duration.ofHours(1),
@@ -161,6 +166,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           durationSum = Duration.ofHours(3),
           tasks = List(
             TaskOutput(
+              taskId = t1.taskId,
               owner = owner1Id,
               startedAt = LocalDateTime.of(2020, 7, 29, 17, 0),
               duration = Duration.ofHours(2),
@@ -168,6 +174,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
               comment = Some("first task")
             ),
             TaskOutput(
+              taskId = t2.taskId,
               owner = owner1Id,
               startedAt = LocalDateTime.of(2020, 7, 29, 18, 0),
               duration = Duration.ofHours(1),
@@ -183,6 +190,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           durationSum = Duration.ofHours(4),
           tasks = List(
             TaskOutput(
+              taskId = t3.taskId,
               owner = owner2Id,
               startedAt = LocalDateTime.of(2020, 7, 30, 18, 0),
               duration = Duration.ofHours(4),
@@ -218,6 +226,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           durationSum = Duration.ofHours(4),
           tasks = List(
             TaskOutput(
+              taskId = t3.taskId,
               owner = owner2Id,
               startedAt = LocalDateTime.of(2020, 7, 30, 18, 0),
               duration = Duration.ofHours(4),

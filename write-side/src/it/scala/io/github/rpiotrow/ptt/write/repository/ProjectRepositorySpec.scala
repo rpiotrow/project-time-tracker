@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Clock, LocalDateTime}
+import java.time.{Clock, LocalDateTime, ZoneOffset}
 import java.util.UUID
 
 import cats.effect.IO
@@ -15,13 +15,9 @@ import org.scalatest.matchers.should
 
 trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
-  def tnx: Transactor[IO]
-  def clock: Clock
-
-  def now: LocalDateTime
-  def owner1Id: UUID
-
-  def projectRepo: ProjectRepository
+  protected def tnx: Transactor[IO]
+  protected def clockNow: LocalDateTime
+  protected def projectRepo: ProjectRepository
 
   describe("ProjectRepository") {
     describe("create should") {
@@ -66,17 +62,19 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val entity    = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
 
         projectRepo.delete(entity).transact(tnx).unsafeRunSync()
-        readProjectByDbId(entity.dbId) should matchTo(entity.copy(deletedAt = now.some).some)
+        readProjectByDbId(entity.dbId) should matchTo(entity.copy(deletedAt = clockNow.some).some)
       }
       it("return soft deleted entity") {
         val projectId = "projectD2"
         val entity    = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
 
         val deleted = projectRepo.delete(entity).transact(tnx).unsafeRunSync()
-        deleted should matchTo(entity.copy(deletedAt = now.some))
+        deleted should matchTo(entity.copy(deletedAt = clockNow.some))
       }
     }
   }
+
+  private val owner1Id = UUID.randomUUID()
 
   private val projects = liveContext.quote { liveContext.querySchema[ProjectEntity]("ptt.projects") }
 
@@ -101,6 +99,6 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   implicit private val ignoreDbId: Diff[ProjectEntity]   =
     Derived[Diff[ProjectEntity]].ignore[ProjectEntity, Long](_.dbId)
   private def expected(projectId: String): ProjectEntity =
-    ProjectEntity(projectId = projectId, createdAt = now, updatedAt = now, deletedAt = None, owner = owner1Id)
+    ProjectEntity(projectId = projectId, createdAt = clockNow, updatedAt = clockNow, deletedAt = None, owner = owner1Id)
 
 }

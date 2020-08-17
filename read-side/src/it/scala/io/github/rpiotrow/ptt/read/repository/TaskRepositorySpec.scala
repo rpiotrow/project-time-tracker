@@ -14,14 +14,18 @@ trait TaskRepositorySpec {
 
   def owner1Id: UUID
 
+  private val t1Id = UUID.fromString("aa37e5a5-2f5b-46d9-896a-28422df74ff1")
+  private val t2Id = UUID.fromString("f445a2cd-6c21-4d10-ae96-2e1b1199c09d")
+  private val t3Id = UUID.fromString("5c4c4b21-7ba2-47e7-a0e4-e477231648ee")
+
   def taskRepo: TaskRepository.Service
 
   val insertTasks =
     sql"""
-         |INSERT INTO ptt_read_model.tasks(project_id, deleted_at, owner, started_at, duration, volume, comment)
-         |  VALUES (1, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', 120, NULL, 'first task'),
-         |    (1, '2020-07-22 17:10:00', '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', 120, NULL, 'deleted task'),
-         |    (2, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-23 17:00:00', 120, 8, 'high volume different project')
+         |INSERT INTO ptt_read_model.tasks(task_id, project_db_id, deleted_at, owner, started_at, duration, volume, comment)
+         |  VALUES ('aa37e5a5-2f5b-46d9-896a-28422df74ff1', 1, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', 120, NULL, 'first task'),
+         |    ('f445a2cd-6c21-4d10-ae96-2e1b1199c09d', 1, '2020-07-22 17:10:00', '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', 120, NULL, 'deleted task'),
+         |    ('5c4c4b21-7ba2-47e7-a0e4-e477231648ee', 2, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-23 17:00:00', 120, 8, 'high volume different project')
          |;
          |""".stripMargin
 
@@ -29,7 +33,8 @@ trait TaskRepositorySpec {
   val project2Id = 2
 
   lazy val t1 = TaskEntity(
-    projectId = project1Id,
+    taskId = t1Id,
+    projectDbId = project1Id,
     deletedAt = None,
     owner = owner1Id,
     startedAt = LocalDateTime.of(2020, 7, 22, 17, 0),
@@ -38,7 +43,8 @@ trait TaskRepositorySpec {
     comment = Some("first task")
   )
   lazy val t2 = TaskEntity(
-    projectId = project1Id,
+    taskId = t2Id,
+    projectDbId = project1Id,
     deletedAt = Some(LocalDateTime.of(2020, 7, 22, 17, 10)),
     owner = owner1Id,
     startedAt = LocalDateTime.of(2020, 7, 22, 17, 0),
@@ -47,7 +53,8 @@ trait TaskRepositorySpec {
     comment = Some("deleted task")
   )
   lazy val t3 = TaskEntity(
-    projectId = project2Id,
+    taskId = t3Id,
+    projectDbId = project2Id,
     deletedAt = None,
     owner = owner1Id,
     startedAt = LocalDateTime.of(2020, 7, 23, 17, 0),

@@ -44,7 +44,6 @@ private[repository] class ProjectRepositoryLive(
         .filter(e => e.projectId == lift(project.projectId) && e.deletedAt.isEmpty)
         .update(_.deletedAt -> lift(now.some), _.updatedAt -> lift(now))
     }).map(_ => project.copy(deletedAt = now.some, updatedAt = now))
-
   }
 
 }

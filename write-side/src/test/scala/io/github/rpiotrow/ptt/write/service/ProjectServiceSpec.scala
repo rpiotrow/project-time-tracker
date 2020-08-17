@@ -5,10 +5,9 @@ import java.util.UUID
 import cats.data.EitherT
 import cats.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
-import doobie.ConnectionIO
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
-import io.github.rpiotrow.ptt.write.repository.ProjectRepository
+import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -21,11 +20,11 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       val readSideService   = mock[ReadSideService]
       val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
 
-      (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[ConnectionIO])
-      (projectRepository.create _).expects(projectId.value, ownerId).returning(project.pure[ConnectionIO])
+      (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
+      (projectRepository.create _).expects(projectId.value, ownerId).returning(project.pure[DBResult])
       (readSideService.projectCreated _)
         .expects(project)
-        .returning(EitherT.right[AppFailure](projectReadModel.pure[ConnectionIO]))
+        .returning(EitherT.right[AppFailure](projectReadModel.pure[DBResult]))
 
       val result = service.create(projectInput, ownerId).value.unsafeRunSync()
 
@@ -36,7 +35,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       val readSideService   = mock[ReadSideService]
       val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
 
-      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[ConnectionIO])
+      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
 
       val result = service.create(projectInput, ownerId).value.unsafeRunSync()
 
@@ -49,12 +48,12 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       val readSideService   = mock[ReadSideService]
       val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
 
-      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[ConnectionIO])
-      (projectRepository.delete _).expects(project).returning(project.pure[ConnectionIO])
+      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
+      (projectRepository.delete _).expects(project).returning(project.pure[DBResult])
       // TODO: "delete all tasks of project on the write side"
       (readSideService.projectDeleted _)
         .expects(project)
-        .returning(EitherT.right[AppFailure](projectReadModel.pure[ConnectionIO]))
+        .returning(EitherT.right[AppFailure](().pure[DBResult]))
 
       val result = service.delete(projectId, ownerId).value.unsafeRunSync()
 
@@ -65,7 +64,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       val readSideService   = mock[ReadSideService]
       val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
 
-      (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[ConnectionIO])
+      (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
 
       val result = service.delete(projectId, ownerId).value.unsafeRunSync()
 
@@ -76,7 +75,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       val readSideService   = mock[ReadSideService]
       val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
 
-      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[ConnectionIO])
+      (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
 
       val notOwnerId = UUID.randomUUID()
       val result     = service.delete(projectId, notOwnerId).value.unsafeRunSync()

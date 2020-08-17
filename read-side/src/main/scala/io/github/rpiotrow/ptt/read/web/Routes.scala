@@ -68,14 +68,14 @@ private class RoutesLive(
   private def decodeProjectId(projectId: ProjectId) = {
     ZIO
       .fromEither(refineV[NonEmpty](URLDecoder.decode(projectId.value, "UTF-8")))
-      .orElseFail(InputNotValid("empty project id"))
+      .orElseFail(InvalidInput("empty project id"))
   }
 
   private def projectDetailDecoded(decodedInput: ProjectId): IO[ApiError, ProjectOutput] = {
     projectService
       .one(decodedInput)
       .catchAll {
-        case EntityNotFound         => ZIO.fail(NotFound)
+        case EntityNotFound         => ZIO.fail(NotFound("project with given identifier not found"))
         case RepositoryThrowable(_) => ZIO.fail(ServerError("server.error"))
       }
   }

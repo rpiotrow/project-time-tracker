@@ -4,16 +4,17 @@ import java.sql.Connection
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
+import cats.implicits._
 import cats.effect.{Blocker, ContextShift, IO, Resource}
 import doobie.Transactor
 import doobie.free.KleisliInterpreter
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Strategy
 import eu.timepit.refined.auto._
-import io.github.rpiotrow.ptt.api.input.ProjectInput
-import io.github.rpiotrow.ptt.api.model.ProjectId
-import io.github.rpiotrow.ptt.api.output.ProjectOutput
-import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
+import io.github.rpiotrow.ptt.api.input.{ProjectInput, TaskInput}
+import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
+import io.github.rpiotrow.ptt.api.output.{ProjectOutput, TaskOutput}
+import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity}
 import org.scalamock.scalatest.MockFactory
 
 trait ServiceSpecBase { this: MockFactory =>
@@ -30,6 +31,7 @@ trait ServiceSpecBase { this: MockFactory =>
 
   protected val now                  = LocalDateTime.now()
   protected val ownerId: UUID        = UUID.randomUUID()
+  protected val userId: UUID         = UUID.randomUUID()
   protected val projectId: ProjectId = "p1"
   protected val projectInput         = ProjectInput(projectId)
   protected val projectOutput        = ProjectOutput(
@@ -57,5 +59,30 @@ trait ServiceSpecBase { this: MockFactory =>
     owner = ownerId,
     durationSum = Duration.ZERO
   )
+
+  protected val taskId: TaskId = UUID.randomUUID()
+  protected val taskInput      =
+    TaskInput(startedAt = now, duration = Duration.ofMinutes(30), volume = 10.some, comment = "text".some)
+  protected val taskOutput     = TaskOutput(
+    taskId = taskId,
+    owner = ownerId,
+    startedAt = now,
+    duration = Duration.ofMinutes(30),
+    volume = 10.some,
+    comment = "text".some
+  )
+
+  protected val task          = TaskEntity(
+    dbId = 11,
+    taskId = taskId,
+    projectDbId = project.dbId,
+    deletedAt = None,
+    owner = ownerId,
+    startedAt = now,
+    duration = Duration.ofMinutes(30),
+    volume = 10.some,
+    comment = "text".some
+  )
+  protected val taskReadModel = task
 
 }

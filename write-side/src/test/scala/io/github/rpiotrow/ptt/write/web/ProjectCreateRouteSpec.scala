@@ -25,10 +25,9 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
 
   describe("POST /projects") {
     it("successful") {
-      val url      = s"/projects"
-      val body     = Stream.evalSeq(IO { projectInput.asJson.toString().getBytes.toSeq })
-      val response =
-        makeRequest(Request(method = Method.POST, uri = Uri.unsafeFromString(url), body = body), project())
+      val projectService = mock[ProjectService]
+      (projectService.create _).expects(projectInput, ownerId).returning(EitherT.right(IO(projectOutput)))
+      val response       = makeAddProjectRequest(projectService)
 
       response.status should be(Status.Created)
       response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
@@ -37,12 +36,13 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     }
     describe("failure") {
       it("when id is not unique") {
-        val url      = s"/projects"
-        val body     = Stream.evalSeq(IO { projectInput.asJson.toString().getBytes.toSeq })
-        val response =
-          makeRequest(Request(method = Method.POST, uri = Uri.unsafeFromString(url), body = body), noProject())
+        val projectService = mock[ProjectService]
+        (projectService.create _)
+          .expects(projectInput, ownerId)
+          .returning(EitherT.left(IO(NotUnique("project id is not unique"))))
+        val response       = makeAddProjectRequest(projectService)
 
-        response.status should be(Status.BadRequest)
+        response.status should be(Status.Conflict)
         response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
       }
     }
@@ -57,17 +57,10 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     tasks = List()
   )
 
-  private def project() = {
-    val projectService = mock[ProjectService]
-    (projectService.create _).expects(projectInput, ownerId).returning(EitherT.right(IO(projectOutput)))
-    projectService
-  }
-  private def noProject() = {
-    val projectService = mock[ProjectService]
-    (projectService.create _)
-      .expects(projectInput, ownerId)
-      .returning(EitherT.left(IO(NotUnique("project id is not unique"))))
-    projectService
+  private def makeAddProjectRequest(projectService: ProjectService) = {
+    val url  = "/projects"
+    val body = Stream.evalSeq(IO { projectInput.asJson.toString().getBytes.toSeq })
+    makeRequest(Request(method = Method.POST, uri = Uri.unsafeFromString(url), body = body), projectService)
   }
 
 }

@@ -1,18 +1,18 @@
 package io.github.rpiotrow.ptt.write.service
 
+import java.time.Duration
+
 import cats.data.EitherT
-import cats.effect.{Blocker, ContextShift, IO, Resource}
+import cats.effect.IO
 import cats.implicits._
-import com.zaxxer.hikari.HikariConfig
-import doobie.hikari.HikariTransactor
+import doobie.Transactor
 import doobie.implicits._
-import doobie.{ExecutionContexts, Transactor}
 import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
-import io.github.rpiotrow.ptt.write.configuration.{AppConfiguration, DatabaseConfiguration}
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
-import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectReadSideRepository, ProjectRepository}
+import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository}
+import io.github.rpiotrow.ptt.write.service.ProjectService.ifExists
 
 trait ProjectService {
   def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput]
@@ -20,26 +20,13 @@ trait ProjectService {
 }
 
 object ProjectService {
-  def live(implicit contextShift: ContextShift[IO]): IO[ProjectService] = {
-    createTransactor(AppConfiguration.live.databaseConfiguration)
-      .use(tnx => IO(new ProjectServiceLive(ProjectRepository.live, ReadSideService.live, tnx)))
-  }
 
-  private def createTransactor(
-    configuration: DatabaseConfiguration
-  )(implicit contextShift: ContextShift[IO]): Resource[IO, HikariTransactor[IO]] = {
-
-    val hikariConfig = new HikariConfig()
-    hikariConfig.setDriverClassName(configuration.jdbcDriver)
-    hikariConfig.setJdbcUrl(configuration.jdbcUrl)
-    hikariConfig.setUsername(configuration.dbUsername)
-    hikariConfig.setPassword(configuration.dbPassword)
-
-    for {
-      ce <- ExecutionContexts.fixedThreadPool[IO](32)
-      b  <- Blocker[IO]
-      t  <- HikariTransactor.fromHikariConfig[IO](hikariConfig, ce, b)
-    } yield t
+  def ifExists(option: Option[ProjectEntity]): EitherT[DBResult, EntityNotFound, ProjectEntity] = {
+    option match {
+      case Some(entity) => EitherT.right[EntityNotFound](entity.pure[DBResult])
+      case None         =>
+        EitherT.left[ProjectEntity](EntityNotFound("project with given projectId does not exists").pure[DBResult])
+    }
   }
 
 }
@@ -62,11 +49,11 @@ private[service] class ProjectServiceLive(
 
   override def delete(projectId: ProjectId, user: UserId): EitherT[IO, AppFailure, Unit] = {
     (for {
-      existingOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project        <- checkExists(existingOption)
-      _              <- checkOwner(project, user)
-      deleted        <- EitherT.right[AppFailure](projectRepository.delete(project))
-      _              <- readSideService.projectDeleted(deleted)
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      project       <- ifExists(projectOption)
+      _             <- checkOwner(project, user)
+      deleted       <- EitherT.right[AppFailure](projectRepository.delete(project))
+      _             <- readSideService.projectDeleted(deleted)
       // TODO: delete all tasks related to project on the write side
     } yield ()).transact(tnx)
   }
@@ -76,15 +63,8 @@ private[service] class ProjectServiceLive(
     existingOption match {
       case Some(_) =>
         EitherT.left[Unit](NotUnique("project with given projectId already exists").pure[DBResult])
-      case None    => EitherT.right[NotUnique](().pure[DBResult])
-    }
-  }
-
-  private def checkExists(existingOption: Option[ProjectEntity]): EitherT[DBResult, EntityNotFound, ProjectEntity] = {
-    existingOption match {
-      case Some(entity) => EitherT.right[EntityNotFound](entity.pure[DBResult])
-      case None         =>
-        EitherT.left[ProjectEntity](EntityNotFound("project with given projectId does not exists").pure[DBResult])
+      case None    =>
+        EitherT.right[NotUnique](().pure[DBResult])
     }
   }
 
