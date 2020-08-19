@@ -21,6 +21,7 @@ class AllRepositoriesSpec
     with should.Matchers
     with ProjectRepositorySpec
     with ProjectReadSideRepositorySpec
+    with StatisticsReadSideRepositorySpec
     with TaskReadSideRepositorySpec
     with TaskRepositorySpec {
 
@@ -41,6 +42,7 @@ class AllRepositoriesSpec
             _ <- projectReadSideRepositoryData.update.run.transact(tnx)
             _ <- taskReadSideRepositoryData.update.run.transact(tnx)
             _ <- taskRepositoryData.update.run.transact(tnx)
+            _ <- statisticsReadSideRepositoryData.update.run.transact(tnx)
           } yield ()
       )
       .unsafeRunSync()
@@ -50,10 +52,11 @@ class AllRepositoriesSpec
   override lazy protected val clockNow = LocalDateTime.of(2015, 2, 13, 14, 23)
   private lazy val clock               = Clock.fixed(clockNow.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
 
-  override lazy protected val projectRepo         = new ProjectRepositoryLive(liveContext, clock)
-  override lazy protected val projectReadSideRepo = new ProjectReadSideRepositoryLive(liveContext)
-  override lazy protected val taskRepo            = new TaskRepositoryLive(liveContext)
-  override lazy protected val taskReadSideRepo    = new TaskReadSideRepositoryLive(liveContext)
+  override lazy protected val projectRepo            = new ProjectRepositoryLive(liveContext, clock)
+  override lazy protected val projectReadSideRepo    = new ProjectReadSideRepositoryLive(liveContext)
+  override lazy protected val taskRepo               = new TaskRepositoryLive(liveContext)
+  override lazy protected val taskReadSideRepo       = new TaskReadSideRepositoryLive(liveContext)
+  override lazy protected val statisticsReadSideRepo = new StatisticsReadSideRepositoryLive(liveContext)
 
   private def makeTransactor(username: String, password: String) =
     Transactor.fromDriverManager[IO](
