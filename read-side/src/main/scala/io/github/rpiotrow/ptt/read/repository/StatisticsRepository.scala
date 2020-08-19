@@ -17,7 +17,7 @@ object StatisticsRepository {
   }
   def live(tnx: Transactor[Task]): Service =
     new Service {
-      private val dc = new DoobieContext.Postgres(SnakeCase)
+      private val dc = new DoobieContext.Postgres(SnakeCase) with DurationDecoder
       import dc._
 
       private val statistics = quote { querySchema[StatisticsEntity]("statistics") }

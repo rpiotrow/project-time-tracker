@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.write.service
 
 import java.sql.Connection
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, LocalDateTime, YearMonth}
 import java.util.UUID
 
 import cats.implicits._
@@ -41,8 +41,7 @@ trait ServiceSpecBase { this: MockFactory =>
     durationSum = Duration.ZERO,
     tasks = List()
   )
-
-  protected val project          = ProjectEntity(
+  protected val project              = ProjectEntity(
     dbId = 1,
     projectId = projectId.value,
     createdAt = now,
@@ -50,7 +49,7 @@ trait ServiceSpecBase { this: MockFactory =>
     deletedAt = None,
     owner = ownerId
   )
-  protected val projectReadModel = ProjectReadSideEntity(
+  protected val projectReadModel     = ProjectReadSideEntity(
     dbId = 1,
     projectId = projectId.value,
     createdAt = now,
@@ -60,29 +59,33 @@ trait ServiceSpecBase { this: MockFactory =>
     durationSum = Duration.ZERO
   )
 
-  protected val taskId: TaskId = UUID.randomUUID()
-  protected val taskInput      =
-    TaskInput(startedAt = now, duration = Duration.ofMinutes(30), volume = 10.some, comment = "text".some)
-  protected val taskOutput     = TaskOutput(
+  protected val taskId: TaskId             = UUID.randomUUID()
+  protected val taskStartedAt              = LocalDateTime.parse("2020-08-18T17:30:00")
+  protected val taskStartedAtYearMonth     = YearMonth.of(2020, 8)
+  protected val taskDuration               = Duration.ofMinutes(30)
+  protected val taskVolume                 = 10
+  protected val taskVolumeWeightedDuration = Duration.ofMinutes(300)
+  protected val taskInput                  =
+    TaskInput(startedAt = taskStartedAt, duration = taskDuration, volume = taskVolume.some, comment = "text".some)
+  protected val taskOutput                 = TaskOutput(
     taskId = taskId,
     owner = ownerId,
-    startedAt = now,
-    duration = Duration.ofMinutes(30),
-    volume = 10.some,
+    startedAt = taskStartedAt,
+    duration = taskDuration,
+    volume = taskVolume.some,
     comment = "text".some
   )
-
-  protected val task          = TaskEntity(
+  protected val task                       = TaskEntity(
     dbId = 11,
     taskId = taskId,
     projectDbId = project.dbId,
     deletedAt = None,
     owner = ownerId,
-    startedAt = now,
-    duration = Duration.ofMinutes(30),
-    volume = 10.some,
+    startedAt = taskStartedAt,
+    duration = taskDuration,
+    volume = taskVolume.some,
     comment = "text".some
   )
-  protected val taskReadModel = task
+  protected val taskReadModel              = task
 
 }

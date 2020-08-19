@@ -4,11 +4,11 @@ import java.time.Duration
 
 case class StatisticsOutput(
   numberOfTasks: Int,
-  averageTaskDuration: Duration,
-  averageTaskVolume: BigDecimal,
-  volumeWeightedAverageTaskDuration: Duration
+  averageTaskDuration: Option[Duration],
+  averageTaskVolume: Option[BigDecimal],
+  volumeWeightedAverageTaskDuration: Option[Duration]
 )
 
 object StatisticsOutput {
-  val ZERO = StatisticsOutput(0, Duration.ZERO, 0, Duration.ZERO)
+  val ZERO = StatisticsOutput(0, None, None, None)
 }

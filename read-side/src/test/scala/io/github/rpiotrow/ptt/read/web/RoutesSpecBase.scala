@@ -3,6 +3,7 @@ package io.github.rpiotrow.ptt.read.web
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
+import cats.implicits._
 import io.github.rpiotrow.ptt.api.error.DecodeFailure
 import io.github.rpiotrow.ptt.api.output.{ProjectOutput, StatisticsOutput, TaskOutput}
 import io.github.rpiotrow.ptt.read.service.{ProjectService, StatisticsService}
@@ -56,9 +57,9 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
   )
   val statisticsOutput: StatisticsOutput = StatisticsOutput(
     numberOfTasks = 5,
-    averageTaskDuration = Duration.ofMinutes(32),
-    averageTaskVolume = BigDecimal(10.5),
-    volumeWeightedAverageTaskDuration = Duration.ofMinutes(44)
+    averageTaskDuration = Duration.ofMinutes(32).some,
+    averageTaskVolume = BigDecimal(10.5).some,
+    volumeWeightedAverageTaskDuration = Duration.ofMinutes(44).some
   )
 
   def makeRequest(

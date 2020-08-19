@@ -1,9 +1,10 @@
-package io.github.rpiotrow.ptt.read.entity
+package io.github.rpiotrow.ptt.write.entity
 
 import java.time.Duration
 import java.util.UUID
 
-case class StatisticsEntity(
+case class StatisticsReadSideEntity(
+  dbId: Long,
   owner: UUID,
   year: Int,
   month: Int,
