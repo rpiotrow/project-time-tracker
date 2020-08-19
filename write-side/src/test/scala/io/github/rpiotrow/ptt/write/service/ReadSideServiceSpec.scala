@@ -70,10 +70,10 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         .returning(Option.empty[StatisticsReadSideEntity].pure[DBResult])
       val stats                                   = createStatistics(
         numberOfTasks = 1,
-        numberOfTasksWithVolume = 1,
+        numberOfTasksWithVolume = 1.some,
         durationSum = taskDuration,
         volumeWeightedTaskDurationSum = taskVolumeWeightedDuration.some,
-        volumeSum = BigDecimal(taskVolume).some
+        volumeSum = taskVolume.longValue.some
       )
       (statisticsReadSideRepository.upsert _).expects(stats).returning(().pure[DBResult])
 
@@ -83,20 +83,20 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
       val (service, statisticsReadSideRepository) = taskAddedPrepare()
       val currentStats                            = createStatistics(
         numberOfTasks = 10,
-        numberOfTasksWithVolume = 5,
+        numberOfTasksWithVolume = 5.some,
         durationSum = Duration.ofMinutes(480),
         volumeWeightedTaskDurationSum = Duration.ofMinutes(885).some,
-        volumeSum = BigDecimal(23).some
+        volumeSum = 23L.some
       )
       (statisticsReadSideRepository.get _)
         .expects(ownerId, taskStartedAtYearMonth)
         .returning(Option(currentStats).pure[DBResult])
       val newStats                                = createStatistics(
         numberOfTasks = 11,
-        numberOfTasksWithVolume = 6,
+        numberOfTasksWithVolume = 6.some,
         durationSum = Duration.ofMinutes(510),
         volumeWeightedTaskDurationSum = Duration.ofMinutes(1185).some,
-        volumeSum = BigDecimal(33).some
+        volumeSum = 33L.some
       )
       val argCaptor                               = CaptureOne[StatisticsReadSideEntity]()
       statisticsReadSideRepository.upsert _ expects capture(argCaptor) returning ().pure[DBResult]
@@ -127,14 +127,14 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         year = 2020,
         month = 8,
         numberOfTasks = 1,
-        numberOfTasksWithVolume = 0,
+        numberOfTasksWithVolume = None,
         durationSum = Duration.ofHours(1)
       )
       val stats9 = createStatistics(
         year = 2020,
         month = 9,
         numberOfTasks = 1,
-        numberOfTasksWithVolume = 0,
+        numberOfTasksWithVolume = None,
         durationSum = Duration.ofHours(1)
       )
       argCaptor.values should matchTo(Seq(stats8, stats9))
@@ -156,10 +156,10 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
 
   private def createStatistics(
     numberOfTasks: Int,
-    numberOfTasksWithVolume: Int,
+    numberOfTasksWithVolume: Option[Int],
     durationSum: Duration,
     volumeWeightedTaskDurationSum: Option[Duration] = None,
-    volumeSum: Option[BigDecimal] = None,
+    volumeSum: Option[Long] = None,
     year: Int = taskStartedAtYearMonth.getYear,
     month: Int = taskStartedAtYearMonth.getMonthValue
   ) =

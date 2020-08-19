@@ -105,10 +105,10 @@ private[service] class ReadSideServiceLive(
       year = yearMonth.getYear,
       month = yearMonth.getMonthValue,
       numberOfTasks = 1,
-      numberOfTasksWithVolume = if (volume.isDefined) 1 else 0,
+      numberOfTasksWithVolume = Option.when(volume.isDefined)(1),
       durationSum = duration,
       volumeWeightedTaskDurationSum = volume.map(duration.multipliedBy(_)),
-      volumeSum = volume.map(BigDecimal(_))
+      volumeSum = volume.map(_.longValue)
     )
   }
 
@@ -121,12 +121,12 @@ private[service] class ReadSideServiceLive(
 
     statistics.copy(
       numberOfTasks = newNumberOfTasks,
-      numberOfTasksWithVolume = statistics.numberOfTasksWithVolume + (if (volume.isDefined) 1 else 0),
+      numberOfTasksWithVolume =
+        (statistics.numberOfTasksWithVolume ++ Option.when(volume.isDefined)(1)).reduceOption(_ + _),
       durationSum = statistics.durationSum.plus(duration),
       volumeWeightedTaskDurationSum =
-        (statistics.volumeWeightedTaskDurationSum.toList ++ volume.map(duration.multipliedBy(_)).toList)
-          .combineAllOption((sum: Duration, volumeWeighted: Duration) => sum.plus(volumeWeighted)),
-      volumeSum = (statistics.volumeSum.toList ++ volume.map(BigDecimal(_)).toList).combineAllOption
+        (statistics.volumeWeightedTaskDurationSum ++ volume.map(duration.multipliedBy(_))).reduceOption(_.plus(_)),
+      volumeSum = (statistics.volumeSum ++ volume.map(_.longValue)).reduceOption(_ + _)
     )
   }
 

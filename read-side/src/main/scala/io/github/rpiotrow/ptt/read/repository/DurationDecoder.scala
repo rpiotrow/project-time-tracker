@@ -8,5 +8,5 @@ import org.postgresql.util.PGInterval
 private trait DurationDecoder extends Decoders {
   this: JdbcContextBase[_, _] =>
 
-  implicit val decodeDuration = MappedEncoding[Long, Duration](Duration.ofMinutes(_))
+  implicit val decodeDuration = MappedEncoding[Long, Duration](Duration.ofSeconds)
 }

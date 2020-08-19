@@ -1,5 +1,6 @@
 package io.github.rpiotrow.ptt.read.entity
 
+import java.time.Duration
 import java.util.UUID
 
 case class StatisticsEntity(
@@ -7,10 +8,8 @@ case class StatisticsEntity(
   year: Int,
   month: Int,
   numberOfTasks: Int,
-  averageTaskDurationMinutes: Int,
-  averageTaskVolume: BigDecimal,
-  // nominator of volume weighted average task duration
-  volumeWeightedTaskDurationSum: BigDecimal,
-  // denominator of volume weighted average task duration
-  volumeSum: BigDecimal
+  numberOfTasksWithVolume: Option[Int],
+  durationSum: Duration,
+  volumeSum: Option[Long],
+  volumeWeightedTaskDurationSum: Option[Duration]
 )

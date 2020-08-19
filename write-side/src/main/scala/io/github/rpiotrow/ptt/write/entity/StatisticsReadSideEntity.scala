@@ -9,8 +9,8 @@ case class StatisticsReadSideEntity(
   year: Int,
   month: Int,
   numberOfTasks: Int,
-  numberOfTasksWithVolume: Int,
+  numberOfTasksWithVolume: Option[Int],
   durationSum: Duration,
-  volumeWeightedTaskDurationSum: Option[Duration],
-  volumeSum: Option[BigDecimal]
+  volumeSum: Option[Long],
+  volumeWeightedTaskDurationSum: Option[Duration]
 )
