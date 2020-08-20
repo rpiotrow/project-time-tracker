@@ -5,13 +5,8 @@ import java.time.{Duration, LocalDateTime, YearMonth}
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import cats.implicits._
 import doobie.implicits._
-import io.github.rpiotrow.ptt.write.entity.{StatisticsReadSideEntity, TaskEntity}
-import io.github.rpiotrow.ptt.write.repository.{
-  DBResult,
-  ProjectReadSideRepository,
-  StatisticsReadSideRepository,
-  TaskReadSideRepository
-}
+import io.github.rpiotrow.ptt.write.entity._
+import io.github.rpiotrow.ptt.write.repository._
 import org.scalamock.matchers.ArgCapture.{CaptureAll, CaptureOne}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
@@ -28,9 +23,9 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
 
       (projectReadSideRepository.newProject _).expects(project).returning(projectReadModel.pure[DBResult])
-      val result = service.projectCreated(project).transact(tnx).value.unsafeRunSync()
+      val result = service.projectCreated(project).transact(tnx).unsafeRunSync()
 
-      result should be(projectReadModel.asRight[AppFailure])
+      result should be(projectReadModel)
     }
   }
 
@@ -45,9 +40,9 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
       (projectReadSideRepository.deleteProject _).expects(project).returning(().pure[DBResult])
       // TODO: delete all tasks related to project on read side
       // TODO: update statistics
-      val result = service.projectDeleted(project).transact(tnx).value.unsafeRunSync()
+      val result = service.projectDeleted(project).transact(tnx).unsafeRunSync()
 
-      result should be(().asRight[AppFailure])
+      result should be(())
     }
   }
 
@@ -59,9 +54,9 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         .returning(Option.empty[StatisticsReadSideEntity].pure[DBResult])
       (statisticsReadSideRepository.upsert _).expects(*).returning(().pure[DBResult])
 
-      val result = service.taskAdded(task).transact(tnx).value.unsafeRunSync()
+      val result = service.taskAdded(task).transact(tnx).unsafeRunSync()
 
-      result should be(taskReadModel.asRight[AppFailure])
+      result should be(taskReadModel)
     }
     it("create initial statistics") {
       val (service, statisticsReadSideRepository) = taskAddedPrepare()
@@ -75,9 +70,10 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         volumeWeightedTaskDurationSum = taskVolumeWeightedDuration.some,
         volumeSum = taskVolume.longValue.some
       )
+      // todo arg capture
       (statisticsReadSideRepository.upsert _).expects(stats).returning(().pure[DBResult])
 
-      service.taskAdded(task).transact(tnx).value.unsafeRunSync()
+      service.taskAdded(task).transact(tnx).unsafeRunSync()
     }
     it("update existing statistics") {
       val (service, statisticsReadSideRepository) = taskAddedPrepare()
@@ -101,7 +97,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
       val argCaptor                               = CaptureOne[StatisticsReadSideEntity]()
       statisticsReadSideRepository.upsert _ expects capture(argCaptor) returning ().pure[DBResult]
 
-      service.taskAdded(task).transact(tnx).value.unsafeRunSync()
+      service.taskAdded(task).transact(tnx).unsafeRunSync()
       argCaptor.value should matchTo(newStats)
     }
     it("create initial statistics for two months") {
@@ -111,7 +107,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         volume = None,
         comment = None
       )
-      val (service, statisticsReadSideRepository) = taskAddedPrepare(lateTask, lateTask)
+      val (service, statisticsReadSideRepository) = taskAddedPrepare(lateTask, TaskReadSideEntity(lateTask))
       (statisticsReadSideRepository.get _)
         .expects(ownerId, YearMonth.of(2020, 8))
         .returning(Option.empty[StatisticsReadSideEntity].pure[DBResult])
@@ -121,7 +117,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
       val argCaptor                               = CaptureAll[StatisticsReadSideEntity]()
       statisticsReadSideRepository.upsert _ expects capture(argCaptor) repeat 2 returning ().pure[DBResult]
 
-      service.taskAdded(lateTask).transact(tnx).value.unsafeRunSync()
+      service.taskAdded(lateTask).transact(tnx).unsafeRunSync()
 
       val stats8 = createStatistics(
         year = 2020,
@@ -141,7 +137,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
     }
   }
 
-  private def taskAddedPrepare(task: TaskEntity = task, taskReadModel: TaskEntity = taskReadModel) = {
+  private def taskAddedPrepare(task: TaskEntity = task, taskReadModel: TaskReadSideEntity = taskReadModel) = {
     val projectReadSideRepository    = mock[ProjectReadSideRepository]
     val taskReadSideRepository       = mock[TaskReadSideRepository]
     val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
@@ -149,7 +145,9 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
       new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
 
     (taskReadSideRepository.add _).expects(task).returning(taskReadModel.pure[DBResult])
-    (projectReadSideRepository.addToProjectDuration _).expects(taskReadModel).returning(().pure[DBResult])
+    (projectReadSideRepository.addToProjectDuration _)
+      .expects(taskReadModel.projectDbId, taskReadModel.duration)
+      .returning(().pure[DBResult])
 
     (service, statisticsReadSideRepository)
   }

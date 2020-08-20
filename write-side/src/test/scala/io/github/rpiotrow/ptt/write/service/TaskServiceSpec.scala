@@ -26,7 +26,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
       (taskRepository.add _).expects(project.dbId, taskInput, userId).returning(task.pure[DBResult])
       (readSideService.taskAdded _)
         .expects(task)
-        .returning(EitherT.right[AppFailure](taskReadModel.pure[DBResult]))
+        .returning(taskReadModel.pure[DBResult])
 
       val result = service.add(projectId, taskInput, userId).value.unsafeRunSync()
 

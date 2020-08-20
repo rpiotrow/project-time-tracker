@@ -73,13 +73,19 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
     describe("addToProjectDuration should") {
       it("add duration of task to durationSum when sum is zero") {
-        projectReadSideRepo.addToProjectDuration(taskReadModel(durationSumZero.dbId)).transact(tnx).unsafeRunSync()
+        projectReadSideRepo
+          .addToProjectDuration(durationSumZero.dbId, Duration.ofMinutes(30))
+          .transact(tnx)
+          .unsafeRunSync()
 
         val expected = durationSumZero.copy(durationSum = Duration.ofMinutes(30))
         readProjectByDbId(durationSumZero.dbId) should matchTo(expected.some)
       }
       it("add duration of task to durationSum when sum is positive") {
-        projectReadSideRepo.addToProjectDuration(taskReadModel(durationSum30.dbId)).transact(tnx).unsafeRunSync()
+        projectReadSideRepo
+          .addToProjectDuration(durationSum30.dbId, Duration.ofMinutes(30))
+          .transact(tnx)
+          .unsafeRunSync()
 
         val expected = durationSum30.copy(durationSum = Duration.ofMinutes(60))
         readProjectByDbId(durationSum30.dbId) should matchTo(expected.some)

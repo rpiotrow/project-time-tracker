@@ -24,7 +24,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       (projectRepository.create _).expects(projectId.value, ownerId).returning(project.pure[DBResult])
       (readSideService.projectCreated _)
         .expects(project)
-        .returning(EitherT.right[AppFailure](projectReadModel.pure[DBResult]))
+        .returning(projectReadModel.pure[DBResult])
 
       val result = service.create(projectInput, ownerId).value.unsafeRunSync()
 
@@ -53,7 +53,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       // TODO: "delete all tasks of project on the write side"
       (readSideService.projectDeleted _)
         .expects(project)
-        .returning(EitherT.right[AppFailure](().pure[DBResult]))
+        .returning(().pure[DBResult])
 
       val result = service.delete(projectId, ownerId).value.unsafeRunSync()
 

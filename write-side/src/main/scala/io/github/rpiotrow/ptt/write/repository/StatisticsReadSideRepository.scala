@@ -14,7 +14,9 @@ object StatisticsReadSideRepository {
   val live: StatisticsReadSideRepository = new StatisticsReadSideRepositoryLive(liveContext)
 }
 
-private[repository] class StatisticsReadSideRepositoryLive(ctx: DBContext) extends StatisticsReadSideRepository {
+private[repository] class StatisticsReadSideRepositoryLive(ctx: DBContext)
+    extends StatisticsReadSideRepository
+    with ReadSideRepositoryBase {
 
   import ctx._
 
@@ -33,11 +35,15 @@ private[repository] class StatisticsReadSideRepositoryLive(ctx: DBContext) exten
     if (entity.dbId == 0) {
       run(quote {
         statistics.insert(lift(entity)).returningGenerated(_.dbId)
-      }).map(_ => ())
+      }).map(logIfNotUpdated(s"cannot insert statistics for ${entity.owner} ${entity.year}-${entity.month}"))
     } else {
       run(quote {
         statistics.filter(_.dbId == lift(entity.dbId)).update(lift(entity))
-      }).map(_ => ())
+      }).map(
+        logIfNotUpdated(
+          s"cannot update statistics for ${entity.owner} ${entity.year}-${entity.month} with dbId ${entity.dbId}"
+        )
+      )
     }
   }
 

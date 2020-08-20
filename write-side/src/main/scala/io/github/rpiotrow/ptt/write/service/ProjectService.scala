@@ -1,7 +1,5 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.Duration
-
 import cats.data.EitherT
 import cats.effect.IO
 import cats.implicits._
@@ -43,7 +41,7 @@ private[service] class ProjectServiceLive(
       existingOption    <- EitherT.right[AppFailure](projectRepository.get(projectId))
       _                 <- checkUniqueness(existingOption)
       project           <- EitherT.right[AppFailure](projectRepository.create(projectId, owner))
-      projectSideEntity <- readSideService.projectCreated(project)
+      projectSideEntity <- EitherT.right[AppFailure](readSideService.projectCreated(project))
     } yield toOutput(projectSideEntity)).transact(tnx)
   }
 
@@ -53,7 +51,7 @@ private[service] class ProjectServiceLive(
       project       <- ifExists(projectOption)
       _             <- checkOwner(project, user)
       deleted       <- EitherT.right[AppFailure](projectRepository.delete(project))
-      _             <- readSideService.projectDeleted(deleted)
+      _             <- EitherT.right[AppFailure](readSideService.projectDeleted(deleted))
       // TODO: delete all tasks related to project on the write side
     } yield ()).transact(tnx)
   }

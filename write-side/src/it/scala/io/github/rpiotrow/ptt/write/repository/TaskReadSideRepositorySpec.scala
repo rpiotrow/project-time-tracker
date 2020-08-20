@@ -9,7 +9,7 @@ import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
-import io.github.rpiotrow.ptt.write.entity.TaskEntity
+import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 
@@ -42,9 +42,9 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val taskOwner                             = UUID.randomUUID()
-  private val taskStart                             = LocalDateTime.now()
-  private def task(): TaskEntity                    =
+  private val taskOwner                                     = UUID.randomUUID()
+  private val taskStart                                     = LocalDateTime.now()
+  private def task(): TaskEntity                            =
     TaskEntity(
       dbId = 0,
       taskId = UUID.randomUUID(),
@@ -56,10 +56,10 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       volume = 10.some,
       comment = "some comment".some
     )
-  implicit private val ignoreDbId: Diff[TaskEntity] =
-    Derived[Diff[TaskEntity]].ignore[TaskEntity, Long](_.dbId)
-  private def taskReadModel(taskId: UUID)           =
-    TaskEntity(
+  implicit private val ignoreDbId: Diff[TaskReadSideEntity] =
+    Derived[Diff[TaskReadSideEntity]].ignore[TaskReadSideEntity, Long](_.dbId)
+  private def taskReadModel(taskId: UUID)                   =
+    TaskReadSideEntity(
       dbId = 0,
       taskId = taskId,
       projectDbId = 200,
@@ -71,9 +71,9 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       comment = "some comment".some
     )
 
-  private val tasks = liveContext.quote { liveContext.querySchema[TaskEntity]("ptt_read_model.tasks") }
+  private val tasks = liveContext.quote { liveContext.querySchema[TaskReadSideEntity]("ptt_read_model.tasks") }
 
-  private def readTaskByDbId(dbId: Long): Option[TaskEntity] = {
+  private def readTaskByDbId(dbId: Long): Option[TaskReadSideEntity] = {
     import liveContext._
     liveContext
       .run(liveContext.quote { tasks.filter(_.dbId == lift(dbId)) })

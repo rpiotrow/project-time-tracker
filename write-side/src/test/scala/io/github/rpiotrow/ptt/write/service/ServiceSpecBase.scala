@@ -14,7 +14,7 @@ import eu.timepit.refined.auto._
 import io.github.rpiotrow.ptt.api.input.{ProjectInput, TaskInput}
 import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
 import io.github.rpiotrow.ptt.api.output.{ProjectOutput, TaskOutput}
-import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity}
+import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity, TaskReadSideEntity}
 import org.scalamock.scalatest.MockFactory
 
 trait ServiceSpecBase { this: MockFactory =>
@@ -86,6 +86,6 @@ trait ServiceSpecBase { this: MockFactory =>
     volume = taskVolume.some,
     comment = "text".some
   )
-  protected val taskReadModel              = task
+  protected val taskReadModel              = TaskReadSideEntity(task)
 
 }

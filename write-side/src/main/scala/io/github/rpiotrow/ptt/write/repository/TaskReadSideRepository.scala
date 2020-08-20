@@ -1,10 +1,10 @@
 package io.github.rpiotrow.ptt.write.repository
 
 import io.getquill.{idiom => _}
-import io.github.rpiotrow.ptt.write.entity.TaskEntity
+import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 
 trait TaskReadSideRepository {
-  def add(task: TaskEntity): DBResult[TaskEntity]
+  def add(task: TaskEntity): DBResult[TaskReadSideEntity]
 }
 
 object TaskReadSideRepository {
@@ -15,11 +15,12 @@ private[repository] class TaskReadSideRepositoryLive(private val ctx: DBContext)
 
   import ctx._
 
-  private val tasksReadSide = quote { querySchema[TaskEntity]("ptt_read_model.tasks") }
+  private val tasksReadSide = quote { querySchema[TaskReadSideEntity]("ptt_read_model.tasks") }
 
-  override def add(task: TaskEntity): DBResult[TaskEntity] = {
-    run(quote { tasksReadSide.insert(lift(task)).returningGenerated(_.dbId) })
-      .map(dbId => task.copy(dbId = dbId))
+  override def add(task: TaskEntity): DBResult[TaskReadSideEntity] = {
+    val readSideEntity = TaskReadSideEntity(task)
+    run(quote { tasksReadSide.insert(lift(readSideEntity)).returningGenerated(_.dbId) })
+      .map(dbId => readSideEntity.copy(dbId = dbId))
   }
 
 }

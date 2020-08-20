@@ -7,7 +7,7 @@ import doobie.implicits._
 import io.github.rpiotrow.ptt.api.input.TaskInput
 import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.api.output.TaskOutput
-import io.github.rpiotrow.ptt.write.entity.TaskEntity
+import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 import io.github.rpiotrow.ptt.write.repository._
 import io.github.rpiotrow.ptt.write.service.ProjectService.ifExists
 
@@ -28,7 +28,7 @@ private[service] class TaskServiceLive(
       project       <- ifExists(projectOption)
       _             <- taskDoesNotOverlap(input, userId)
       task          <- EitherT.right[AppFailure](taskRepository.add(project.dbId, input, userId))
-      readModel     <- readSideService.taskAdded(task)
+      readModel     <- EitherT.right[AppFailure](readSideService.taskAdded(task))
     } yield toOutput(readModel)).transact(tnx)
   }
 
@@ -40,7 +40,7 @@ private[service] class TaskServiceLive(
     } yield check
   }
 
-  private def toOutput(task: TaskEntity): TaskOutput = {
+  private def toOutput(task: TaskReadSideEntity): TaskOutput = {
     TaskOutput(
       taskId = task.taskId,
       owner = task.owner,

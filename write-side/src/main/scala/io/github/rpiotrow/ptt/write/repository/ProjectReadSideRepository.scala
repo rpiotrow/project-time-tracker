@@ -1,5 +1,7 @@
 package io.github.rpiotrow.ptt.write.repository
 
+import java.time.Duration
+
 import io.getquill.{idiom => _}
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity}
 
@@ -7,14 +9,16 @@ trait ProjectReadSideRepository {
   def newProject(project: ProjectEntity): DBResult[ProjectReadSideEntity]
   def deleteProject(project: ProjectEntity): DBResult[Unit]
 
-  def addToProjectDuration(taskReadModel: TaskEntity): DBResult[Unit]
+  def addToProjectDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
 }
 
 object ProjectReadSideRepository {
   lazy val live: ProjectReadSideRepository = new ProjectReadSideRepositoryLive(liveContext)
 }
 
-private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBContext) extends ProjectReadSideRepository {
+private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBContext)
+    extends ProjectReadSideRepository
+    with ReadSideRepositoryBase {
 
   import ctx._
 
@@ -31,15 +35,15 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
       projectsReadSide
         .filter(_.projectId == lift(project.projectId))
         .update(_.deletedAt -> lift(project.deletedAt), _.updatedAt -> lift(project.updatedAt))
-    }).map(_ => ())
+    }).map(logIfNotUpdated(s"no project '${project.projectId}' in read model"))
   }
 
-  override def addToProjectDuration(taskReadModel: TaskEntity): DBResult[Unit] = {
+  override def addToProjectDuration(projectDbId: Long, duration: Duration): DBResult[Unit] = {
     run(quote {
       projectsReadSide
-        .filter(_.dbId == lift(taskReadModel.projectDbId))
-        .update(e => e.durationSum -> (e.durationSum + lift(taskReadModel.duration)))
-    }).map(_ => ())
+        .filter(_.dbId == lift(projectDbId))
+        .update(e => e.durationSum -> (e.durationSum + lift(duration)))
+    }).map(logIfNotUpdated(s"no project with dbId ${projectDbId} in read model"))
   }
 
 }

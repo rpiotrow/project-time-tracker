@@ -2,22 +2,16 @@ package io.github.rpiotrow.ptt.write.service
 
 import java.time.{Duration, YearMonth}
 
-import cats.data.EitherT
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.model.UserId
-import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, StatisticsReadSideEntity, TaskEntity}
-import io.github.rpiotrow.ptt.write.repository.{
-  DBResult,
-  ProjectReadSideRepository,
-  StatisticsReadSideRepository,
-  TaskReadSideRepository
-}
+import io.github.rpiotrow.ptt.write.entity._
+import io.github.rpiotrow.ptt.write.repository._
 
 trait ReadSideService {
-  def projectCreated(project: ProjectEntity): EitherT[DBResult, AppFailure, ProjectReadSideEntity]
-  def projectDeleted(project: ProjectEntity): EitherT[DBResult, AppFailure, Unit]
+  def projectCreated(project: ProjectEntity): DBResult[ProjectReadSideEntity]
+  def projectDeleted(project: ProjectEntity): DBResult[Unit]
 
-  def taskAdded(task: TaskEntity): EitherT[DBResult, AppFailure, TaskEntity]
+  def taskAdded(task: TaskEntity): DBResult[TaskReadSideEntity]
 }
 
 object ReadSideService {
@@ -34,25 +28,23 @@ private[service] class ReadSideServiceLive(
   private val statisticsReadSideRepository: StatisticsReadSideRepository
 ) extends ReadSideService {
 
-  override def projectCreated(project: ProjectEntity): EitherT[DBResult, AppFailure, ProjectReadSideEntity] = {
-    EitherT.right[AppFailure](projectReadSideRepository.newProject(project))
-  }
+  override def projectCreated(project: ProjectEntity): DBResult[ProjectReadSideEntity] =
+    projectReadSideRepository.newProject(project)
 
-  override def projectDeleted(project: ProjectEntity): EitherT[DBResult, AppFailure, Unit] = {
-    EitherT.right[AppFailure](projectReadSideRepository.deleteProject(project))
+  override def projectDeleted(project: ProjectEntity): DBResult[Unit] = {
+    projectReadSideRepository.deleteProject(project)
     // TODO: delete all tasks related to project on the read side
     // TODO: update statistics
   }
 
-  override def taskAdded(task: TaskEntity): EitherT[DBResult, AppFailure, TaskEntity] = {
-    EitherT.right[AppFailure](for {
+  override def taskAdded(task: TaskEntity): DBResult[TaskReadSideEntity] =
+    for {
       readModel <- taskReadSideRepository.add(task)
-      _         <- projectReadSideRepository.addToProjectDuration(readModel)
+      _         <- projectReadSideRepository.addToProjectDuration(readModel.projectDbId, readModel.duration)
       _         <- updateStatisticsForAddedTask(readModel)
-    } yield readModel)
-  }
+    } yield readModel
 
-  private def updateStatisticsForAddedTask(task: TaskEntity): DBResult[Unit] = {
+  private def updateStatisticsForAddedTask(task: TaskReadSideEntity): DBResult[Unit] = {
     splitDuration(task)
       .map({
         case (yearMonth, duration) => updateStatisticsForAddedDuration(task.owner, yearMonth, duration, task.volume)
@@ -61,7 +53,7 @@ private[service] class ReadSideServiceLive(
       .sequence_
   }
 
-  private def splitDuration(task: TaskEntity): Map[YearMonth, Duration] = {
+  private def splitDuration(task: TaskReadSideEntity): Map[YearMonth, Duration] = {
     LocalDateTimeRange(task.startedAt, task.startedAt.plus(task.duration))
       .splitToMonths()
       .map(r => r.fromYearMonth -> r.duration())
