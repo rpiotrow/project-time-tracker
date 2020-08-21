@@ -1,14 +1,17 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Clock, Duration, LocalDateTime}
 import java.util.UUID
 
+import cats.implicits._
 import io.github.rpiotrow.ptt.api.input.TaskInput
-import io.github.rpiotrow.ptt.api.model.UserId
+import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.write.entity.TaskEntity
 
 trait TaskRepository {
   def add(projectId: Long, input: TaskInput, owner: UUID): DBResult[TaskEntity]
+  def get(taskId: TaskId): DBResult[Option[TaskEntity]]
+  def delete(task: TaskEntity): DBResult[TaskEntity]
 
   def overlapping(userId: UserId, startedAt: LocalDateTime, duration: Duration): DBResult[List[TaskEntity]]
 }
@@ -17,7 +20,8 @@ object TaskRepository {
   val live: TaskRepository = new TaskRepositoryLive(liveContext)
 }
 
-private[repository] class TaskRepositoryLive(private val ctx: DBContext) extends TaskRepository {
+private[repository] class TaskRepositoryLive(private val ctx: DBContext, private val clock: Clock = Clock.systemUTC())
+    extends TaskRepository {
 
   import ctx._
 
@@ -39,13 +43,26 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext) extends
       .map(dbId => entity.copy(dbId = dbId))
   }
 
-  override def overlapping(userId: UserId, startedAt: LocalDateTime, duration: Duration): DBResult[List[TaskEntity]] = {
+  override def get(taskId: TaskId): DBResult[Option[TaskEntity]] =
+    run(quote {
+      tasks.filter(_.taskId == lift(taskId))
+    }).map(_.headOption)
+
+  override def delete(task: TaskEntity): DBResult[TaskEntity] = {
+    val now = LocalDateTime.now(clock)
+    run(quote {
+      tasks
+        .filter(t => t.dbId == lift(task.dbId) && t.deletedAt.isEmpty)
+        .update(_.deletedAt -> lift(now.some))
+    }).map(_ => task.copy(deletedAt = now.some))
+  }
+
+  override def overlapping(userId: UserId, startedAt: LocalDateTime, duration: Duration): DBResult[List[TaskEntity]] =
     run(quote {
       tasks
         .filter(_.owner == lift(userId))
         .filter(_.deletedAt.isEmpty)
         .filter(e => (e.startedAt, e.duration) overlaps lift((startedAt, duration)))
     })
-  }
 
 }

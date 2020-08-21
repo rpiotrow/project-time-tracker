@@ -54,7 +54,7 @@ class AllRepositoriesSpec
 
   override lazy protected val projectRepo            = new ProjectRepositoryLive(liveContext, clock)
   override lazy protected val projectReadSideRepo    = new ProjectReadSideRepositoryLive(liveContext)
-  override lazy protected val taskRepo               = new TaskRepositoryLive(liveContext)
+  override lazy protected val taskRepo               = new TaskRepositoryLive(liveContext, clock)
   override lazy protected val taskReadSideRepo       = new TaskReadSideRepositoryLive(liveContext)
   override lazy protected val statisticsReadSideRepo = new StatisticsReadSideRepositoryLive(liveContext)
 

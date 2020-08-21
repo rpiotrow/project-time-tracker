@@ -53,36 +53,42 @@ private class RoutesLive(
     val taskCreateRoute    = taskCreateEndpoint
       .withUserId()
       .toRoutes { case ((projectId, taskInput), userId) => taskAdd(projectId, taskInput, userId) }
+    val taskDeleteRoute    = taskDeleteEndpoint
+      .withUserId()
+      .toRoutes { case ((_, taskId), userId) => taskDelete(taskId, userId) }
 
-    projectCreateRoute <+> projectDeleteRoute <+> taskCreateRoute
+    projectCreateRoute <+> projectDeleteRoute <+> taskCreateRoute <+> taskDeleteRoute
   }
 
-  private def projectCreate(input: ProjectInput, userId: UserId): IO[Either[ApiError, LocationHeader]] = {
+  private def projectCreate(input: ProjectInput, userId: UserId): IO[Either[ApiError, LocationHeader]] =
     projectService
       .create(input, userId)
       .leftMap(mapToApiErrors)
       .map(project => new LocationHeader(s"$gatewayAddress/projects/${project.projectId}"))
       .value
-  }
 
-  private def projectDelete(projectId: ProjectId, userId: UserId): IO[Either[ApiError, Unit]] = {
+  private def projectDelete(projectId: ProjectId, userId: UserId): IO[Either[ApiError, Unit]] =
     projectService
       .delete(projectId, userId)
       .leftMap(mapToApiErrors)
       .value
-  }
 
   private def taskAdd(
     projectId: ProjectId,
     taskInput: TaskInput,
     userId: UserId
-  ): IO[Either[ApiError, LocationHeader]] = {
+  ): IO[Either[ApiError, LocationHeader]] =
     taskService
       .add(projectId, taskInput, userId)
       .leftMap(mapToApiErrors)
       .map(task => new LocationHeader(s"$gatewayAddress/projects/${projectId}/tasks/${task.taskId}"))
       .value
-  }
+
+  private def taskDelete(taskId: TaskId, userId: UserId): IO[Either[ApiError, Unit]] =
+    taskService
+      .delete(taskId, userId)
+      .leftMap(mapToApiErrors)
+      .value
 
   implicit private class AuthorizedEndpoint[I, E, O, F[_]](e: Endpoint[I, E, O, EntityBody[F]]) {
     def withUserId(): Endpoint[(I, UserId), E, O, EntityBody[F]] = e.in(header[UserId]("X-Authorization"))

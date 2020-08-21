@@ -54,6 +54,9 @@ is done in a transaction. The transaction includes update of the read model to e
 Data redundancy is done by purpose to make it possible to switch into different implementation
 (e.g. based on akka event sourcing with events stored in Cassandra database).
 
+When update of the read model detects inconsistency it is reported as warn to logs, but transaction
+is not aborted (unless there is some error or failure in operation on the write side).
+
 ### Effects
 
 Repositories return values in `ConnectionIO` from Doobie, while services and routes use IO monad from cats.

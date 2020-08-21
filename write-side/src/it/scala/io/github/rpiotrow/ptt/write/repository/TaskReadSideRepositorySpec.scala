@@ -16,6 +16,7 @@ import org.scalatest.matchers.should
 trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected def tnx: Transactor[IO]
+  protected val clockNow: LocalDateTime
   protected def taskReadSideRepo: TaskReadSideRepository
 
   protected val taskReadSideRepositoryData =
@@ -23,7 +24,29 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, updated_at, deleted_at, owner, duration_sum)
          |  VALUES (200, 'projectT1', '2020-08-17 10:00:00', '2020-08-17 16:00:00', NULL, '181ab738-1cb7-4adc-a3d6-24e0bdcf1ebf', 21600)
          |;
+         |INSERT INTO ptt_read_model.tasks(db_id, task_id, project_db_id, deleted_at, owner, started_at, duration, volume, comment)
+         |  VALUES (201, 'fcedfe83-42c5-45ee-9ed0-80a70c9b0231', 200, NULL, '92d57572-3bee-44f2-b3cc-298e267c8ab6', '2020-08-20T08:00', 5*60*60, NULL, 'p1'),
+         |    (202, '6f2a01a1-a66d-4127-844b-f95bee3d1ace', 200, NULL, '92d57572-3bee-44f2-b3cc-298e267c8ab6', '2020-08-20T08:00', 5*60*60, NULL, 'to-delete')
+         |;
          |""".stripMargin
+  private val taskOwner: UUID              = UUID.fromString("92d57572-3bee-44f2-b3cc-298e267c8ab6")
+  private val readSideTask1                = TaskReadSideEntity(
+    dbId = 201,
+    taskId = UUID.fromString("fcedfe83-42c5-45ee-9ed0-80a70c9b0231"),
+    projectDbId = 200,
+    deletedAt = None,
+    owner = taskOwner,
+    startedAt = LocalDateTime.parse("2020-08-20T08:00"),
+    duration = Duration.ofHours(5),
+    volume = None,
+    comment = Some("p1")
+  )
+  private val toDelete                     =
+    readSideTask1.copy(
+      dbId = 202,
+      taskId = UUID.fromString("6f2a01a1-a66d-4127-844b-f95bee3d1ace"),
+      comment = "to-delete".some
+    )
 
   describe("TaskReadSideRepository") {
     describe("add should") {
@@ -40,9 +63,31 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         readSide should matchTo(taskReadModel(entity.taskId))
       }
     }
+
+    describe("get should") {
+      it("return existing") {
+        val optionTask = taskReadSideRepo.get(readSideTask1.taskId).transact(tnx).unsafeRunSync()
+
+        optionTask should matchTo(readSideTask1.some)
+      }
+      it("return None when task with given taskId does not exist") {
+        val optionTask = taskReadSideRepo.get(UUID.randomUUID()).transact(tnx).unsafeRunSync()
+
+        optionTask should be(None)
+      }
+    }
+
+    describe("delete should") {
+      it("soft delete task on read side") {
+        val now = LocalDateTime.now()
+        taskReadSideRepo.delete(toDelete.dbId, now).transact(tnx).unsafeRunSync()
+
+        val optionTask = taskReadSideRepo.get(toDelete.taskId).transact(tnx).unsafeRunSync()
+        optionTask should matchTo(toDelete.copy(deletedAt = now.some).some)
+      }
+    }
   }
 
-  private val taskOwner                                     = UUID.randomUUID()
   private val taskStart                                     = LocalDateTime.now()
   private def task(): TaskEntity                            =
     TaskEntity(

@@ -17,6 +17,7 @@ import org.scalatest.matchers.should
 trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected def tnx: Transactor[IO]
+  protected val clockNow: LocalDateTime
   protected def taskRepo: TaskRepository
 
   protected val taskRepositoryData =
@@ -54,12 +55,15 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |  -- owned    : 2020-08-08T08:00 - 2020-08-01T13:00
          |  -- not-owned: 2020-08-08T14:00 - 2020-08-01T17:00
          |    (214, '9b49e3ee-a8b2-4658-a20c-4894beb10c6f', 100, NULL, 'ae15ea88-06d6-472c-95e4-a7caf366c337', '2020-08-08T08:00', 5*60*60, NULL, 'owned'),
-         |    (215, '830fa9e6-d909-49fa-8f86-019fa9c67ac0', 100, NULL, '3afb912d-b713-4960-805f-81216a981545', '2020-08-08T14:00', 3*60*60, NULL, 'not-owned')
+         |    (215, '830fa9e6-d909-49fa-8f86-019fa9c67ac0', 100, NULL, '3afb912d-b713-4960-805f-81216a981545', '2020-08-08T14:00', 3*60*60, NULL, 'not-owned'),
+         |  -- to-delete
+         |    (216, '18caffa9-7b3a-493e-a299-a4fba1efd9ae', 100, NULL, 'ae15ea88-06d6-472c-95e4-a7caf366c337', '2020-08-10T14:00', 3*60*60, NULL, 'to-delete-1'),
+         |    (217, 'd8ce26d3-722c-41ab-86d0-0630f2d51c04', 100, NULL, 'ae15ea88-06d6-472c-95e4-a7caf366c337', '2020-08-10T14:00', 3*60*60, NULL, 'to-delete-2')
          |;
          |""".stripMargin
 
-  private val taskOwner: UUID = UUID.fromString("ae15ea88-06d6-472c-95e4-a7caf366c337")
-  val p1: TaskEntity          = TaskEntity(
+  private val taskOwner: UUID        = UUID.fromString("ae15ea88-06d6-472c-95e4-a7caf366c337")
+  private val p1: TaskEntity         = TaskEntity(
     dbId = 201,
     taskId = UUID.fromString("35631327-4dea-41aa-8f0a-1e6f335eef99"),
     projectDbId = 100,
@@ -70,7 +74,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("p1")
   )
-  val p1a: TaskEntity         = TaskEntity(
+  private val p1a: TaskEntity        = TaskEntity(
     dbId = 202,
     taskId = UUID.fromString("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
     projectDbId = 100,
@@ -81,7 +85,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("p1a")
   )
-  val p2: TaskEntity          = TaskEntity(
+  private val p2: TaskEntity         = TaskEntity(
     dbId = 203,
     taskId = UUID.fromString("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
     projectDbId = 100,
@@ -92,7 +96,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("p2")
   )
-  val p2a: TaskEntity         = TaskEntity(
+  private val p2a: TaskEntity        = TaskEntity(
     dbId = 204,
     taskId = UUID.fromString("f990af84-b711-485c-9f01-47dc9d830d4e"),
     projectDbId = 100,
@@ -103,7 +107,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("p2a")
   )
-  val p3: TaskEntity          = TaskEntity(
+  private val p3: TaskEntity         = TaskEntity(
     dbId = 205,
     taskId = UUID.fromString("6158b42a-6cf1-4597-bf68-ad3f834d0633"),
     projectDbId = 100,
@@ -114,7 +118,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("p3")
   )
-  val p4: TaskEntity          = TaskEntity(
+  private val p4: TaskEntity         = TaskEntity(
     dbId = 206,
     taskId = UUID.fromString("ce78dda0-3561-439d-b225-fd905a0521b2"),
     projectDbId = 100,
@@ -125,7 +129,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("p4")
   )
-  val p5: TaskEntity          = TaskEntity(
+  private val p5: TaskEntity         = TaskEntity(
     dbId = 207,
     taskId = UUID.fromString("16d1d978-91c9-446a-9138-8ef8f8f4f415"),
     projectDbId = 100,
@@ -136,7 +140,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("p5")
   )
-  val notDeleted: TaskEntity  = TaskEntity(
+  private val notDeleted: TaskEntity = TaskEntity(
     dbId = 213,
     taskId = UUID.fromString("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
     projectDbId = 100,
@@ -147,7 +151,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     volume = None,
     comment = Some("not-deleted")
   )
-  val owned: TaskEntity       = TaskEntity(
+  private val owned: TaskEntity      = TaskEntity(
     dbId = 214,
     taskId = UUID.fromString("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
     projectDbId = 100,
@@ -157,6 +161,28 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     duration = Duration.ofHours(5),
     volume = None,
     comment = Some("owned")
+  )
+  private val toDelete1: TaskEntity  = TaskEntity(
+    dbId = 216,
+    taskId = UUID.fromString("18caffa9-7b3a-493e-a299-a4fba1efd9ae"),
+    projectDbId = 100,
+    deletedAt = None,
+    owner = taskOwner,
+    startedAt = LocalDateTime.parse("2020-08-10T14:00"),
+    duration = Duration.ofHours(3),
+    volume = None,
+    comment = Some("to-delete-1")
+  )
+  private val toDelete2: TaskEntity  = TaskEntity(
+    dbId = 217,
+    taskId = UUID.fromString("d8ce26d3-722c-41ab-86d0-0630f2d51c04"),
+    projectDbId = 100,
+    deletedAt = None,
+    owner = taskOwner,
+    startedAt = LocalDateTime.parse("2020-08-10T14:00"),
+    duration = Duration.ofHours(3),
+    volume = None,
+    comment = Some("to-delete-2")
   )
 
   describe("TaskRepository") {
@@ -256,6 +282,31 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
           list should matchTo(List(owned))
         }
+      }
+    }
+    describe("get should") {
+      it("return existing") {
+        val optionTask = taskRepo.get(p1.taskId).transact(tnx).unsafeRunSync()
+
+        optionTask should matchTo(p1.some)
+      }
+      it("return None when task with given taskId does not exist") {
+        val optionTask = taskRepo.get(UUID.randomUUID()).transact(tnx).unsafeRunSync()
+
+        optionTask should be(Option.empty)
+      }
+    }
+    describe("delete should") {
+      it("return deleted task") {
+        val result = taskRepo.delete(toDelete1).transact(tnx).unsafeRunSync()
+
+        result should matchTo(result.copy(deletedAt = clockNow.some))
+      }
+      it("soft delete task") {
+        taskRepo.delete(toDelete2).transact(tnx).unsafeRunSync()
+
+        val optionTask = taskRepo.get(toDelete2.taskId).transact(tnx).unsafeRunSync()
+        optionTask should matchTo(toDelete2.copy(deletedAt = clockNow.some).some)
       }
     }
   }

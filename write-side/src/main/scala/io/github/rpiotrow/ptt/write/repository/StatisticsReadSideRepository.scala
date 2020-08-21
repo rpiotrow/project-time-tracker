@@ -37,14 +37,18 @@ private[repository] class StatisticsReadSideRepositoryLive(ctx: DBContext)
         statistics.insert(lift(entity)).returningGenerated(_.dbId)
       }).map(logIfNotUpdated(s"cannot insert statistics for ${entity.owner} ${entity.year}-${entity.month}"))
     } else {
-      run(quote {
-        statistics.filter(_.dbId == lift(entity.dbId)).update(lift(entity))
-      }).map(
-        logIfNotUpdated(
-          s"cannot update statistics for ${entity.owner} ${entity.year}-${entity.month} with dbId ${entity.dbId}"
-        )
-      )
+      update(entity)
     }
+  }
+
+  private def update(entity: StatisticsReadSideEntity): DBResult[Unit] = {
+    run(quote {
+      statistics.filter(_.dbId == lift(entity.dbId)).update(lift(entity))
+    }).map(
+      logIfNotUpdated(
+        s"cannot update statistics for ${entity.owner} ${entity.year}-${entity.month} with dbId ${entity.dbId}"
+      )
+    )
   }
 
 }

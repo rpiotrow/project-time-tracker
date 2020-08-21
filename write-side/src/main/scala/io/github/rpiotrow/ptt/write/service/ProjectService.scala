@@ -10,30 +10,18 @@ import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
 import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository}
-import io.github.rpiotrow.ptt.write.service.ProjectService.ifExists
 
 trait ProjectService {
   def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput]
   def delete(projectId: ProjectId, user: UserId): EitherT[IO, AppFailure, Unit]
 }
 
-object ProjectService {
-
-  def ifExists(option: Option[ProjectEntity]): EitherT[DBResult, EntityNotFound, ProjectEntity] = {
-    option match {
-      case Some(entity) => EitherT.right[EntityNotFound](entity.pure[DBResult])
-      case None         =>
-        EitherT.left[ProjectEntity](EntityNotFound("project with given projectId does not exists").pure[DBResult])
-    }
-  }
-
-}
-
 private[service] class ProjectServiceLive(
   private val projectRepository: ProjectRepository,
   private val readSideService: ReadSideService,
   private val tnx: Transactor[IO]
-) extends ProjectService {
+) extends ProjectService
+    with ServiceBase {
 
   override def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput] = {
     val projectId = input.projectId.value
@@ -48,7 +36,7 @@ private[service] class ProjectServiceLive(
   override def delete(projectId: ProjectId, user: UserId): EitherT[IO, AppFailure, Unit] = {
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project       <- ifExists(projectOption)
+      project       <- ifExists(projectOption, "project with given projectId does not exists")
       _             <- checkOwner(project, user)
       deleted       <- EitherT.right[AppFailure](projectRepository.delete(project))
       _             <- EitherT.right[AppFailure](readSideService.projectDeleted(deleted))

@@ -1,17 +1,20 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.{Duration, YearMonth}
+import java.time.{Duration, LocalDateTime, YearMonth}
 
+import cats.data.OptionT
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.write.entity._
-import io.github.rpiotrow.ptt.write.repository._
+import io.github.rpiotrow.ptt.write.repository.{DBResult, _}
+import org.slf4j.LoggerFactory
 
 trait ReadSideService {
   def projectCreated(project: ProjectEntity): DBResult[ProjectReadSideEntity]
   def projectDeleted(project: ProjectEntity): DBResult[Unit]
 
   def taskAdded(task: TaskEntity): DBResult[TaskReadSideEntity]
+  def taskDeleted(task: TaskEntity): DBResult[Unit]
 }
 
 object ReadSideService {
@@ -28,6 +31,8 @@ private[service] class ReadSideServiceLive(
   private val statisticsReadSideRepository: StatisticsReadSideRepository
 ) extends ReadSideService {
 
+  private val logger = LoggerFactory.getLogger("ReadSideService")
+
   override def projectCreated(project: ProjectEntity): DBResult[ProjectReadSideEntity] =
     projectReadSideRepository.newProject(project)
 
@@ -40,17 +45,49 @@ private[service] class ReadSideServiceLive(
   override def taskAdded(task: TaskEntity): DBResult[TaskReadSideEntity] =
     for {
       readModel <- taskReadSideRepository.add(task)
-      _         <- projectReadSideRepository.addToProjectDuration(readModel.projectDbId, readModel.duration)
+      _         <- projectReadSideRepository.addDuration(readModel.projectDbId, readModel.duration)
       _         <- updateStatisticsForAddedTask(readModel)
     } yield readModel
 
+  override def taskDeleted(task: TaskEntity): DBResult[Unit] = {
+    (for {
+      readModel <- OptionT(taskReadSideRepository.get(task.taskId))
+      _         <- OptionT(taskDeletedReadModel(readModel, task.deletedAt.get))
+    } yield ()).getOrElse(logger.warn("Read model update failure: " + "task not found in read model"))
+  }
+
+  private def taskDeletedReadModel(readModel: TaskReadSideEntity, deletedAt: LocalDateTime) = {
+    for {
+      _ <- taskReadSideRepository.delete(readModel.dbId, deletedAt)
+      _ <- projectReadSideRepository.substractDuration(readModel.projectDbId, readModel.duration)
+      _ <- updateStatisticsForDeletedTask(readModel)
+    } yield ().some
+  }
+
   private def updateStatisticsForAddedTask(task: TaskReadSideEntity): DBResult[Unit] = {
-    splitDuration(task)
-      .map({
-        case (yearMonth, duration) => updateStatisticsForAddedDuration(task.owner, yearMonth, duration, task.volume)
-      })
-      .toList
-      .sequence_
+    updateStatisticsForEachYearMonth(
+      task,
+      {
+        case (yearMonth, duration) => updateStatisticsInDatabase(task.owner, yearMonth, 1, duration, task.volume)
+      }
+    )
+  }
+
+  private def updateStatisticsForDeletedTask(task: TaskReadSideEntity): DBResult[Unit] = {
+    updateStatisticsForEachYearMonth(
+      task,
+      {
+        case (yearMonth, duration) =>
+          updateStatisticsInDatabase(task.owner, yearMonth, -1, duration.negated(), task.volume.map(_ * (-1)))
+      }
+    )
+  }
+
+  private def updateStatisticsForEachYearMonth(
+    task: TaskReadSideEntity,
+    updateStatisticsInYearMonth: ((YearMonth, Duration)) => DBResult[Unit]
+  ) = {
+    splitDuration(task).map(updateStatisticsInYearMonth).toList.sequence_
   }
 
   private def splitDuration(task: TaskReadSideEntity): Map[YearMonth, Duration] = {
@@ -60,34 +97,37 @@ private[service] class ReadSideServiceLive(
       .toMap
   }
 
-  private def updateStatisticsForAddedDuration(
+  private def updateStatisticsInDatabase(
     user: UserId,
     yearMonth: YearMonth,
+    tasksNumber: Int,
     duration: Duration,
     volume: Option[Int]
   ): DBResult[Unit] = {
     for {
       current <- statisticsReadSideRepository.get(user, yearMonth)
-      createdOrUpdated = createOrUpdateStatisticsForAddedDuration(current, user, yearMonth, duration, volume)
+      createdOrUpdated = initialOrUpdateStatistics(current, user, yearMonth, tasksNumber, duration, volume)
       _ <- statisticsReadSideRepository.upsert(createdOrUpdated)
     } yield ()
   }
 
-  private def createOrUpdateStatisticsForAddedDuration(
+  private def initialOrUpdateStatistics(
     current: Option[StatisticsReadSideEntity],
     user: UserId,
     yearMonth: YearMonth,
+    tasksNumber: Int,
     duration: Duration,
     volume: Option[Int]
   ): StatisticsReadSideEntity =
     current match {
-      case None    => initialStatistics(user, yearMonth, duration, volume)
-      case Some(v) => updateStatisticsForAddedDuration(v, duration, volume)
+      case None    => initialStatistics(user, yearMonth, tasksNumber, duration, volume)
+      case Some(v) => updateStatistics(v, tasksNumber, duration, volume)
     }
 
   private def initialStatistics(
     user: UserId,
     yearMonth: YearMonth,
+    tasksNumber: Int,
     duration: Duration,
     volume: Option[Int]
   ): StatisticsReadSideEntity = {
@@ -96,29 +136,38 @@ private[service] class ReadSideServiceLive(
       owner = user,
       year = yearMonth.getYear,
       month = yearMonth.getMonthValue,
-      numberOfTasks = 1,
-      numberOfTasksWithVolume = Option.when(volume.isDefined)(1),
+      numberOfTasks = tasksNumber,
+      numberOfTasksWithVolume = Option.when(volume.isDefined)(tasksNumber),
       durationSum = duration,
       volumeWeightedTaskDurationSum = volume.map(duration.multipliedBy(_)),
       volumeSum = volume.map(_.longValue)
     )
   }
 
-  private def updateStatisticsForAddedDuration(
+  private def updateStatistics(
     statistics: StatisticsReadSideEntity,
+    tasksNumber: Int,
     duration: Duration,
     volume: Option[Int]
   ): StatisticsReadSideEntity = {
-    val newNumberOfTasks = statistics.numberOfTasks + 1
+    // tasks number is 1 when task was added and -1 when it was deleted
+    val newNumberOfTasks           = statistics.numberOfTasks + tasksNumber
+    // we multiply volume by tasksNumber to get negative value task deletion case,
+    // since when duration and volume are negative we would get positive value of volume weighted duration
+    val volumeWeightedTaskDuration = volume.map(v => duration.multipliedBy(v * tasksNumber))
 
     statistics.copy(
       numberOfTasks = newNumberOfTasks,
-      numberOfTasksWithVolume =
-        (statistics.numberOfTasksWithVolume ++ Option.when(volume.isDefined)(1)).reduceOption(_ + _),
+      numberOfTasksWithVolume = (statistics.numberOfTasksWithVolume ++ Option.when(volume.isDefined)(tasksNumber))
+        .reduceOption(_ + _)
+        .flatMap(n => Option.when(n > 0)(n)),
       durationSum = statistics.durationSum.plus(duration),
-      volumeWeightedTaskDurationSum =
-        (statistics.volumeWeightedTaskDurationSum ++ volume.map(duration.multipliedBy(_))).reduceOption(_.plus(_)),
-      volumeSum = (statistics.volumeSum ++ volume.map(_.longValue)).reduceOption(_ + _)
+      volumeWeightedTaskDurationSum = (statistics.volumeWeightedTaskDurationSum ++ volumeWeightedTaskDuration)
+        .reduceOption(_.plus(_))
+        .flatMap(d => Option.when(!d.isZero)(d)),
+      volumeSum = (statistics.volumeSum ++ volume.map(_.longValue))
+        .reduceOption(_ + _)
+        .flatMap(n => Option.when(n > 0)(n))
     )
   }
 

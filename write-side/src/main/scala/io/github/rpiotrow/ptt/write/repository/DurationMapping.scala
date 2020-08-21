@@ -12,6 +12,7 @@ trait DurationMapping extends Decoders {
 
   implicit class DurationQuotes(left: Duration) {
     def +(right: Duration) = quote(infix"$left + $right".as[Duration])
+    def -(right: Duration) = quote(infix"$left - $right".as[Duration])
   }
 
   implicit class OverlapsQuotes(left: (LocalDateTime, Duration)) {

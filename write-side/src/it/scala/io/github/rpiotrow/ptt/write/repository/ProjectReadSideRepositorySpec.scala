@@ -24,7 +24,8 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |  VALUES (100, 'projectD1', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
          |    (101, 'projectD2', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
          |    (102, 'duration-sum-zero', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 0),
-         |    (103, 'duration-sum-30', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 1800)
+         |    (103, 'duration-sum-30', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 1800),
+         |    (104, 'duration-sum-60', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 3600)
          |;
          |""".stripMargin
 
@@ -40,6 +41,8 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   private val durationSumZero = projectD1.copy(dbId = 102, projectId = "duration-sum-zero", durationSum = Duration.ZERO)
   private val durationSum30   =
     projectD1.copy(dbId = 103, projectId = "duration-sum-30", durationSum = Duration.ofMinutes(30))
+  private val durationSum60   =
+    projectD1.copy(dbId = 104, projectId = "duration-sum-60", durationSum = Duration.ofMinutes(60))
 
   describe("ProjectReadSideRepository") {
     describe("newProject should") {
@@ -71,10 +74,10 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         readProjectByDbId(projectD1.dbId) should matchTo(projectD1.copy(deletedAt = now.some).some)
       }
     }
-    describe("addToProjectDuration should") {
+    describe("addDuration should") {
       it("add duration of task to durationSum when sum is zero") {
         projectReadSideRepo
-          .addToProjectDuration(durationSumZero.dbId, Duration.ofMinutes(30))
+          .addDuration(durationSumZero.dbId, Duration.ofMinutes(30))
           .transact(tnx)
           .unsafeRunSync()
 
@@ -83,12 +86,23 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       }
       it("add duration of task to durationSum when sum is positive") {
         projectReadSideRepo
-          .addToProjectDuration(durationSum30.dbId, Duration.ofMinutes(30))
+          .addDuration(durationSum30.dbId, Duration.ofMinutes(30))
           .transact(tnx)
           .unsafeRunSync()
 
         val expected = durationSum30.copy(durationSum = Duration.ofMinutes(60))
         readProjectByDbId(durationSum30.dbId) should matchTo(expected.some)
+      }
+    }
+    describe("substractDuration should") {
+      it("subtract duration of task from durationSum") {
+        projectReadSideRepo
+          .substractDuration(durationSum60.dbId, Duration.ofMinutes(45))
+          .transact(tnx)
+          .unsafeRunSync()
+
+        val expected = durationSum60.copy(durationSum = Duration.ofMinutes(15))
+        readProjectByDbId(durationSum60.dbId) should matchTo(expected.some)
       }
     }
   }
