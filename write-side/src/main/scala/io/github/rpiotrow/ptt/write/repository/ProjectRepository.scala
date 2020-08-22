@@ -10,7 +10,8 @@ import io.github.rpiotrow.ptt.write.entity.ProjectEntity
 trait ProjectRepository {
   def create(projectId: String, owner: UUID): DBResult[ProjectEntity]
   def get(projectId: String): DBResult[Option[ProjectEntity]]
-  def delete(projectEntity: ProjectEntity): DBResult[ProjectEntity]
+  def update(project: ProjectEntity, newProjectId: String): DBResult[ProjectEntity]
+  def delete(project: ProjectEntity): DBResult[ProjectEntity]
 }
 
 object ProjectRepository {
@@ -35,6 +36,18 @@ private[repository] class ProjectRepositoryLive(
 
   override def get(projectId: String): DBResult[Option[ProjectEntity]] = {
     run(quote { projects.filter(_.projectId == lift(projectId)) }).map(_.headOption)
+  }
+
+  override def update(project: ProjectEntity, newProjectId: String): DBResult[ProjectEntity] = {
+    val now = LocalDateTime.now(clock)
+    run(quote {
+      projects
+        .filter(_.projectId == lift(project.projectId))
+        .update(_.projectId -> lift(newProjectId))
+    }).map({
+      case 1 => project.copy(projectId = newProjectId, updatedAt = now)
+      case _ => throw new RuntimeException(s"Project '${project.projectId}' not updated !!!")
+    })
   }
 
   override def delete(project: ProjectEntity): DBResult[ProjectEntity] = {

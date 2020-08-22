@@ -4,17 +4,18 @@ import java.time.{Duration, LocalDateTime, YearMonth}
 
 import cats.data.OptionT
 import cats.implicits._
-import io.github.rpiotrow.ptt.api.model.UserId
+import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.write.entity._
 import io.github.rpiotrow.ptt.write.repository.{DBResult, _}
 import org.slf4j.LoggerFactory
 
 trait ReadSideService {
-  def projectCreated(project: ProjectEntity): DBResult[ProjectReadSideEntity]
-  def projectDeleted(project: ProjectEntity): DBResult[Unit]
+  def projectCreated(created: ProjectEntity): DBResult[ProjectReadSideEntity]
+  def projectUpdated(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit]
+  def projectDeleted(deleted: ProjectEntity): DBResult[Unit]
 
-  def taskAdded(task: TaskEntity): DBResult[TaskReadSideEntity]
-  def taskDeleted(task: TaskEntity): DBResult[Unit]
+  def taskAdded(added: TaskEntity): DBResult[TaskReadSideEntity]
+  def taskDeleted(deleted: TaskEntity): DBResult[Unit]
 }
 
 object ReadSideService {
@@ -33,26 +34,29 @@ private[service] class ReadSideServiceLive(
 
   private val logger = LoggerFactory.getLogger("ReadSideService")
 
-  override def projectCreated(project: ProjectEntity): DBResult[ProjectReadSideEntity] =
-    projectReadSideRepository.newProject(project)
+  override def projectCreated(created: ProjectEntity): DBResult[ProjectReadSideEntity] =
+    projectReadSideRepository.newProject(created)
 
-  override def projectDeleted(project: ProjectEntity): DBResult[Unit] = {
-    projectReadSideRepository.deleteProject(project)
+  override def projectUpdated(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit] =
+    projectReadSideRepository.updateProject(projectId.value, updated)
+
+  override def projectDeleted(deleted: ProjectEntity): DBResult[Unit] = {
+    projectReadSideRepository.deleteProject(deleted)
     // TODO: delete all tasks related to project on the read side
     // TODO: update statistics
   }
 
-  override def taskAdded(task: TaskEntity): DBResult[TaskReadSideEntity] =
+  override def taskAdded(added: TaskEntity): DBResult[TaskReadSideEntity] =
     for {
-      readModel <- taskReadSideRepository.add(task)
+      readModel <- taskReadSideRepository.add(added)
       _         <- projectReadSideRepository.addDuration(readModel.projectDbId, readModel.duration)
       _         <- updateStatisticsForAddedTask(readModel)
     } yield readModel
 
-  override def taskDeleted(task: TaskEntity): DBResult[Unit] = {
+  override def taskDeleted(deleted: TaskEntity): DBResult[Unit] = {
     (for {
-      readModel <- OptionT(taskReadSideRepository.get(task.taskId))
-      _         <- OptionT(taskDeletedReadModel(readModel, task.deletedAt.get))
+      readModel <- OptionT(taskReadSideRepository.get(deleted.taskId))
+      _         <- OptionT(taskDeletedReadModel(readModel, deleted.deletedAt.get))
     } yield ()).getOrElse(logger.warn("Read model update failure: " + "task not found in read model"))
   }
 

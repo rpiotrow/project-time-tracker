@@ -29,19 +29,21 @@ trait ServiceSpecBase { this: MockFactory =>
     Strategy.void
   )
 
-  protected val now                  = LocalDateTime.now()
-  protected val ownerId: UUID        = UUID.randomUUID()
-  protected val userId: UUID         = UUID.randomUUID()
-  protected val projectId: ProjectId = "p1"
-  protected val projectInput         = ProjectInput(projectId)
-  protected val projectOutput        = ProjectOutput(
+  protected val now                           = LocalDateTime.now()
+  protected val ownerId: UUID                 = UUID.randomUUID()
+  protected val userId: UUID                  = UUID.randomUUID()
+  protected val projectId: ProjectId          = "p1"
+  protected val projectIdForUpdate: ProjectId = "new-one"
+  protected val projectCreateInput            = ProjectInput(projectId)
+  protected val projectUpdateInput            = ProjectInput(projectIdForUpdate)
+  protected val projectOutput                 = ProjectOutput(
     projectId = projectId.value,
     owner = ownerId,
     createdAt = now,
     durationSum = Duration.ZERO,
     tasks = List()
   )
-  protected val project              = ProjectEntity(
+  protected val project                       = ProjectEntity(
     dbId = 1,
     projectId = projectId.value,
     createdAt = now,
@@ -49,7 +51,8 @@ trait ServiceSpecBase { this: MockFactory =>
     deletedAt = None,
     owner = ownerId
   )
-  protected val projectReadModel     = ProjectReadSideEntity(
+  protected val projectUpdated                = project.copy(projectId = projectIdForUpdate)
+  protected val projectReadModel              = ProjectReadSideEntity(
     dbId = 1,
     projectId = projectId.value,
     createdAt = now,
@@ -58,6 +61,7 @@ trait ServiceSpecBase { this: MockFactory =>
     owner = ownerId,
     durationSum = Duration.ZERO
   )
+  protected val projectUpdatedReadModel       = projectReadModel.copy(projectId = projectIdForUpdate)
 
   protected val taskId: TaskId             = UUID.randomUUID()
   protected val taskStartedAt              = LocalDateTime.parse("2020-08-18T17:30:00")

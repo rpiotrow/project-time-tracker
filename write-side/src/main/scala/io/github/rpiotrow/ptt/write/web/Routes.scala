@@ -47,6 +47,9 @@ private class RoutesLive(
     val projectCreateRoute = projectCreateEndpoint
       .withUserId()
       .toRoutes { case (params, userId) => projectCreate(params, userId) }
+    val projectUpdateRoute = projectUpdateEndpoint
+      .withUserId()
+      .toRoutes { case ((projectId, input), userId) => projectUpdate(projectId, input, userId) }
     val projectDeleteRoute = projectDeleteEndpoint
       .withUserId()
       .toRoutes { case (projectId, userId) => projectDelete(projectId, userId) }
@@ -57,14 +60,25 @@ private class RoutesLive(
       .withUserId()
       .toRoutes { case ((_, taskId), userId) => taskDelete(taskId, userId) }
 
-    projectCreateRoute <+> projectDeleteRoute <+> taskCreateRoute <+> taskDeleteRoute
+    projectCreateRoute <+> projectUpdateRoute <+> projectDeleteRoute <+> taskCreateRoute <+> taskDeleteRoute
   }
 
   private def projectCreate(input: ProjectInput, userId: UserId): IO[Either[ApiError, LocationHeader]] =
     projectService
       .create(input, userId)
       .leftMap(mapToApiErrors)
-      .map(project => new LocationHeader(s"$gatewayAddress/projects/${project.projectId}"))
+      .map(_ => new LocationHeader(s"$gatewayAddress/projects/${input.projectId}"))
+      .value
+
+  private def projectUpdate(
+    projectId: ProjectId,
+    input: ProjectInput,
+    userId: UserId
+  ): IO[Either[ApiError, LocationHeader]] =
+    projectService
+      .update(projectId, input, userId)
+      .leftMap(mapToApiErrors)
+      .map(_ => new LocationHeader(s"$gatewayAddress/projects/${input.projectId}"))
       .value
 
   private def projectDelete(projectId: ProjectId, userId: UserId): IO[Either[ApiError, Unit]] =

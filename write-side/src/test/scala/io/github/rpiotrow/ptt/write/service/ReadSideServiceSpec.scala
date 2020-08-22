@@ -7,7 +7,7 @@ import com.softwaremill.diffx.scalatest.DiffMatcher._
 import cats.implicits._
 import doobie.implicits._
 import io.github.rpiotrow.ptt.write.entity._
-import io.github.rpiotrow.ptt.write.repository.{DBResult, _}
+import io.github.rpiotrow.ptt.write.repository._
 import org.scalamock.matchers.ArgCapture.{CaptureAll, CaptureOne}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
@@ -28,6 +28,23 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         val result = service.projectCreated(project).transact(tnx).unsafeRunSync()
 
         result should be(projectReadModel)
+      }
+    }
+
+    describe("projectUpdated should") {
+      it("update project in read model") {
+        val projectReadSideRepository    = mock[ProjectReadSideRepository]
+        val taskReadSideRepository       = mock[TaskReadSideRepository]
+        val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
+        val service                      =
+          new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
+
+        (projectReadSideRepository.updateProject _)
+          .expects(projectId.value, projectUpdated)
+          .returning(Monad[DBResult].unit)
+        val result = service.projectUpdated(projectId, projectUpdated).transact(tnx).unsafeRunSync()
+
+        result should be(())
       }
     }
 
