@@ -169,7 +169,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
 
         (taskReadSideRepository.get _).expects(taskReadModel.taskId).returning(taskReadModel.some.pure[DBResult])
         (taskReadSideRepository.delete _).expects(taskReadModel.dbId, now).returning(Monad[DBResult].unit)
-        (projectReadSideRepository.substractDuration _)
+        (projectReadSideRepository.subtractDuration _)
           .expects(taskReadModel.projectDbId, taskReadModel.duration)
           .returning(().pure[DBResult])
         val currentStats = createStatistics(
@@ -199,7 +199,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
 
         (taskReadSideRepository.get _).expects(taskReadModel.taskId).returning(taskReadModel.some.pure[DBResult])
         (taskReadSideRepository.delete _).expects(taskReadModel.dbId, now).returning(Monad[DBResult].unit)
-        (projectReadSideRepository.substractDuration _)
+        (projectReadSideRepository.subtractDuration _)
           .expects(taskReadModel.projectDbId, taskReadModel.duration)
           .returning(().pure[DBResult])
         val currentStats = createStatistics(
@@ -237,7 +237,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
 
         (taskReadSideRepository.get _).expects(taskReadModel.taskId).returning(taskReadModel.some.pure[DBResult])
         (taskReadSideRepository.delete _).expects(taskReadModel.dbId, now).returning(Monad[DBResult].unit)
-        (projectReadSideRepository.substractDuration _)
+        (projectReadSideRepository.subtractDuration _)
           .expects(taskReadModel.projectDbId, taskReadModel.duration)
           .returning(().pure[DBResult])
         val stats     = createStatistics(

@@ -63,7 +63,7 @@ private[service] class ReadSideServiceLive(
   private def taskDeletedReadModel(readModel: TaskReadSideEntity, deletedAt: LocalDateTime) = {
     for {
       _ <- taskReadSideRepository.delete(readModel.dbId, deletedAt)
-      _ <- projectReadSideRepository.substractDuration(readModel.projectDbId, readModel.duration)
+      _ <- projectReadSideRepository.subtractDuration(readModel.projectDbId, readModel.duration)
       _ <- updateStatisticsForDeletedTask(readModel)
     } yield ().some
   }

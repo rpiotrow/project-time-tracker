@@ -11,7 +11,7 @@ trait ProjectReadSideRepository {
   def deleteProject(project: ProjectEntity): DBResult[Unit]
 
   def addDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
-  def substractDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
+  def subtractDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
 }
 
 object ProjectReadSideRepository {
@@ -55,7 +55,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
         .update(e => e.durationSum -> (e.durationSum + lift(duration)))
     }).map(logIfNotUpdated(s"no project with dbId ${projectDbId} in read model"))
 
-  override def substractDuration(projectDbId: Long, duration: Duration): DBResult[Unit] =
+  override def subtractDuration(projectDbId: Long, duration: Duration): DBResult[Unit] =
     run(quote {
       projectsReadSide
         .filter(_.dbId == lift(projectDbId))

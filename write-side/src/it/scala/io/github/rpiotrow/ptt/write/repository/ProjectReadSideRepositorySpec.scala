@@ -94,10 +94,10 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         readProjectByDbId(durationSum30.dbId) should matchTo(expected.some)
       }
     }
-    describe("substractDuration should") {
+    describe("subtractDuration should") {
       it("subtract duration of task from durationSum") {
         projectReadSideRepo
-          .substractDuration(durationSum60.dbId, Duration.ofMinutes(45))
+          .subtractDuration(durationSum60.dbId, Duration.ofMinutes(45))
           .transact(tnx)
           .unsafeRunSync()
 

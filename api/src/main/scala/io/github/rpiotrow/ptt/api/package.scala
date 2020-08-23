@@ -120,7 +120,7 @@ package object api {
     .put
     .in(jsonBody[TaskInput])
     .out(header[LocationHeader]("location"))
-    .out(statusCode(StatusCode.Created))
+    .out(statusCode(StatusCode.Ok))
 
   val taskDeleteEndpoint = tasksEndpoint
     .in(path[TaskId]("id"))

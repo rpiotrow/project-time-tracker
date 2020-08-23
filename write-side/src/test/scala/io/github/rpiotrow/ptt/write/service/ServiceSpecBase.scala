@@ -29,21 +29,19 @@ trait ServiceSpecBase { this: MockFactory =>
     Strategy.void
   )
 
-  protected val now                           = LocalDateTime.now()
-  protected val ownerId: UUID                 = UUID.randomUUID()
-  protected val userId: UUID                  = UUID.randomUUID()
-  protected val projectId: ProjectId          = "p1"
-  protected val projectIdForUpdate: ProjectId = "new-one"
-  protected val projectCreateInput            = ProjectInput(projectId)
-  protected val projectUpdateInput            = ProjectInput(projectIdForUpdate)
-  protected val projectOutput                 = ProjectOutput(
+  protected val now                  = LocalDateTime.now()
+  protected val ownerId: UUID        = UUID.randomUUID()
+  protected val userId: UUID         = UUID.randomUUID()
+  protected val projectId: ProjectId = "p1"
+  protected val projectCreateInput   = ProjectInput(projectId)
+  protected val projectOutput        = ProjectOutput(
     projectId = projectId.value,
     owner = ownerId,
     createdAt = now,
     durationSum = Duration.ZERO,
     tasks = List()
   )
-  protected val project                       = ProjectEntity(
+  protected val project              = ProjectEntity(
     dbId = 1,
     projectId = projectId.value,
     createdAt = now,
@@ -51,8 +49,7 @@ trait ServiceSpecBase { this: MockFactory =>
     deletedAt = None,
     owner = ownerId
   )
-  protected val projectUpdated                = project.copy(projectId = projectIdForUpdate)
-  protected val projectReadModel              = ProjectReadSideEntity(
+  protected val projectReadModel     = ProjectReadSideEntity(
     dbId = 1,
     projectId = projectId.value,
     createdAt = now,
@@ -61,6 +58,10 @@ trait ServiceSpecBase { this: MockFactory =>
     owner = ownerId,
     durationSum = Duration.ZERO
   )
+
+  protected val projectIdForUpdate: ProjectId = "new-one"
+  protected val projectUpdateInput            = ProjectInput(projectIdForUpdate)
+  protected val projectUpdated                = project.copy(projectId = projectIdForUpdate)
   protected val projectUpdatedReadModel       = projectReadModel.copy(projectId = projectIdForUpdate)
 
   protected val taskId: TaskId             = UUID.randomUUID()
@@ -91,5 +92,11 @@ trait ServiceSpecBase { this: MockFactory =>
     comment = "text".some
   )
   protected val taskReadModel              = TaskReadSideEntity(task)
+
+  protected val taskIdUpdated        = UUID.randomUUID()
+  protected val updateInput          = taskInput.copy(duration = Duration.ofMinutes(45))
+  protected val taskUpdated          = task.copy(taskId = taskIdUpdated, duration = Duration.ofMinutes(45))
+  protected val taskUpdatedReadModel = taskReadModel.copy(taskId = taskIdUpdated, duration = Duration.ofMinutes(45))
+  protected val taskUpdatedOutput    = taskOutput.copy(taskId = taskIdUpdated, duration = Duration.ofMinutes(45))
 
 }
