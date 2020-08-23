@@ -49,19 +49,88 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
     }
 
     describe("projectDeleted should") {
-      it("update project, tasks and statistics in the read model") {
+      it("update project and tasks in the read model") {
         val projectReadSideRepository    = mock[ProjectReadSideRepository]
         val taskReadSideRepository       = mock[TaskReadSideRepository]
         val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
         val service                      =
           new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
 
-        (projectReadSideRepository.deleteProject _).expects(project).returning(().pure[DBResult])
-        // TODO: delete all tasks related to project on read side
-        // TODO: update statistics
-        val result = service.projectDeleted(project).transact(tnx).unsafeRunSync()
+        val deletedProject = project.copy(deletedAt = now.some)
+        val tasksToDelete  = List[TaskReadSideEntity]().pure[DBResult]
+
+        (projectReadSideRepository.get _)
+          .expects(deletedProject.projectId)
+          .returning(projectReadModel.some.pure[DBResult])
+        (projectReadSideRepository.deleteProject _)
+          .expects(projectReadModel.dbId, projectReadModel.projectId, now)
+          .returning(().pure[DBResult])
+        (taskReadSideRepository.getNotDeleted _)
+          .expects(projectReadModel.dbId)
+          .returning(tasksToDelete)
+        (taskReadSideRepository.deleteAll _).expects(projectReadModel.dbId, now).returning(Monad[DBResult].unit)
+
+        val result = service.projectDeleted(deletedProject).transact(tnx).unsafeRunSync()
 
         result should be(())
+      }
+      it("update statistics in the read model") {
+        val projectReadSideRepository    = mock[ProjectReadSideRepository]
+        val taskReadSideRepository       = mock[TaskReadSideRepository]
+        val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
+        val service                      =
+          new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
+
+        val deletedProject = project.copy(deletedAt = now.some)
+        val tasksToDelete  = List[TaskReadSideEntity](
+          taskReadModel,
+          taskReadModel.copy(dbId = 112, duration = Duration.ofMinutes(15), volume = None)
+        ).pure[DBResult]
+
+        (projectReadSideRepository.get _)
+          .expects(deletedProject.projectId)
+          .returning(projectReadModel.some.pure[DBResult])
+        (projectReadSideRepository.deleteProject _)
+          .expects(projectReadModel.dbId, projectReadModel.projectId, now)
+          .returning(().pure[DBResult])
+        (taskReadSideRepository.getNotDeleted _)
+          .expects(projectReadModel.dbId)
+          .returning(tasksToDelete)
+        (taskReadSideRepository.deleteAll _).expects(projectReadModel.dbId, now).returning(Monad[DBResult].unit)
+
+        val stats1 = createStatistics(
+          numberOfTasks = 10,
+          numberOfTasksWithVolume = 5.some,
+          durationSum = Duration.ofMinutes(480),
+          volumeWeightedTaskDurationSum = Duration.ofMinutes(885).some,
+          volumeSum = 23L.some
+        )
+        (statisticsReadSideRepository.get _)
+          .expects(ownerId, taskStartedAtYearMonth)
+          .returning(Option(stats1).pure[DBResult])
+        val stats2 = createStatistics(
+          numberOfTasks = 9,
+          numberOfTasksWithVolume = 4.some,
+          durationSum = Duration.ofMinutes(450),
+          volumeWeightedTaskDurationSum = Duration.ofMinutes(585).some,
+          volumeSum = 13L.some
+        )
+        (statisticsReadSideRepository.get _)
+          .expects(ownerId, taskStartedAtYearMonth)
+          .returning(Option(stats2).pure[DBResult])
+        val stats3 = createStatistics(
+          numberOfTasks = 8,
+          numberOfTasksWithVolume = 4.some,
+          durationSum = Duration.ofMinutes(435),
+          volumeWeightedTaskDurationSum = Duration.ofMinutes(585).some,
+          volumeSum = 13L.some
+        )
+
+        val argCaptor = CaptureAll[StatisticsReadSideEntity]()
+        statisticsReadSideRepository.upsert _ expects capture(argCaptor) repeat 2 returning ().pure[DBResult]
+        service.projectDeleted(deletedProject).transact(tnx).unsafeRunSync()
+
+        argCaptor.values should matchTo(Seq(stats2, stats3))
       }
     }
 

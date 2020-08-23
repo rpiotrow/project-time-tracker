@@ -18,8 +18,10 @@ package object service {
   def services(implicit contextShift: ContextShift[IO]): IO[(ProjectService, TaskService)] = {
     createTransactor(AppConfiguration.live.databaseConfiguration)
       .use(tnx => {
-        val projectService = new ProjectServiceLive(ProjectRepository.live, ReadSideService.live, tnx)
-        val taskService    = new TaskServiceLive(TaskRepository.live, ProjectRepository.live, ReadSideService.live, tnx)
+        val projectService =
+          new ProjectServiceLive(ProjectRepository.live, TaskRepository.live, ReadSideService.live, tnx)
+        val taskService    =
+          new TaskServiceLive(TaskRepository.live, ProjectRepository.live, ReadSideService.live, tnx)
         IO((projectService, taskService))
       })
   }

@@ -9,7 +9,7 @@ import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
-import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository}
+import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository, TaskRepository}
 
 trait ProjectService {
   def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput]
@@ -19,6 +19,7 @@ trait ProjectService {
 
 private[service] class ProjectServiceLive(
   private val projectRepository: ProjectRepository,
+  private val taskRepository: TaskRepository,
   private val readSideService: ReadSideService,
   private val tnx: Transactor[IO]
 ) extends ProjectService
@@ -52,8 +53,8 @@ private[service] class ProjectServiceLive(
       project       <- ifExists(projectOption, "project with given projectId does not exists")
       _             <- checkOwner(project, user, "delete")
       deleted       <- EitherT.right[AppFailure](projectRepository.delete(project))
+      _             <- EitherT.right[AppFailure](taskRepository.deleteAll(project.dbId, deleted.deletedAt.get))
       _             <- EitherT.right[AppFailure](readSideService.projectDeleted(deleted))
-      // TODO: delete all tasks related to project on the write side
     } yield ()).transact(tnx)
   }
 

@@ -10,7 +10,9 @@ import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 trait TaskReadSideRepository {
   def add(task: TaskEntity): DBResult[TaskReadSideEntity]
   def get(taskId: TaskId): DBResult[Option[TaskReadSideEntity]]
+  def getNotDeleted(projectDbId: Long): DBResult[List[TaskReadSideEntity]]
   def delete(dbId: Long, deletedAt: LocalDateTime): DBResult[Unit]
+  def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit]
 }
 
 object TaskReadSideRepository {
@@ -36,11 +38,23 @@ private[repository] class TaskReadSideRepositoryLive(private val ctx: DBContext)
       tasksReadSide.filter(_.taskId == lift(taskId))
     }).map(_.headOption)
 
+  override def getNotDeleted(projectDbId: Long): DBResult[List[TaskReadSideEntity]] =
+    run(quote {
+      tasksReadSide.filter(t => t.projectDbId == lift(projectDbId) && t.deletedAt.isEmpty)
+    })
+
   override def delete(dbId: Long, deletedAt: LocalDateTime): DBResult[Unit] =
     run(quote {
       tasksReadSide
         .filter(_.dbId == lift(dbId))
         .update(_.deletedAt -> lift(deletedAt.some))
     }).map(logIfNotUpdated(s"no task with id '${dbId}'"))
+
+  override def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit] =
+    run(quote {
+      tasksReadSide
+        .filter(t => t.projectDbId == lift(projectDbId) && t.deletedAt.isEmpty)
+        .update(_.deletedAt -> lift(deletedAt.some))
+    }).map(_ => ())
 
 }

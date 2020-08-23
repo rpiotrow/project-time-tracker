@@ -12,7 +12,7 @@ trait TaskRepository {
   def add(projectId: Long, input: TaskInput, owner: UUID): DBResult[TaskEntity]
   def get(taskId: TaskId): DBResult[Option[TaskEntity]]
   def delete(task: TaskEntity): DBResult[TaskEntity]
-
+  def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit]
   def overlapping(userId: UserId, startedAt: LocalDateTime, duration: Duration): DBResult[List[TaskEntity]]
 }
 
@@ -56,6 +56,13 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext, private
         .update(_.deletedAt -> lift(now.some))
     }).map(_ => task.copy(deletedAt = now.some))
   }
+
+  override def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit] =
+    run(quote {
+      tasks
+        .filter(t => t.projectDbId == lift(projectDbId) && t.deletedAt.isEmpty)
+        .update(_.deletedAt -> lift(deletedAt.some))
+    }).map(_ => ())
 
   override def overlapping(userId: UserId, startedAt: LocalDateTime, duration: Duration): DBResult[List[TaskEntity]] =
     run(quote {

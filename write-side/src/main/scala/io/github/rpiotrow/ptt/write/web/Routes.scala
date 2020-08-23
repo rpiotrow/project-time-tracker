@@ -63,7 +63,12 @@ private class RoutesLive(
       .withUserId()
       .toRoutes { case ((_, taskId), userId) => taskDelete(taskId, userId) }
 
-    projectCreateRoute <+> projectUpdateRoute <+> projectDeleteRoute <+> taskCreateRoute <+> taskUpdateRoute <+> taskDeleteRoute
+    projectCreateRoute <+>
+      projectUpdateRoute <+>
+      projectDeleteRoute <+>
+      taskCreateRoute <+>
+      taskUpdateRoute <+>
+      taskDeleteRoute
   }
 
   private def projectCreate(input: ProjectInput, userId: UserId): IO[Either[ApiError, LocationHeader]] =

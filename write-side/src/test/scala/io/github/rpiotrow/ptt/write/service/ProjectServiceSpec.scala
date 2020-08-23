@@ -3,13 +3,11 @@ package io.github.rpiotrow.ptt.write.service
 import java.util.UUID
 
 import cats.Monad
-import cats.data.EitherT
-import cats.effect.IO
 import cats.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
-import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository}
+import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository, TaskRepository}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -20,8 +18,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
     describe("create should") {
       it("create new project") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
         (projectRepository.create _).expects(projectId.value, ownerId).returning(project.pure[DBResult])
@@ -35,8 +34,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       }
       it("do not create project with the same projectId") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
 
@@ -49,8 +49,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
     describe("update should") {
       it("change projectId") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _)
           .expects(projectIdForUpdate.value)
@@ -67,8 +68,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       }
       it("return error when project with given id does not exist") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
 
@@ -79,8 +81,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       }
       it("return error when given not owner wants to update project") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
 
@@ -91,8 +94,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       }
       it("return error when given project id is already used by some project") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
         (projectRepository.get _)
@@ -105,8 +109,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       }
       it("return failure when repository update is not successful") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _)
           .expects(projectIdForUpdate.value)
@@ -126,14 +131,17 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
     describe("delete should") {
       it("soft delete project on write and update read side") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
+
+        val deletedProject = project.copy(deletedAt = now.some)
 
         (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
-        (projectRepository.delete _).expects(project).returning(project.pure[DBResult])
-        // TODO: "delete all tasks of project on the write side"
+        (projectRepository.delete _).expects(project).returning(deletedProject.pure[DBResult])
+        (taskRepository.deleteAll _).expects(deletedProject.dbId, now).returning(Monad[DBResult].unit)
         (readSideService.projectDeleted _)
-          .expects(project)
+          .expects(deletedProject)
           .returning(().pure[DBResult])
 
         val result = service.delete(projectId, ownerId).value.unsafeRunSync()
@@ -142,8 +150,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       }
       it("return error when project with given id does not exist") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
 
@@ -153,8 +162,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
       }
       it("return error when not owner of the project wants to delete it") {
         val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new ProjectServiceLive(projectRepository, readSideService, tnx)
+        val service           = new ProjectServiceLive(projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
 

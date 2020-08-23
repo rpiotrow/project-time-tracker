@@ -41,8 +41,8 @@ private[service] class TaskServiceLive(
       _          <- checkOwner(task, userId)
       _          <- taskDoesNotOverlap(Some(task), input, userId)
       _          <- EitherT.right[AppFailure](taskRepository.delete(task))
-      _          <- EitherT.right[AppFailure](readSideService.taskDeleted(task))
       newTask    <- EitherT.right[AppFailure](taskRepository.add(task.projectDbId, input, userId))
+      _          <- EitherT.right[AppFailure](readSideService.taskDeleted(task))
       readModel  <- EitherT.right[AppFailure](readSideService.taskAdded(newTask))
     } yield toOutput(readModel)).transact(tnx)
   }

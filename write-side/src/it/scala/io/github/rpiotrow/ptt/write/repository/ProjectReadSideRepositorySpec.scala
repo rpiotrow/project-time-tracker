@@ -25,7 +25,8 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |    (101, 'projectD2', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
          |    (102, 'duration-sum-zero', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 0),
          |    (103, 'duration-sum-30', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 1800),
-         |    (104, 'duration-sum-60', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 3600)
+         |    (104, 'duration-sum-60', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 3600),
+         |    (106, 'project-get-one', '2020-08-21 08:00:00', '2020-08-21 23:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 7200)
          |;
          |""".stripMargin
 
@@ -43,8 +44,29 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     projectD1.copy(dbId = 103, projectId = "duration-sum-30", durationSum = Duration.ofMinutes(30))
   private val durationSum60   =
     projectD1.copy(dbId = 104, projectId = "duration-sum-60", durationSum = Duration.ofMinutes(60))
+  private val getOne          =
+    projectD1.copy(
+      dbId = 106,
+      projectId = "project-get-one",
+      createdAt = LocalDateTime.parse("2020-08-21T08:00:00"),
+      updatedAt = LocalDateTime.parse("2020-08-21T23:00:00"),
+      durationSum = Duration.ofHours(2)
+    )
 
   describe("ProjectReadSideRepository") {
+    describe("get should") {
+      it("return existing project from the read model") {
+        val result = projectReadSideRepo.get("project-get-one").transact(tnx).unsafeRunSync()
+
+        result should matchTo(getOne.some)
+      }
+      it("return none for non-existing project in the read model") {
+        val result = projectReadSideRepo.get("project-get-no-existing").transact(tnx).unsafeRunSync()
+
+        result should be(None)
+      }
+    }
+
     describe("newProject should") {
       it("return entity") {
         val projectId      = "project1"
@@ -67,11 +89,12 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
     describe("deletedProject should") {
       it("soft delete project from read model") {
-        val now             = LocalDateTime.now()
-        val writeSideEntity = project(projectD1).copy(deletedAt = now.some)
+        val now      = LocalDateTime.now()
+        val expected = projectD1.copy(deletedAt = now.some, updatedAt = now, durationSum = Duration.ZERO)
 
-        projectReadSideRepo.deleteProject(writeSideEntity).transact(tnx).unsafeRunSync()
-        readProjectByDbId(projectD1.dbId) should matchTo(projectD1.copy(deletedAt = now.some).some)
+        projectReadSideRepo.deleteProject(projectD1.dbId, projectD1.projectId, now).transact(tnx).unsafeRunSync()
+
+        readProjectByDbId(projectD1.dbId) should matchTo(expected.some)
       }
     }
     describe("addDuration should") {

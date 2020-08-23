@@ -40,11 +40,19 @@ private[service] class ReadSideServiceLive(
   override def projectUpdated(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit] =
     projectReadSideRepository.updateProject(projectId.value, updated)
 
-  override def projectDeleted(deleted: ProjectEntity): DBResult[Unit] = {
-    projectReadSideRepository.deleteProject(deleted)
-    // TODO: delete all tasks related to project on the read side
-    // TODO: update statistics
-  }
+  override def projectDeleted(deleted: ProjectEntity): DBResult[Unit] =
+    (for {
+      readModel <- OptionT(projectReadSideRepository.get(deleted.projectId))
+      _         <- OptionT(projectDeletedReadModel(readModel, deleted.deletedAt.get))
+    } yield ()).getOrElse(logger.warn("Read model update failure: " + "project not found in read model"))
+
+  private def projectDeletedReadModel(readModel: ProjectReadSideEntity, deletedAt: LocalDateTime) =
+    for {
+      _     <- projectReadSideRepository.deleteProject(readModel.dbId, readModel.projectId, deletedAt)
+      tasks <- taskReadSideRepository.getNotDeleted(readModel.dbId)
+      _     <- tasks.map(updateStatisticsForDeletedTask).sequence_
+      _     <- taskReadSideRepository.deleteAll(readModel.dbId, deletedAt)
+    } yield ().some
 
   override def taskAdded(added: TaskEntity): DBResult[TaskReadSideEntity] =
     for {
@@ -53,31 +61,28 @@ private[service] class ReadSideServiceLive(
       _         <- updateStatisticsForAddedTask(readModel)
     } yield readModel
 
-  override def taskDeleted(deleted: TaskEntity): DBResult[Unit] = {
+  override def taskDeleted(deleted: TaskEntity): DBResult[Unit] =
     (for {
       readModel <- OptionT(taskReadSideRepository.get(deleted.taskId))
       _         <- OptionT(taskDeletedReadModel(readModel, deleted.deletedAt.get))
     } yield ()).getOrElse(logger.warn("Read model update failure: " + "task not found in read model"))
-  }
 
-  private def taskDeletedReadModel(readModel: TaskReadSideEntity, deletedAt: LocalDateTime) = {
+  private def taskDeletedReadModel(readModel: TaskReadSideEntity, deletedAt: LocalDateTime) =
     for {
       _ <- taskReadSideRepository.delete(readModel.dbId, deletedAt)
       _ <- projectReadSideRepository.subtractDuration(readModel.projectDbId, readModel.duration)
       _ <- updateStatisticsForDeletedTask(readModel)
     } yield ().some
-  }
 
-  private def updateStatisticsForAddedTask(task: TaskReadSideEntity): DBResult[Unit] = {
+  private def updateStatisticsForAddedTask(task: TaskReadSideEntity): DBResult[Unit] =
     updateStatisticsForEachYearMonth(
       task,
       {
         case (yearMonth, duration) => updateStatisticsInDatabase(task.owner, yearMonth, 1, duration, task.volume)
       }
     )
-  }
 
-  private def updateStatisticsForDeletedTask(task: TaskReadSideEntity): DBResult[Unit] = {
+  private def updateStatisticsForDeletedTask(task: TaskReadSideEntity): DBResult[Unit] =
     updateStatisticsForEachYearMonth(
       task,
       {
@@ -85,21 +90,18 @@ private[service] class ReadSideServiceLive(
           updateStatisticsInDatabase(task.owner, yearMonth, -1, duration.negated(), task.volume.map(_ * (-1)))
       }
     )
-  }
 
   private def updateStatisticsForEachYearMonth(
     task: TaskReadSideEntity,
     updateStatisticsInYearMonth: ((YearMonth, Duration)) => DBResult[Unit]
-  ) = {
+  ) =
     splitDuration(task).map(updateStatisticsInYearMonth).toList.sequence_
-  }
 
-  private def splitDuration(task: TaskReadSideEntity): Map[YearMonth, Duration] = {
+  private def splitDuration(task: TaskReadSideEntity): Map[YearMonth, Duration] =
     LocalDateTimeRange(task.startedAt, task.startedAt.plus(task.duration))
       .splitToMonths()
       .map(r => r.fromYearMonth -> r.duration())
       .toMap
-  }
 
   private def updateStatisticsInDatabase(
     user: UserId,
@@ -107,13 +109,12 @@ private[service] class ReadSideServiceLive(
     tasksNumber: Int,
     duration: Duration,
     volume: Option[Int]
-  ): DBResult[Unit] = {
+  ): DBResult[Unit] =
     for {
       current <- statisticsReadSideRepository.get(user, yearMonth)
       createdOrUpdated = initialOrUpdateStatistics(current, user, yearMonth, tasksNumber, duration, volume)
       _ <- statisticsReadSideRepository.upsert(createdOrUpdated)
     } yield ()
-  }
 
   private def initialOrUpdateStatistics(
     current: Option[StatisticsReadSideEntity],
@@ -134,7 +135,7 @@ private[service] class ReadSideServiceLive(
     tasksNumber: Int,
     duration: Duration,
     volume: Option[Int]
-  ): StatisticsReadSideEntity = {
+  ): StatisticsReadSideEntity =
     StatisticsReadSideEntity(
       dbId = 0,
       owner = user,
@@ -146,7 +147,6 @@ private[service] class ReadSideServiceLive(
       volumeWeightedTaskDurationSum = volume.map(duration.multipliedBy(_)),
       volumeSum = volume.map(_.longValue)
     )
-  }
 
   private def updateStatistics(
     statistics: StatisticsReadSideEntity,
