@@ -2,10 +2,9 @@ package io.github.rpiotrow.ptt.gateway.web
 
 import java.util.UUID
 
-import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
-import akka.http.scaladsl.server.Directives.provide
-import akka.http.scaladsl.server.{Directive1, Route}
+import akka.http.scaladsl.model.headers.{OAuth2BearerToken, RawHeader, Authorization => AkkaAuthorizationHeader}
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import io.github.rpiotrow.ptt.api.model.UserId
 import org.scalamock.scalatest.MockFactory
@@ -17,6 +16,11 @@ import scala.concurrent.Future
 class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest with should.Matchers {
 
   describe("Routes") {
+    it("not authorized") {
+      Get("http://localhost:8080/projects") ~> noOpRoutes() ~> check {
+        status shouldEqual StatusCodes.Unauthorized
+      }
+    }
     describe("/projects") {
       describe("read-side") {
         it("GET") {
@@ -61,17 +65,19 @@ class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest wit
         }
       }
     }
-    describe("other") {
+    describe("/ufo") {
       it("should return not found") {
         checkWithStatus(Get("/ufo"), StatusCodes.NotFound)
       }
     }
   }
 
-  val userId                    = UUID.randomUUID()
+  private val userId            = UUID.randomUUID()
   private val noOpAuthorization = new Authorization {
-    override def check: Directive1[UserId] = provide(userId)
+    override def getUserId(rawJwtToken: String): Option[UserId] =
+      if (rawJwtToken == "token") Some(userId) else None
   }
+  private val validCredentials  = OAuth2BearerToken("token")
 
   private def noOpRoutes(): Route = Routes.serviceRoute(noOpAuthorization, mock[ServiceProxy], mock[ServiceProxy])
 
@@ -79,23 +85,24 @@ class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest wit
     val readSide     = mock[ServiceProxy]
     val writeSide    = mock[ServiceProxy]
     val proxy        = if (request.method == HttpMethods.GET) readSide else writeSide
+    val authRequest  = request.addHeader(AkkaAuthorizationHeader(OAuth2BearerToken("token")))
     val proxyRequest =
-      if (request.method == HttpMethods.GET) request
-      else request.withHeaders(RawHeader("X-Authorization", userId.toString))
+      if (request.method == HttpMethods.GET) authRequest
+      else authRequest.addHeader(RawHeader("X-Authorization", userId.toString))
 
     (proxy.queueRequest _)
       .expects(proxyRequest)
       .returning(Future.successful(HttpResponse(entity = HttpEntity("test"))))
     val routes = Routes.serviceRoute(noOpAuthorization, readSide, writeSide)
 
-    request ~> routes ~> check {
+    authRequest ~> routes ~> check {
       status shouldEqual StatusCodes.OK
       entityAs[String] shouldEqual "test"
     }
   }
 
   private def checkWithStatus(request: HttpRequest, expectedStatus: StatusCode) = {
-    request ~> noOpRoutes() ~> check {
+    request ~> addCredentials(validCredentials) ~> noOpRoutes() ~> check {
       status shouldEqual expectedStatus
     }
   }

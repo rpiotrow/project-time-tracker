@@ -3,80 +3,66 @@ package io.github.rpiotrow.ptt.gateway.web
 import java.time.Instant
 import java.util.UUID
 
-import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
-import akka.http.scaladsl.model.{HttpEntity, StatusCodes, _}
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.MissingHeaderRejection
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import io.github.rpiotrow.ptt.gateway.configuration.AuthorizationConfig
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
-import sttp.model.HeaderNames
 
-class AuthorizationSpec extends AnyFunSpec with ScalatestRouteTest with should.Matchers {
+class AuthorizationSpec extends AnyFunSpec with should.Matchers {
 
-  val jwtKey    = "secretKey"
-  val algorithm = JwtAlgorithm.HS256
+  private val jwtKey    = "secretKey"
+  private val algorithm = JwtAlgorithm.HS256
 
-  val authorization = new AuthorizationLive(AuthorizationConfig(jwtKey, algorithm.toString))
-  val route         =
-    path("hello") {
-      get {
-        authorization.check { _ =>
-          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>"))
-        }
-      }
-    }
+  private val authorization = new AuthorizationLive(AuthorizationConfig(jwtKey, algorithm.toString))
 
-  val claim = JwtClaim(
+  private val userId = UUID.randomUUID()
+  private val claim  = JwtClaim(
     expiration = Some(Instant.now.plusSeconds(120).getEpochSecond),
     issuedAt = Some(Instant.now.getEpochSecond),
-    subject = Some(UUID.randomUUID().toString)
+    subject = Some(userId.toString)
   )
 
   describe("Authorization") {
-    it("should reject when token is not provided") {
-      Get("/hello") ~> route ~> check {
-        rejection shouldEqual MissingHeaderRejection(HeaderNames.Authorization)
+    describe("getUserId should") {
+      describe("return none") {
+        it("when token is not provided") {
+          authorization.getUserId("") should be(None)
+        }
+        it("when token is not valid") {
+          authorization.getUserId("abc") should be(None)
+        }
+        it("when token is signed with different secret") {
+          val invalidToken = JwtCirce.encode(claim, "differentKey", algorithm)
+          authorization.getUserId(invalidToken) should be(None)
+        }
+        it("when token is expired") {
+          val expiredClaim = JwtClaim(
+            expiration = Some(Instant.now.minusSeconds(120).getEpochSecond),
+            issuedAt = Some(Instant.now.minusSeconds(240).getEpochSecond),
+            subject = Some(UUID.randomUUID().toString)
+          )
+          val expiredToken = JwtCirce.encode(expiredClaim, jwtKey, algorithm)
+          authorization.getUserId(expiredToken) should be(None)
+        }
+        it("when token does not have subject") {
+          val noSubjectClaim      = JwtClaim(
+            expiration = Some(Instant.now.plusSeconds(120).getEpochSecond),
+            issuedAt = Some(Instant.now.getEpochSecond)
+          )
+          val tokenWithoutSubject = JwtCirce.encode(noSubjectClaim, jwtKey, algorithm)
+          authorization.getUserId(tokenWithoutSubject) should be(None)
+        }
       }
-    }
-    it("should return Unauthorized when token is invalid") {
-      val invalidToken = JwtCirce.encode(claim, "differentKey", algorithm)
-      Get("/hello").withHeaders(Authorization(OAuth2BearerToken(invalidToken))) ~> route ~> check {
-        status should be(StatusCodes.Unauthorized)
-      }
-    }
-    it("should return Unauthorized when token is expired") {
-      val expiredClaim = JwtClaim(
-        expiration = Some(Instant.now.minusSeconds(120).getEpochSecond),
-        issuedAt = Some(Instant.now.minusSeconds(240).getEpochSecond),
-        subject = Some(UUID.randomUUID().toString)
-      )
-      val expiredToken = JwtCirce.encode(expiredClaim, jwtKey, algorithm)
-      Get("/hello").withHeaders(Authorization(OAuth2BearerToken(expiredToken))) ~> route ~> check {
-        status should be(StatusCodes.Unauthorized)
-      }
-    }
-    it("should return Unauthorized when token does not have subject") {
-      val noSubjectClaim      = JwtClaim(
-        expiration = Some(Instant.now.plusSeconds(120).getEpochSecond),
-        issuedAt = Some(Instant.now.getEpochSecond)
-      )
-      val tokenWithoutSubject = JwtCirce.encode(noSubjectClaim, jwtKey, algorithm)
-      Get("/hello").withHeaders(Authorization(OAuth2BearerToken(tokenWithoutSubject))) ~> route ~> check {
-        status should be(StatusCodes.Unauthorized)
-      }
-    }
-    it("should return OK when token is valid") {
-      val claim = JwtClaim(
-        expiration = Some(Instant.now.plusSeconds(120).getEpochSecond),
-        issuedAt = Some(Instant.now.getEpochSecond),
-        subject = Some(UUID.randomUUID().toString)
-      )
-      val token = JwtCirce.encode(claim, jwtKey, algorithm)
-      Get("/hello").withHeaders(Authorization(OAuth2BearerToken(token))) ~> route ~> check {
-        status should be(StatusCodes.OK)
+      describe("return some userId") {
+        it("when token is valid") {
+          val claim = JwtClaim(
+            expiration = Some(Instant.now.plusSeconds(120).getEpochSecond),
+            issuedAt = Some(Instant.now.getEpochSecond),
+            subject = Some(userId.toString)
+          )
+          val token = JwtCirce.encode(claim, jwtKey, algorithm)
+          authorization.getUserId(token) should be(Some(userId))
+        }
       }
     }
   }
