@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.write.service
 
 import cats.data.EitherT
-import cats.effect.IO
+import cats.effect.Sync
 import doobie.Transactor
 import doobie.implicits._
 import io.github.rpiotrow.ptt.api.input.TaskInput
@@ -10,21 +10,21 @@ import io.github.rpiotrow.ptt.api.output.TaskOutput
 import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 import io.github.rpiotrow.ptt.write.repository._
 
-trait TaskService {
-  def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[IO, AppFailure, TaskOutput]
-  def update(taskId: TaskId, input: TaskInput, userId: UserId): EitherT[IO, AppFailure, TaskOutput]
-  def delete(taskId: TaskId, userId: UserId): EitherT[IO, AppFailure, Unit]
+trait TaskService[F[_]] {
+  def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput]
+  def update(taskId: TaskId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput]
+  def delete(taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit]
 }
 
-private[service] class TaskServiceLive(
+private[service] class TaskServiceLive[F[_]: Sync](
   private val taskRepository: TaskRepository,
   private val projectRepository: ProjectRepository,
   private val readSideService: ReadSideService,
-  private val tnx: Transactor[IO]
-) extends TaskService
+  private val tnx: Transactor[F]
+) extends TaskService[F]
     with ServiceBase {
 
-  override def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[IO, AppFailure, TaskOutput] = {
+  override def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput] = {
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project       <- ifExists(projectOption, "project with given identifier does not exist")
@@ -34,7 +34,7 @@ private[service] class TaskServiceLive(
     } yield toOutput(readModel)).transact(tnx)
   }
 
-  override def update(taskId: TaskId, input: TaskInput, userId: UserId): EitherT[IO, AppFailure, TaskOutput] = {
+  override def update(taskId: TaskId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput] = {
     (for {
       taskOption <- EitherT.right[AppFailure](taskRepository.get(taskId))
       task       <- ifExists(taskOption, "task with given identifier does not exist")
@@ -47,7 +47,7 @@ private[service] class TaskServiceLive(
     } yield toOutput(readModel)).transact(tnx)
   }
 
-  override def delete(taskId: TaskId, userId: UserId): EitherT[IO, AppFailure, Unit] = {
+  override def delete(taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit] = {
     (for {
       taskOption <- EitherT.right[AppFailure](taskRepository.get(taskId))
       task       <- ifExists(taskOption, "task with given identifier does not exist")

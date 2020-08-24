@@ -6,7 +6,7 @@ import cats.data.OptionT
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.write.entity._
-import io.github.rpiotrow.ptt.write.repository.{DBResult, _}
+import io.github.rpiotrow.ptt.write.repository._
 import org.slf4j.LoggerFactory
 
 trait ReadSideService {

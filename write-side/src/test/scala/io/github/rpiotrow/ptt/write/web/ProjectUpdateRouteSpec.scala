@@ -24,7 +24,7 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
 
   describe("PUT /projects/change-me") {
     it("successful") {
-      val projectService = mock[ProjectService]
+      val projectService = mock[ProjectService[IO]]
       (projectService.update _).expects(projectId, projectInput, ownerId).returning(EitherT.right(Monad[IO].unit))
       val response       = makeUpdateProjectRequest(projectService)
 
@@ -35,7 +35,7 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     }
     describe("failure") {
       it("when id is not unique") {
-        val projectService = mock[ProjectService]
+        val projectService = mock[ProjectService[IO]]
         (projectService.update _)
           .expects(projectId, projectInput, ownerId)
           .returning(EitherT.left(IO(NotUnique("project id is not unique"))))
@@ -45,7 +45,7 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
         response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
       }
       it("when user is not owner of the project") {
-        val projectService = mock[ProjectService]
+        val projectService = mock[ProjectService[IO]]
         (projectService.update _)
           .expects(projectId, projectInput, ownerId)
           .returning(EitherT.left(IO(NotOwner("project is not owned by invoking user"))))
@@ -55,7 +55,7 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
         response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
       }
       it("when project does not exist") {
-        val projectService = mock[ProjectService]
+        val projectService = mock[ProjectService[IO]]
         (projectService.update _)
           .expects(projectId, projectInput, ownerId)
           .returning(EitherT.left(IO(EntityNotFound("project with given identifier does not exist"))))
@@ -70,7 +70,7 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
   private val projectId: ProjectId = "change-me"
   private val projectInput         = ProjectInput(projectId = "project-new")
 
-  private def makeUpdateProjectRequest(projectService: ProjectService) = {
+  private def makeUpdateProjectRequest(projectService: ProjectService[IO]) = {
     val url  = "/projects/change-me"
     val body = Stream.evalSeq(IO { projectInput.asJson.toString().getBytes.toSeq })
     makeRequest(Request(method = Method.PUT, uri = Uri.unsafeFromString(url), body = body), projectService)

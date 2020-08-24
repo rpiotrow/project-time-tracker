@@ -7,7 +7,7 @@ object WriteSide extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
     for {
-      serverStream <- Server.stream
+      serverStream <- Server.stream[IO]
       exit         <- serverStream.compile.drain.as(ExitCode.Success)
     } yield exit
 

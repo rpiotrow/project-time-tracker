@@ -16,8 +16,8 @@ trait RouteSpecBase { this: MockFactory =>
 
   protected def makeRequest(
     request: Request[IO],
-    projectService: ProjectService = mock[ProjectService],
-    taskService: TaskService = mock[TaskService]
+    projectService: ProjectService[IO] = mock[ProjectService[IO]],
+    taskService: TaskService[IO] = mock[TaskService[IO]]
   ): Response[IO] = {
     val requestWithAuth = request.withHeaders(Header.Raw(CaseInsensitiveString("X-Authorization"), ownerId.toString))
     val routes          = Routes.test("http://gateway.live", projectService, taskService)

@@ -1,6 +1,8 @@
 package io.github.rpiotrow.ptt.write
 
-import cats.effect.{Blocker, ContextShift, IO, Resource}
+import cats.Monad
+import cats.implicits._
+import cats.effect.{Async, Blocker, ContextShift, Resource, Sync}
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
@@ -15,20 +17,20 @@ package object service {
   case class NotOwner(what: String)       extends AppFailure
   case object InvalidTimeSpan             extends AppFailure
 
-  def services(implicit contextShift: ContextShift[IO]): IO[(ProjectService, TaskService)] = {
-    createTransactor(AppConfiguration.live.databaseConfiguration)
+  def services[F[_]: Async: ContextShift](): F[(ProjectService[F], TaskService[F])] = {
+    createTransactor[F](AppConfiguration.live.databaseConfiguration)
       .use(tnx => {
         val projectService =
           new ProjectServiceLive(ProjectRepository.live, TaskRepository.live, ReadSideService.live, tnx)
         val taskService    =
           new TaskServiceLive(TaskRepository.live, ProjectRepository.live, ReadSideService.live, tnx)
-        IO((projectService, taskService))
+        Monad[F].pure((projectService, taskService))
       })
   }
 
-  private def createTransactor(
+  private def createTransactor[F[_]: Async: ContextShift](
     configuration: DatabaseConfiguration
-  )(implicit contextShift: ContextShift[IO]): Resource[IO, HikariTransactor[IO]] = {
+  ): Resource[F, HikariTransactor[F]] = {
 
     val hikariConfig = new HikariConfig()
     hikariConfig.setDriverClassName(configuration.jdbcDriver)
@@ -37,9 +39,9 @@ package object service {
     hikariConfig.setPassword(configuration.dbPassword)
 
     for {
-      ec <- ExecutionContexts.fixedThreadPool[IO](32)
-      b  <- Blocker[IO]
-      t  <- HikariTransactor.fromHikariConfig[IO](hikariConfig, ec, b)
+      ec <- ExecutionContexts.fixedThreadPool[F](32)
+      b  <- Blocker[F]
+      t  <- HikariTransactor.fromHikariConfig[F](hikariConfig, ec, b)
     } yield t
   }
 

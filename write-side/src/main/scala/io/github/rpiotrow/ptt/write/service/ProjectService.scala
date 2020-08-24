@@ -1,7 +1,8 @@
 package io.github.rpiotrow.ptt.write.service
 
+import cats.Monad
 import cats.data.EitherT
-import cats.effect.IO
+import cats.effect.{Async, Bracket, Sync}
 import cats.implicits._
 import doobie.Transactor
 import doobie.implicits._
@@ -11,21 +12,21 @@ import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
 import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository, TaskRepository}
 
-trait ProjectService {
-  def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput]
-  def update(projectId: ProjectId, input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, Unit]
-  def delete(projectId: ProjectId, user: UserId): EitherT[IO, AppFailure, Unit]
+trait ProjectService[F[_]] {
+  def create(input: ProjectInput, owner: UserId): EitherT[F, AppFailure, ProjectOutput]
+  def update(projectId: ProjectId, input: ProjectInput, owner: UserId): EitherT[F, AppFailure, Unit]
+  def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit]
 }
 
-private[service] class ProjectServiceLive(
+private[service] class ProjectServiceLive[F[_]: Sync](
   private val projectRepository: ProjectRepository,
   private val taskRepository: TaskRepository,
   private val readSideService: ReadSideService,
-  private val tnx: Transactor[IO]
-) extends ProjectService
+  private val tnx: Transactor[F]
+) extends ProjectService[F]
     with ServiceBase {
 
-  override def create(input: ProjectInput, owner: UserId): EitherT[IO, AppFailure, ProjectOutput] = {
+  override def create(input: ProjectInput, owner: UserId): EitherT[F, AppFailure, ProjectOutput] = {
     val projectId = input.projectId.value
     (for {
       existingOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
@@ -35,7 +36,7 @@ private[service] class ProjectServiceLive(
     } yield toOutput(readModel)).transact(tnx)
   }
 
-  override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[IO, AppFailure, Unit] = {
+  override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] = {
     (for {
       projectOption  <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project        <- ifExists(projectOption, "project with given projectId does not exists")
@@ -47,7 +48,7 @@ private[service] class ProjectServiceLive(
     } yield ()).transact(tnx)
   }
 
-  override def delete(projectId: ProjectId, user: UserId): EitherT[IO, AppFailure, Unit] = {
+  override def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit] = {
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project       <- ifExists(projectOption, "project with given projectId does not exists")

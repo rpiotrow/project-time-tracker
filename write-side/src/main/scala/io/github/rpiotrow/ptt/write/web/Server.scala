@@ -1,5 +1,7 @@
 package io.github.rpiotrow.ptt.write.web
 
+import cats.implicits._
+import cats.Monad
 import cats.effect._
 import fs2.Stream
 import io.github.rpiotrow.ptt.write.configuration.AppConfiguration
@@ -11,15 +13,15 @@ import scala.concurrent.ExecutionContext
 
 object Server {
 
-  def stream(implicit contextShift: ContextShift[IO], C: Concurrent[IO], T: Timer[IO]): IO[Stream[IO, Nothing]] = {
+  def stream[F[_]: Monad: ContextShift: ConcurrentEffect: Timer](): F[Stream[F, Nothing]] = {
     val webConfiguration = AppConfiguration.live.webConfiguration
     for {
-      routes <- Routes.live
+      routes <- Routes.live[F]()
 
       httpApp        = routes.writeSideRoutes().orNotFound
       loggingHttpApp = org.http4s.server.middleware.Logger.httpApp(true, true)(httpApp)
 
-      serverStream = BlazeServerBuilder[IO](ExecutionContext.global)
+      serverStream = BlazeServerBuilder[F](ExecutionContext.global)
         .bindHttp(webConfiguration.port, webConfiguration.host)
         .withHttpApp(loggingHttpApp)
         .serve

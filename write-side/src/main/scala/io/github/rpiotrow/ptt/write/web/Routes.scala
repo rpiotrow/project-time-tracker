@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.write.web
 
 import cats.implicits._
-import cats.effect.{ContextShift, IO}
+import cats.effect.{Async, ContextShift}
 import io.github.rpiotrow.ptt.api._
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.input._
@@ -13,37 +13,39 @@ import org.http4s.{EntityBody, HttpRoutes}
 import sttp.tapir._
 import sttp.tapir.server.http4s._
 
-trait Routes {
-  def writeSideRoutes(): HttpRoutes[IO]
+trait Routes[F[_]] {
+  def writeSideRoutes(): HttpRoutes[F]
 }
 
 object Routes {
 
-  def live(implicit contextShift: ContextShift[IO]): IO[Routes] = {
+  def live[F[_]: Async: ContextShift](): F[Routes[F]] = {
     val gatewayConfiguration = AppConfiguration.live.gatewayConfiguration
-    services.map({
+    services[F].map({
       case (projectService, taskService) =>
-        new RoutesLive(gatewayConfiguration.address, projectService, taskService)
+        new RoutesLive[F](gatewayConfiguration.address, projectService, taskService)
     })
   }
 
-  def test(gatewayAddress: String, projectService: ProjectService, taskService: TaskService)(implicit
-    contextShift: ContextShift[IO]
-  ): Routes =
-    new RoutesLive(gatewayAddress, projectService, taskService)
+  def test[F[_]: Async: ContextShift](
+    gatewayAddress: String,
+    projectService: ProjectService[F],
+    taskService: TaskService[F]
+  ): Routes[F] =
+    new RoutesLive[F](gatewayAddress, projectService, taskService)
 }
 
-private class RoutesLive(
+private class RoutesLive[F[_]: Async](
   private val gatewayAddress: String,
-  private val projectService: ProjectService,
-  private val taskService: TaskService
-)(implicit private val contextShift: ContextShift[IO])
-    extends Routes {
+  private val projectService: ProjectService[F],
+  private val taskService: TaskService[F]
+)(implicit private val contextShift: ContextShift[F])
+    extends Routes[F] {
 
-  implicit private val serverOptions: Http4sServerOptions[IO] =
-    Http4sServerOptions.default[IO].copy(decodeFailureHandler = DecodeFailure.decodeFailureHandler)
+  implicit private val serverOptions: Http4sServerOptions[F] =
+    Http4sServerOptions.default[F].copy(decodeFailureHandler = DecodeFailure.decodeFailureHandler)
 
-  override def writeSideRoutes(): HttpRoutes[IO] = {
+  override def writeSideRoutes(): HttpRoutes[F] = {
     val projectCreateRoute = projectCreateEndpoint
       .withUserId()
       .toRoutes { case (params, userId) => projectCreate(params, userId) }
@@ -71,7 +73,7 @@ private class RoutesLive(
       taskDeleteRoute
   }
 
-  private def projectCreate(input: ProjectInput, userId: UserId): IO[Either[ApiError, LocationHeader]] =
+  private def projectCreate(input: ProjectInput, userId: UserId): F[Either[ApiError, LocationHeader]] =
     projectService
       .create(input, userId)
       .leftMap(mapToApiErrors)
@@ -82,20 +84,20 @@ private class RoutesLive(
     projectId: ProjectId,
     input: ProjectInput,
     userId: UserId
-  ): IO[Either[ApiError, LocationHeader]] =
+  ): F[Either[ApiError, LocationHeader]] =
     projectService
       .update(projectId, input, userId)
       .leftMap(mapToApiErrors)
       .map(_ => new LocationHeader(s"$gatewayAddress/projects/${input.projectId}"))
       .value
 
-  private def projectDelete(projectId: ProjectId, userId: UserId): IO[Either[ApiError, Unit]] =
+  private def projectDelete(projectId: ProjectId, userId: UserId): F[Either[ApiError, Unit]] =
     projectService
       .delete(projectId, userId)
       .leftMap(mapToApiErrors)
       .value
 
-  private def taskAdd(projectId: ProjectId, input: TaskInput, userId: UserId): IO[Either[ApiError, LocationHeader]] =
+  private def taskAdd(projectId: ProjectId, input: TaskInput, userId: UserId): F[Either[ApiError, LocationHeader]] =
     taskService
       .add(projectId, input, userId)
       .leftMap(mapToApiErrors)
@@ -107,14 +109,14 @@ private class RoutesLive(
     taskId: TaskId,
     input: TaskInput,
     userId: UserId
-  ): IO[Either[ApiError, LocationHeader]] =
+  ): F[Either[ApiError, LocationHeader]] =
     taskService
       .update(taskId, input, userId)
       .leftMap(mapToApiErrors)
       .map(task => new LocationHeader(s"$gatewayAddress/projects/${projectId}/tasks/${task.taskId}"))
       .value
 
-  private def taskDelete(taskId: TaskId, userId: UserId): IO[Either[ApiError, Unit]] =
+  private def taskDelete(taskId: TaskId, userId: UserId): F[Either[ApiError, Unit]] =
     taskService
       .delete(taskId, userId)
       .leftMap(mapToApiErrors)

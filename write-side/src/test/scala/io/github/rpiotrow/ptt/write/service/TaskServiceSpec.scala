@@ -4,6 +4,7 @@ import java.util.UUID
 
 import cats.implicits._
 import cats.Monad
+import cats.effect.IO
 import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import io.github.rpiotrow.ptt.api.output.TaskOutput
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, TaskEntity}
@@ -20,7 +21,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
         (taskRepository.overlapping _)
@@ -39,7 +40,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
         (taskRepository.overlapping _)
@@ -54,7 +55,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
 
@@ -69,7 +70,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
         (taskRepository.overlapping _)
@@ -92,7 +93,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (taskRepository.get _).expects(taskId).returning(Option.empty[TaskEntity].pure[DBResult])
 
@@ -104,7 +105,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
 
@@ -117,7 +118,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
         (taskRepository.overlapping _)
@@ -135,7 +136,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
         (taskRepository.delete _).expects(task).returning(task.pure[DBResult])
@@ -151,7 +152,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (taskRepository.get _).expects(taskId).returning(Option.empty[TaskEntity].pure[DBResult])
 
@@ -163,7 +164,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
-        val service           = new TaskServiceLive(taskRepository, projectRepository, readSideService, tnx)
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
 

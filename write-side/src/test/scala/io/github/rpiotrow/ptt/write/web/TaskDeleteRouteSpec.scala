@@ -18,7 +18,7 @@ class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
 
   describe(s"DELETE $url") {
     it("successful") {
-      val taskService = mock[TaskService]
+      val taskService = mock[TaskService[IO]]
       (taskService.delete _).expects(taskId, ownerId).returning(EitherT.right(IO(())))
       val response    = makeDeleteTaskRequest(taskId, taskService)
 
@@ -26,7 +26,7 @@ class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
     }
     describe("failure") {
       it("when task does not exist") {
-        val taskService = mock[TaskService]
+        val taskService = mock[TaskService[IO]]
         (taskService.delete _)
           .expects(taskId, ownerId)
           .returning(EitherT.left(IO(EntityNotFound("task not exist"))))
@@ -35,7 +35,7 @@ class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         response.status should be(Status.NotFound)
       }
       it("when owner does not match authorized user") {
-        val taskService = mock[TaskService]
+        val taskService = mock[TaskService[IO]]
         (taskService.delete _)
           .expects(taskId, ownerId)
           .returning(EitherT.left(IO(NotOwner("only owner can delete task"))))
@@ -46,7 +46,7 @@ class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
     }
   }
 
-  private def makeDeleteTaskRequest(projectId: TaskId, taskService: TaskService) = {
+  private def makeDeleteTaskRequest(projectId: TaskId, taskService: TaskService[IO]) = {
     makeRequest(Request(method = Method.DELETE, uri = Uri.unsafeFromString(url)), taskService = taskService)
   }
 

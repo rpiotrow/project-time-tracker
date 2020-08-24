@@ -25,7 +25,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
 
   describe("POST /projects") {
     it("successful") {
-      val projectService = mock[ProjectService]
+      val projectService = mock[ProjectService[IO]]
       (projectService.create _).expects(projectInput, ownerId).returning(EitherT.right(IO(projectOutput)))
       val response       = makeAddProjectRequest(projectService)
 
@@ -36,7 +36,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     }
     describe("failure") {
       it("when id is not unique") {
-        val projectService = mock[ProjectService]
+        val projectService = mock[ProjectService[IO]]
         (projectService.create _)
           .expects(projectInput, ownerId)
           .returning(EitherT.left(IO(NotUnique("project id is not unique"))))
@@ -57,7 +57,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     tasks = List()
   )
 
-  private def makeAddProjectRequest(projectService: ProjectService) = {
+  private def makeAddProjectRequest(projectService: ProjectService[IO]) = {
     val url  = "/projects"
     val body = Stream.evalSeq(IO { projectInput.asJson.toString().getBytes.toSeq })
     makeRequest(Request(method = Method.POST, uri = Uri.unsafeFromString(url), body = body), projectService)

@@ -30,7 +30,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
 
   describe(s"POST /projects/$projectId/tasks") {
     it("successful") {
-      val taskService = mock[TaskService]
+      val taskService = mock[TaskService[IO]]
       (taskService.add _).expects(projectId, taskInput, ownerId).returning(EitherT.right(IO(taskOutput)))
       val response    = makeAddTaskRequest(taskService)
 
@@ -41,7 +41,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
     }
     describe("failure") {
       it("when project does not exist") {
-        val taskService = mock[TaskService]
+        val taskService = mock[TaskService[IO]]
         (taskService.add _)
           .expects(projectId, taskInput, ownerId)
           .returning(EitherT.left(IO(EntityNotFound("project with given projectId does not exist"))))
@@ -51,7 +51,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
         response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
       }
       it("when task time span is invalid") {
-        val taskService            = mock[TaskService]
+        val taskService            = mock[TaskService[IO]]
         val appFailure: AppFailure = InvalidTimeSpan
         (taskService.add _)
           .expects(projectId, taskInput, ownerId)
@@ -79,7 +79,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
     comment = "text".some
   )
 
-  private def makeAddTaskRequest(taskService: TaskService) = {
+  private def makeAddTaskRequest(taskService: TaskService[IO]) = {
     val url  = s"/projects/$projectId/tasks"
     val body = Stream.evalSeq(IO { taskInput.asJson.toString().getBytes.toSeq })
     makeRequest(

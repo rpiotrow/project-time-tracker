@@ -17,7 +17,7 @@ class ProjectDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
   describe("DELETE /projects/one") {
     it("successful") {
       val projectId: ProjectId = "one"
-      val projectService       = mock[ProjectService]
+      val projectService       = mock[ProjectService[IO]]
       (projectService.delete _).expects(projectId, ownerId).returning(EitherT.right(IO(())))
       val response             = makeDeleteProjectRequest(projectId, projectService)
 
@@ -26,7 +26,7 @@ class ProjectDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     describe("failure") {
       it("when project does not exist") {
         val projectId: ProjectId = "two"
-        val projectService       = mock[ProjectService]
+        val projectService       = mock[ProjectService[IO]]
         (projectService.delete _)
           .expects(projectId, ownerId)
           .returning(EitherT.left(IO(EntityNotFound("project with given projectId does not exist"))))
@@ -36,7 +36,7 @@ class ProjectDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
       }
       it("when owner does not match authorized user") {
         val projectId: ProjectId = "three"
-        val projectService       = mock[ProjectService]
+        val projectService       = mock[ProjectService[IO]]
         (projectService.delete _)
           .expects(projectId, ownerId)
           .returning(EitherT.left(IO(NotOwner("only owner can delete project"))))
@@ -47,7 +47,7 @@ class ProjectDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     }
   }
 
-  private def makeDeleteProjectRequest(projectId: ProjectId, projectService: ProjectService) = {
+  private def makeDeleteProjectRequest(projectId: ProjectId, projectService: ProjectService[IO]) = {
     val url = s"/projects/$projectId"
     makeRequest(Request(method = Method.DELETE, uri = Uri.unsafeFromString(url)), projectService)
   }

@@ -31,7 +31,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
 
   describe(s"PUT /projects/$projectId/tasks/$taskId") {
     it("successful") {
-      val taskService = mock[TaskService]
+      val taskService = mock[TaskService[IO]]
       (taskService.update _).expects(taskId, taskInput, ownerId).returning(EitherT.right(IO(taskOutput)))
       val response    = makeUpdateTaskRequest(taskService)
 
@@ -42,7 +42,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
     }
     describe("failure") {
       it("when project does not exist") {
-        val taskService = mock[TaskService]
+        val taskService = mock[TaskService[IO]]
         (taskService.update _)
           .expects(taskId, taskInput, ownerId)
           .returning(EitherT.left(IO(EntityNotFound("project with given projectId does not exist"))))
@@ -52,7 +52,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
       }
       it("when owner does not match authorized user") {
-        val taskService = mock[TaskService]
+        val taskService = mock[TaskService[IO]]
         (taskService.update _)
           .expects(taskId, taskInput, ownerId)
           .returning(EitherT.left(IO(NotOwner("only owner can update task"))))
@@ -61,7 +61,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         response.status should be(Status.Forbidden)
       }
       it("when task time span is invalid") {
-        val taskService            = mock[TaskService]
+        val taskService            = mock[TaskService[IO]]
         val appFailure: AppFailure = InvalidTimeSpan
         (taskService.update _)
           .expects(taskId, taskInput, ownerId)
@@ -89,7 +89,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
     comment = "text".some
   )
 
-  private def makeUpdateTaskRequest(taskService: TaskService) = {
+  private def makeUpdateTaskRequest(taskService: TaskService[IO]) = {
     val url  = s"/projects/$projectId/tasks/$taskId"
     val body = Stream.evalSeq(IO { taskInput.asJson.toString().getBytes.toSeq })
     makeRequest(
