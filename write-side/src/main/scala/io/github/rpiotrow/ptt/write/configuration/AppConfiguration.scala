@@ -13,7 +13,7 @@ case class AppConfiguration(
 
 case class DatabaseConfiguration(jdbcDriver: String, jdbcUrl: String, dbUsername: String, dbPassword: String)
 
-case class WebConfiguration(host: String, port: Int)
+case class WebConfiguration(host: String, port: Int, threadPoolSize: Int)
 
 case class GatewayConfiguration(address: String)
 

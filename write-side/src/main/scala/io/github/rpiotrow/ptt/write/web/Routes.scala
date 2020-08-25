@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.write.web
 
 import cats.implicits._
-import cats.effect.{Async, ContextShift}
+import cats.effect.{Async, ContextShift, Resource}
 import io.github.rpiotrow.ptt.api._
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.input._
@@ -19,9 +19,9 @@ trait Routes[F[_]] {
 
 object Routes {
 
-  def live[F[_]: Async: ContextShift](): F[Routes[F]] = {
+  def live[F[_]: Async: ContextShift](): Resource[F, Routes[F]] = {
     val gatewayConfiguration = AppConfiguration.live.gatewayConfiguration
-    services[F].map({
+    services[F]().map({
       case (projectService, taskService) =>
         new RoutesLive[F](gatewayConfiguration.address, projectService, taskService)
     })

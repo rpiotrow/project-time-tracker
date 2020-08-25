@@ -1,8 +1,6 @@
 package io.github.rpiotrow.ptt.write
 
-import cats.Monad
-import cats.implicits._
-import cats.effect.{Async, Blocker, ContextShift, Resource, Sync}
+import cats.effect.{Async, Blocker, ContextShift, Resource}
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
@@ -17,15 +15,12 @@ package object service {
   case class NotOwner(what: String)       extends AppFailure
   case object InvalidTimeSpan             extends AppFailure
 
-  def services[F[_]: Async: ContextShift](): F[(ProjectService[F], TaskService[F])] = {
-    createTransactor[F](AppConfiguration.live.databaseConfiguration)
-      .use(tnx => {
-        val projectService =
-          new ProjectServiceLive(ProjectRepository.live, TaskRepository.live, ReadSideService.live, tnx)
-        val taskService    =
-          new TaskServiceLive(TaskRepository.live, ProjectRepository.live, ReadSideService.live, tnx)
-        Monad[F].pure((projectService, taskService))
-      })
+  def services[F[_]: Async: ContextShift](): Resource[F, (ProjectService[F], TaskService[F])] = {
+    for {
+      tnx <- createTransactor[F](AppConfiguration.live.databaseConfiguration)
+      projectService = new ProjectServiceLive(ProjectRepository.live, TaskRepository.live, ReadSideService.live, tnx)
+      taskService    = new TaskServiceLive(TaskRepository.live, ProjectRepository.live, ReadSideService.live, tnx)
+    } yield (projectService, taskService)
   }
 
   private def createTransactor[F[_]: Async: ContextShift](
