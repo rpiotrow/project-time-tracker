@@ -5,6 +5,20 @@ API for tracking time of projects. The time is tracked in tasks. Statistics are 
 Data are stored in PostgreSQL database. Read operations are separated from writes (CQRS pattern).
 There are separate sub-projects and separate schemas in SQL databases.
 
+## Date and time formats
+
+Currently, all dates are stored and expected without timezone information, services assume UTC timezone. Clients
+need to provide dates in UTC without time zone. Services use and expect
+[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format. Example input for task creation:
+```json
+{
+  "startedAt": "2020-08-04T10:00:00",
+  "duration": "PT4H",
+  "volume": 1,
+  "comment": "a new shiny task"
+}
+```
+
 ## Sub-projects
 
  * [api](api/README.md) - REST API defined with [tAPIr](https://tapir.softwaremill.com/)
