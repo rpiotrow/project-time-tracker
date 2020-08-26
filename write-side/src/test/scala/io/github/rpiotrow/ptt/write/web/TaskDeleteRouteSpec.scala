@@ -5,7 +5,7 @@ import java.util.UUID
 import cats.data.EitherT
 import cats.effect.IO
 import io.github.rpiotrow.ptt.api.model.TaskId
-import io.github.rpiotrow.ptt.write.service.{EntityNotFound, NotOwner, TaskService}
+import io.github.rpiotrow.ptt.write.service.{AlreadyDeleted, EntityNotFound, NotOwner, TaskService}
 import org.http4s._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
@@ -42,6 +42,15 @@ class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         val response    = makeDeleteTaskRequest(taskId, taskService)
 
         response.status should be(Status.Forbidden)
+      }
+      it("when task is already deleted") {
+        val taskService = mock[TaskService[IO]]
+        (taskService.delete _)
+          .expects(taskId, ownerId)
+          .returning(EitherT.left(IO(AlreadyDeleted("task was alread deleted"))))
+        val response    = makeDeleteTaskRequest(taskId, taskService)
+
+        response.status should be(Status.Conflict)
       }
     }
   }

@@ -28,6 +28,8 @@ Only owner of the project (user who created it) can delete it. This is soft dele
 be undeleted. All the tasks that are registered for deleted project are also marked as deleted (with the same deletion
 time as the deleted project).
 
+Project can be deleted only once, and it cannot be undeleted. Subsequent invocation of delete will return client error.
+
 ### Register a new task in project
 
 Every user can register a task for a project. Task specify amount of time spend on the project. User can register
@@ -43,6 +45,8 @@ previous version of the task will be present in project tasks (as deleted).
 
 Only owner of the task can delete it. This is soft delete and deleted task will be still visible in tasks list
 of the project, although deleted task duration will not be counted to project duration and to statistics.
+
+Task can be deleted only once, and it cannot be undeleted. Subsequent invocation of delete will return client error.
 
 ## Implementation notes
 

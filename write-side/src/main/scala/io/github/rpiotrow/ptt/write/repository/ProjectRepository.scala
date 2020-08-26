@@ -56,7 +56,10 @@ private[repository] class ProjectRepositoryLive(
       projects
         .filter(e => e.projectId == lift(project.projectId) && e.deletedAt.isEmpty)
         .update(_.deletedAt -> lift(now.some), _.updatedAt -> lift(now))
-    }).map(_ => project.copy(deletedAt = now.some, updatedAt = now))
+    }).map({
+      case 1 => project.copy(deletedAt = now.some, updatedAt = now)
+      case _ => throw new RuntimeException(s"Project '${project.projectId}' not deleted !!!")
+    })
   }
 
 }

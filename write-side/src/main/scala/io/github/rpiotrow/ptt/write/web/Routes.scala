@@ -132,5 +132,6 @@ private class RoutesLive[F[_]: Async](
       case NotOwner(m)       => Forbidden(m)
       case EntityNotFound(m) => NotFound(m)
       case InvalidTimeSpan   => Conflict("other task overlaps task time span")
+      case AlreadyDeleted(m) => Conflict(m)
     }
 }

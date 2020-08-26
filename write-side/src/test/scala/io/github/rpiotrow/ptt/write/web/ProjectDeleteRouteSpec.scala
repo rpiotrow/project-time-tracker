@@ -6,7 +6,7 @@ import cats.data.EitherT
 import cats.effect.IO
 import eu.timepit.refined.auto._
 import io.github.rpiotrow.ptt.api.model.ProjectId
-import io.github.rpiotrow.ptt.write.service.{EntityNotFound, NotOwner, ProjectService}
+import io.github.rpiotrow.ptt.write.service.{AlreadyDeleted, EntityNotFound, NotOwner, ProjectService}
 import org.http4s._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
@@ -43,6 +43,16 @@ class ProjectDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
         val response             = makeDeleteProjectRequest(projectId, projectService)
 
         response.status should be(Status.Forbidden)
+      }
+      it("when project is already deleted") {
+        val projectId: ProjectId = "three"
+        val projectService       = mock[ProjectService[IO]]
+        (projectService.delete _)
+          .expects(projectId, ownerId)
+          .returning(EitherT.left(IO(AlreadyDeleted("project was already deleted"))))
+        val response             = makeDeleteProjectRequest(projectId, projectService)
+
+        response.status should be(Status.Conflict)
       }
     }
   }

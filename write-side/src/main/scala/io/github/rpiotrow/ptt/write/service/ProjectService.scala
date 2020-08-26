@@ -36,7 +36,7 @@ private[service] class ProjectServiceLive[F[_]: Sync](
     } yield toOutput(readModel)).transact(tnx)
   }
 
-  override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] = {
+  override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
       projectOption  <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project        <- ifExists(projectOption, "project with given projectId does not exists")
@@ -46,36 +46,36 @@ private[service] class ProjectServiceLive[F[_]: Sync](
       updated        <- EitherT.right[AppFailure](projectRepository.update(project, input.projectId.value))
       _              <- EitherT.right[AppFailure](readSideService.projectUpdated(projectId, updated))
     } yield ()).transact(tnx)
-  }
 
-  override def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit] = {
+  override def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project       <- ifExists(projectOption, "project with given projectId does not exists")
       _             <- checkOwner(project, user, "delete")
+      _             <- checkNotAlreadyDeleted(project)
       deleted       <- EitherT.right[AppFailure](projectRepository.delete(project))
       _             <- EitherT.right[AppFailure](taskRepository.deleteAll(project.dbId, deleted.deletedAt.get))
       _             <- EitherT.right[AppFailure](readSideService.projectDeleted(deleted))
     } yield ()).transact(tnx)
-  }
 
   // FIXME: check Uniqueness should take id, read form db and return Unit, this one is more like checkDoesNotExist
-  private def checkUniqueness(existingOption: Option[ProjectEntity]): EitherT[DBResult, NotUnique, Unit] = {
+  private def checkUniqueness(existingOption: Option[ProjectEntity]): EitherT[DBResult, NotUnique, Unit] =
     existingOption match {
       case Some(_) =>
         EitherT.left[Unit](NotUnique("project with given projectId already exists").pure[DBResult])
       case None    =>
         EitherT.right[NotUnique](().pure[DBResult])
     }
-  }
 
-  private def checkOwner(
-    project: ProjectEntity,
-    user: UserId,
-    actionName: String
-  ): EitherT[DBResult, NotOwner, Unit] = {
+  private def checkOwner(project: ProjectEntity, user: UserId, actionName: String): EitherT[DBResult, NotOwner, Unit] =
     EitherT.cond[DBResult](project.owner == user, (), NotOwner(s"only owner can $actionName project"))
-  }
+
+  private def checkNotAlreadyDeleted(project: ProjectEntity): EitherT[DBResult, AlreadyDeleted, Unit] =
+    EitherT.cond[DBResult](
+      project.deletedAt.isEmpty,
+      (),
+      AlreadyDeleted(s"project was already deleted at ${project.deletedAt.get}")
+    )
 
   private def toOutput(project: ProjectReadSideEntity) =
     ProjectOutput(

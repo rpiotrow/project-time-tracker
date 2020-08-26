@@ -52,7 +52,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
   override def deleteProject(dbId: Long, projectId: String, deletedAt: LocalDateTime): DBResult[Unit] = {
     run(quote {
       projectsReadSide
-        .filter(_.dbId == lift(dbId))
+        .filter(p => p.dbId == lift(dbId) && p.deletedAt.isEmpty)
         .update(
           _.deletedAt   -> lift(deletedAt.some),
           _.updatedAt   -> lift(deletedAt),

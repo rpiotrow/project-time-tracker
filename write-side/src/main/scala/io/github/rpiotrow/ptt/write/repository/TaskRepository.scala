@@ -54,7 +54,10 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext, private
       tasks
         .filter(t => t.dbId == lift(task.dbId) && t.deletedAt.isEmpty)
         .update(_.deletedAt -> lift(now.some))
-    }).map(_ => task.copy(deletedAt = now.some))
+    }).map({
+      case 1 => task.copy(deletedAt = now.some)
+      case _ => throw new RuntimeException(s"Task '${task.taskId}' not deleted !!!")
+    })
   }
 
   override def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit] =

@@ -52,8 +52,9 @@ private[service] class TaskServiceLive[F[_]: Sync](
       taskOption <- EitherT.right[AppFailure](taskRepository.get(taskId))
       task       <- ifExists(taskOption, "task with given identifier does not exist")
       _          <- checkOwner(task, userId)
-      _          <- EitherT.right[AppFailure](taskRepository.delete(task))
-      _          <- EitherT.right[AppFailure](readSideService.taskDeleted(task))
+      _          <- checkNotDeletedAlready(task)
+      deleted    <- EitherT.right[AppFailure](taskRepository.delete(task))
+      _          <- EitherT.right[AppFailure](readSideService.taskDeleted(deleted))
     } yield ()).transact(tnx)
   }
 
@@ -72,6 +73,11 @@ private[service] class TaskServiceLive[F[_]: Sync](
 
   private def checkOwner(task: TaskEntity, user: UserId): EitherT[DBResult, NotOwner, Unit] = {
     EitherT.cond[DBResult](task.owner == user, (), NotOwner("only owner can delete task"))
+  }
+
+  private def checkNotDeletedAlready(task: TaskEntity): EitherT[DBResult, AlreadyDeleted, Unit] = {
+    EitherT
+      .cond[DBResult](task.deletedAt.isEmpty, (), AlreadyDeleted(s"task was already deleted at ${task.deletedAt.get}"))
   }
 
   private def toOutput(task: TaskReadSideEntity): TaskOutput = {

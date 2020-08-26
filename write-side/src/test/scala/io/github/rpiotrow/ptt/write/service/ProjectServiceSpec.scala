@@ -1,5 +1,6 @@
 package io.github.rpiotrow.ptt.write.service
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import cats.Monad
@@ -173,6 +174,21 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val result     = service.delete(projectId, notOwnerId).value.unsafeRunSync()
 
         result should be(NotOwner("only owner can delete project").asLeft[Unit])
+      }
+      it("return error when project is already deleted") {
+        val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
+        val readSideService   = mock[ReadSideService]
+        val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
+
+        val deletedAt      = LocalDateTime.now
+        val deletedProject = project.copy(deletedAt = deletedAt.some)
+
+        (projectRepository.get _).expects(projectId.value).returning(Option(deletedProject).pure[DBResult])
+
+        val result = service.delete(projectId, ownerId).value.unsafeRunSync()
+
+        result should be(AlreadyDeleted(s"project was already deleted at $deletedAt").asLeft[Unit])
       }
     }
   }

@@ -46,7 +46,7 @@ private[repository] class TaskReadSideRepositoryLive(private val ctx: DBContext)
   override def delete(dbId: Long, deletedAt: LocalDateTime): DBResult[Unit] =
     run(quote {
       tasksReadSide
-        .filter(_.dbId == lift(dbId))
+        .filter(t => t.dbId == lift(dbId) && t.deletedAt.isEmpty)
         .update(_.deletedAt -> lift(deletedAt.some))
     }).map(logIfNotUpdated(s"no task with id '${dbId}'"))
 

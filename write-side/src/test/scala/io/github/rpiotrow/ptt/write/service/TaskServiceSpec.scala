@@ -1,5 +1,6 @@
 package io.github.rpiotrow.ptt.write.service
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import cats.implicits._
@@ -138,10 +139,12 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val readSideService   = mock[ReadSideService]
         val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
+        val taskDeleted = task.copy(deletedAt = LocalDateTime.now.some)
+
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
-        (taskRepository.delete _).expects(task).returning(task.pure[DBResult])
+        (taskRepository.delete _).expects(task).returning(taskDeleted.pure[DBResult])
         (readSideService.taskDeleted _)
-          .expects(task)
+          .expects(taskDeleted)
           .returning(Monad[DBResult].unit)
 
         val result = service.delete(taskId, ownerId).value.unsafeRunSync()
@@ -172,6 +175,21 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val result     = service.delete(taskId, notOwnerId).value.unsafeRunSync()
 
         result should be(NotOwner("only owner can delete task").asLeft[Unit])
+      }
+      it("return error when task is already deleted") {
+        val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
+        val readSideService   = mock[ReadSideService]
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
+
+        val deletedAt   = LocalDateTime.now
+        val taskDeleted = task.copy(deletedAt = deletedAt.some)
+
+        (taskRepository.get _).expects(taskId).returning(Option(taskDeleted).pure[DBResult])
+
+        val result = service.delete(taskId, ownerId).value.unsafeRunSync()
+
+        result should be(AlreadyDeleted(s"task was already deleted at $deletedAt").asLeft[Unit])
       }
     }
   }

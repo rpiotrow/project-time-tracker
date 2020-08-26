@@ -12,6 +12,7 @@ package object service {
   sealed trait AppFailure
   case class EntityNotFound(what: String) extends AppFailure
   case class NotUnique(what: String)      extends AppFailure
+  case class AlreadyDeleted(what: String) extends AppFailure
   case class NotOwner(what: String)       extends AppFailure
   case object InvalidTimeSpan             extends AppFailure
 
