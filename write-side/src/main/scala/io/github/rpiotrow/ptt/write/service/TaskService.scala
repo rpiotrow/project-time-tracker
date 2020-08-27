@@ -87,7 +87,8 @@ private[service] class TaskServiceLive[F[_]: Sync](
       startedAt = task.startedAt,
       duration = task.duration,
       volume = task.volume,
-      comment = task.comment
+      comment = task.comment,
+      deletedAt = task.deletedAt
     )
   }
 

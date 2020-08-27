@@ -81,6 +81,7 @@ private[service] class ProjectServiceLive[F[_]: Sync](
     ProjectOutput(
       projectId = project.projectId,
       createdAt = project.createdAt,
+      deletedAt = project.deletedAt,
       owner = project.owner,
       durationSum = project.durationSum,
       tasks = List()

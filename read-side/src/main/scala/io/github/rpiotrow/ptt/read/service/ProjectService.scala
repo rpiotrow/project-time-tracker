@@ -50,13 +50,15 @@ private class ProjectServiceLive(
       startedAt = task.startedAt,
       duration = task.duration,
       volume = task.volume,
-      comment = task.comment
+      comment = task.comment,
+      deletedAt = task.deletedAt
     )
 
   private def toOutput(project: ProjectEntity, tasks: List[TaskEntity]): ProjectOutput =
     ProjectOutput(
       projectId = project.projectId,
       createdAt = project.createdAt,
+      deletedAt = project.deletedAt,
       owner = project.owner,
       durationSum = project.durationSum,
       tasks = tasks.map(toOutput)

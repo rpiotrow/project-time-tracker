@@ -7,6 +7,7 @@ import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 case class ProjectOutput(
   projectId: String,
   createdAt: LocalDateTime,
+  deletedAt: Option[LocalDateTime],
   owner: UserId,
   durationSum: Duration,
   tasks: List[TaskOutput]

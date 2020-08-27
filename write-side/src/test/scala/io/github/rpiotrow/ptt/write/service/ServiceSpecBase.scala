@@ -38,6 +38,7 @@ trait ServiceSpecBase { this: MockFactory =>
     projectId = projectId.value,
     owner = ownerId,
     createdAt = now,
+    deletedAt = None,
     durationSum = Duration.ZERO,
     tasks = List()
   )
@@ -78,7 +79,8 @@ trait ServiceSpecBase { this: MockFactory =>
     startedAt = taskStartedAt,
     duration = taskDuration,
     volume = taskVolume.some,
-    comment = "text".some
+    comment = "text".some,
+    deletedAt = None
   )
   protected val task                       = TaskEntity(
     dbId = 11,

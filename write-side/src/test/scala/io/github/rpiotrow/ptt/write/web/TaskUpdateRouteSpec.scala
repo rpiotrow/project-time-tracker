@@ -86,7 +86,8 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
     startedAt = LocalDateTime.now(),
     duration = Duration.ofMinutes(30),
     volume = 10.some,
-    comment = "text".some
+    comment = "text".some,
+    deletedAt = None
   )
 
   private def makeUpdateTaskRequest(taskService: TaskService[IO]) = {

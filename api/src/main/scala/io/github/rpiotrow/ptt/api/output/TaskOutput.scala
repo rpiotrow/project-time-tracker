@@ -10,5 +10,6 @@ case class TaskOutput(
   startedAt: LocalDateTime,
   duration: Duration,
   volume: Option[Int],
-  comment: Option[String]
+  comment: Option[String],
+  deletedAt: Option[LocalDateTime]
 )

@@ -76,7 +76,8 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
     startedAt = LocalDateTime.now(),
     duration = Duration.ofMinutes(30),
     volume = 10.some,
-    comment = "text".some
+    comment = "text".some,
+    deletedAt = None
   )
 
   private def makeAddTaskRequest(taskService: TaskService[IO]) = {

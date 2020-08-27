@@ -53,6 +53,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     projectId = "project1",
     owner = ownerId,
     createdAt = LocalDateTime.now(),
+    deletedAt = None,
     durationSum = Duration.ZERO,
     tasks = List()
   )
