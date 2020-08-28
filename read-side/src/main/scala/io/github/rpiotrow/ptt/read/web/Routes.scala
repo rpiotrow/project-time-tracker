@@ -7,7 +7,8 @@ import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection._
 import io.github.rpiotrow.ptt.api.model._
-import io.github.rpiotrow.ptt.api._
+import io.github.rpiotrow.ptt.api.ProjectEndpoints._
+import io.github.rpiotrow.ptt.api.StatisticsEndpoints._
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.output._
 import io.github.rpiotrow.ptt.api.param._

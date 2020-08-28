@@ -2,7 +2,8 @@ package io.github.rpiotrow.ptt.write.web
 
 import cats.implicits._
 import cats.effect.{Async, ContextShift, Resource}
-import io.github.rpiotrow.ptt.api._
+import io.github.rpiotrow.ptt.api.ProjectEndpoints._
+import io.github.rpiotrow.ptt.api.TaskEndpoints._
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.input._
 import io.github.rpiotrow.ptt.api.model._
