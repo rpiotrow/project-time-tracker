@@ -2,22 +2,16 @@
 
 API for tracking time of projects. The time is tracked in tasks. Statistics are gathered per user.
 
-Data are stored in PostgreSQL database. Read operations are separated from writes (CQRS pattern).
-There are separate sub-projects and separate schemas in SQL databases.
+## Brief architecture
 
-## Date and time formats
+![Architecture diagram](arch_diagram.png)
 
-Currently, all dates are stored and expected without timezone information, services assume UTC timezone. Clients
-need to provide dates in UTC without time zone. Services use and expect
-[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format. Example input for task creation:
-```json
-{
-  "startedAt": "2020-08-04T10:00:00",
-  "duration": "PT4H",
-  "volume": 1,
-  "comment": "a new shiny task"
-}
-```
+System contains 3 services:
+ * gateway - exposes API, handles authorization and routes request to proper services
+ * read-side - contains endpoints responsible for queries
+ * write-side - contains endpoints responsible for data modifications
+
+Data are stored in PostgreSQL database. There are separate schemas in SQL databases for read-side and write-side.
 
 ## Sub-projects
 
@@ -26,23 +20,7 @@ need to provide dates in UTC without time zone. Services use and expect
    and [OpenAPI](https://www.openapis.org/) documentation with [Swagger UI](https://swagger.io/tools/swagger-ui/)
  * [read-side](read-side/README.md) - implementation of the query (read) side of the API
  * [write-side](write-side/README.md) - implementation of command (write) side of the API
- * [e2e-tests](e2e-tests/README.md) - end to end tests
-
-## Running tests
-
-To run all possible tests in all sub-projects invoke (from the main directory):
-```
-$ sbt checks
-```
-To run only unit tests:
-```
-$ sbt test
-```
-To run only integration tests (much slower than unit tests, using
-[testcontainers](https://github.com/testcontainers/testcontainers-scala)):
-```
-$ sbt it:test
-```
+ * [e2e-tests](e2e-tests/README.md) - end to end tests (TBD)
 
 ## Run
 
@@ -68,7 +46,41 @@ $ sbt runAll
 ### Using API
 
 The simplest way to check, learn and experiment with the API
-is by using [Swagger UI](https://swagger.io/tools/swagger-ui/) exposed by [gateway](gateway/README.md).
+is by using [Swagger UI](https://swagger.io/tools/swagger-ui/) exposed by [gateway](gateway/README.md):
+
+http://localhost:8080/docs/index.html?url=/docs/docs.yaml
+
+Authorization is described in the [gateway](gateway/README.md).
+
+## Running tests
+
+To run all possible tests in all sub-projects invoke (from the main directory):
+```
+$ sbt checks
+```
+To run only unit tests:
+```
+$ sbt test
+```
+To run only integration tests (much slower than unit tests, using
+[testcontainers](https://github.com/testcontainers/testcontainers-scala)):
+```
+$ sbt it:test
+```
+
+## Date and time formats
+
+Currently, all dates are stored and expected without timezone information, services assume UTC timezone. Clients
+need to provide dates in UTC without time zone. Services use and expect
+[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format. Example input for task creation:
+```json
+{
+  "startedAt": "2020-08-04T10:00:00",
+  "duration": "PT4H",
+  "volume": 1,
+  "comment": "a new shiny task"
+}
+```
 
 ## Libraries used
 
