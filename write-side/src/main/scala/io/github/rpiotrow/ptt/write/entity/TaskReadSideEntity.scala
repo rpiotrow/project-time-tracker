@@ -17,11 +17,16 @@ case class TaskReadSideEntity(
 )
 
 object TaskReadSideEntity {
-  def apply(taskEntity: TaskEntity): TaskReadSideEntity = {
-    import shapeless._, ops.hlist.Align
-    val taskGen         = LabelledGeneric[TaskEntity]
-    val taskReadSideGen = LabelledGeneric[TaskReadSideEntity]
-    val align           = Align[taskGen.Repr, taskReadSideGen.Repr]
-    taskReadSideGen.from(align(taskGen.to(taskEntity)))
-  }
+  def apply(task: TaskEntity, projectDbId: Long): TaskReadSideEntity =
+    TaskReadSideEntity(
+      dbId = 0,
+      taskId = task.taskId,
+      projectDbId = projectDbId,
+      deletedAt = task.deletedAt,
+      owner = task.owner,
+      startedAt = task.startedAt,
+      duration = task.duration,
+      volume = task.volume,
+      comment = task.comment
+    )
 }

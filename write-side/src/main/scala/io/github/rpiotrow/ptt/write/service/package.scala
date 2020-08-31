@@ -10,11 +10,12 @@ import io.github.rpiotrow.ptt.write.repository.{ProjectRepository, TaskRepositor
 package object service {
 
   sealed trait AppFailure
-  case class EntityNotFound(what: String) extends AppFailure
-  case class NotUnique(what: String)      extends AppFailure
-  case class AlreadyDeleted(what: String) extends AppFailure
-  case class NotOwner(what: String)       extends AppFailure
-  case object InvalidTimeSpan             extends AppFailure
+  case class EntityNotFound(what: String)  extends AppFailure
+  case class NotUnique(what: String)       extends AppFailure
+  case class AlreadyDeleted(what: String)  extends AppFailure
+  case class NotOwner(what: String)        extends AppFailure
+  case class ProjectNotMatch(what: String) extends AppFailure
+  case object InvalidTimeSpan              extends AppFailure
 
   def services[F[_]: Async: ContextShift](): Resource[F, (ProjectService[F], TaskService[F])] = {
     for {

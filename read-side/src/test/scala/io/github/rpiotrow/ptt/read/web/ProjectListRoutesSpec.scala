@@ -9,7 +9,7 @@ import io.github.rpiotrow.ptt.api.error.ServerError
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.api.param.OrderingDirection.{Ascending, Descending}
 import io.github.rpiotrow.ptt.api.param.ProjectListParams
-import io.github.rpiotrow.ptt.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
+import io.github.rpiotrow.ptt.api.param.ProjectOrderingField.{CreatedAt, LastAddDurationAt}
 import io.github.rpiotrow.ptt.read.repository.RepositoryThrowable
 import io.github.rpiotrow.ptt.read.service.ProjectService
 import org.http4s._
@@ -93,7 +93,7 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
            |&from=2020-03-03T10:11:50
            |&to=2020-04-02T11:12:52
            |&deleted=true
-           |&orderBy=UpdatedAt
+           |&orderBy=LastAddDurationAt
            |&orderDirection=Ascending
            |&pageNumber=2
            |&pageSize=20
@@ -103,7 +103,7 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
         from = LocalDateTime.of(2020, 3, 3, 10, 11, 50).some,
         to = LocalDateTime.of(2020, 4, 2, 11, 12, 52).some,
         deleted = Some(true),
-        orderBy = Some(UpdatedAt),
+        orderBy = Some(LastAddDurationAt),
         orderDirection = Some(Ascending),
         pageNumber = 2,
         pageSize = 20

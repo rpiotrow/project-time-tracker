@@ -1,7 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
 import java.time.{Clock, LocalDateTime, ZoneOffset}
-import java.util.UUID
 
 import cats.effect._
 import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}

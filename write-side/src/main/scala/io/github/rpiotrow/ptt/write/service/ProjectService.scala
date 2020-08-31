@@ -1,19 +1,17 @@
 package io.github.rpiotrow.ptt.write.service
 
-import cats.Monad
 import cats.data.EitherT
-import cats.effect.{Async, Bracket, Sync}
+import cats.effect.Sync
 import cats.implicits._
 import doobie.Transactor
 import doobie.implicits._
 import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
-import io.github.rpiotrow.ptt.api.output.ProjectOutput
-import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
+import io.github.rpiotrow.ptt.write.entity.ProjectEntity
 import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository, TaskRepository}
 
 trait ProjectService[F[_]] {
-  def create(input: ProjectInput, owner: UserId): EitherT[F, AppFailure, ProjectOutput]
+  def create(input: ProjectInput, owner: UserId): EitherT[F, AppFailure, Unit]
   def update(projectId: ProjectId, input: ProjectInput, owner: UserId): EitherT[F, AppFailure, Unit]
   def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit]
 }
@@ -26,14 +24,14 @@ private[service] class ProjectServiceLive[F[_]: Sync](
 ) extends ProjectService[F]
     with ServiceBase {
 
-  override def create(input: ProjectInput, owner: UserId): EitherT[F, AppFailure, ProjectOutput] = {
+  override def create(input: ProjectInput, owner: UserId): EitherT[F, AppFailure, Unit] = {
     val projectId = input.projectId.value
     (for {
       existingOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
       _              <- checkUniqueness(existingOption)
       project        <- EitherT.right[AppFailure](projectRepository.create(projectId, owner))
-      readModel      <- EitherT.right[AppFailure](readSideService.projectCreated(project))
-    } yield toOutput(readModel)).transact(tnx)
+      _              <- EitherT.right[AppFailure](readSideService.projectCreated(project))
+    } yield ()).transact(tnx)
   }
 
   override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] =
@@ -77,13 +75,4 @@ private[service] class ProjectServiceLive[F[_]: Sync](
       AlreadyDeleted(s"project was already deleted at ${project.deletedAt.get}")
     )
 
-  private def toOutput(project: ProjectReadSideEntity) =
-    ProjectOutput(
-      projectId = project.projectId,
-      createdAt = project.createdAt,
-      deletedAt = project.deletedAt,
-      owner = project.owner,
-      durationSum = project.durationSum,
-      tasks = List()
-    )
 }

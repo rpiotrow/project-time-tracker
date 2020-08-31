@@ -32,6 +32,7 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext, private
       dbId = 0,
       taskId = UUID.randomUUID(),
       projectDbId = projectDbId,
+      createdAt = LocalDateTime.now(clock),
       deletedAt = None,
       owner = owner,
       startedAt = input.startedAt,

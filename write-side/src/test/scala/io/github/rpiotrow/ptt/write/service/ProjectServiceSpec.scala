@@ -28,11 +28,11 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         (projectRepository.create _).expects(projectId.value, ownerId).returning(project.pure[DBResult])
         (readSideService.projectCreated _)
           .expects(project)
-          .returning(projectReadModel.pure[DBResult])
+          .returning(Monad[DBResult].unit)
 
         val result = service.create(projectCreateInput, ownerId).value.unsafeRunSync()
 
-        result should matchTo(projectOutput.asRight[AppFailure])
+        result should be(().asRight[AppFailure])
       }
       it("do not create project with the same projectId") {
         val projectRepository = mock[ProjectRepository]

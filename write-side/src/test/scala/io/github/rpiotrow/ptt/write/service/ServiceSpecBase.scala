@@ -42,19 +42,13 @@ trait ServiceSpecBase { this: MockFactory =>
     durationSum = Duration.ZERO,
     tasks = List()
   )
-  protected val project              = ProjectEntity(
-    dbId = 1,
-    projectId = projectId.value,
-    createdAt = now,
-    updatedAt = now,
-    deletedAt = None,
-    owner = ownerId
-  )
+  protected val project              =
+    ProjectEntity(dbId = 1, projectId = projectId.value, createdAt = now, deletedAt = None, owner = ownerId)
   protected val projectReadModel     = ProjectReadSideEntity(
-    dbId = 1,
+    dbId = 111,
     projectId = projectId.value,
     createdAt = now,
-    updatedAt = now,
+    lastAddDurationAt = now,
     deletedAt = None,
     owner = ownerId,
     durationSum = Duration.ZERO
@@ -89,11 +83,12 @@ trait ServiceSpecBase { this: MockFactory =>
     deletedAt = None,
     owner = ownerId,
     startedAt = taskStartedAt,
+    createdAt = now,
     duration = taskDuration,
     volume = taskVolume.some,
     comment = "text".some
   )
-  protected val taskReadModel              = TaskReadSideEntity(task)
+  protected val taskReadModel              = TaskReadSideEntity(task, 111)
 
   protected val taskIdUpdated        = UUID.randomUUID()
   protected val updateInput          = taskInput.copy(duration = Duration.ofMinutes(45))

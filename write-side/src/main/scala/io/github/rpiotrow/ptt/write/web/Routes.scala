@@ -64,7 +64,7 @@ private class RoutesLive[F[_]: Async](
       .toRoutes { case ((projectId, taskId, taskInput), userId) => taskUpdate(projectId, taskId, taskInput, userId) }
     val taskDeleteRoute    = taskDeleteEndpoint
       .withUserId()
-      .toRoutes { case ((_, taskId), userId) => taskDelete(taskId, userId) }
+      .toRoutes { case ((projectId, taskId), userId) => taskDelete(projectId, taskId, userId) }
 
     projectCreateRoute <+>
       projectUpdateRoute <+>
@@ -102,7 +102,7 @@ private class RoutesLive[F[_]: Async](
     taskService
       .add(projectId, input, userId)
       .leftMap(mapToApiErrors)
-      .map(task => new LocationHeader(s"$gatewayAddress/projects/${projectId}/tasks/${task.taskId}"))
+      .map(taskId => new LocationHeader(s"$gatewayAddress/projects/$projectId/tasks/$taskId"))
       .value
 
   private def taskUpdate(
@@ -112,27 +112,28 @@ private class RoutesLive[F[_]: Async](
     userId: UserId
   ): F[Either[ApiError, LocationHeader]] =
     taskService
-      .update(taskId, input, userId)
+      .update(projectId, taskId, input, userId)
       .leftMap(mapToApiErrors)
-      .map(task => new LocationHeader(s"$gatewayAddress/projects/${projectId}/tasks/${task.taskId}"))
+      .map(taskId => new LocationHeader(s"$gatewayAddress/projects/$projectId/tasks/$taskId"))
       .value
 
-  private def taskDelete(taskId: TaskId, userId: UserId): F[Either[ApiError, Unit]] =
+  private def taskDelete(projectId: ProjectId, taskId: TaskId, userId: UserId): F[Either[ApiError, Unit]] =
     taskService
-      .delete(taskId, userId)
+      .delete(projectId, taskId, userId)
       .leftMap(mapToApiErrors)
       .value
 
-  implicit private class AuthorizedEndpoint[I, E, O, F[_]](e: Endpoint[I, E, O, EntityBody[F]]) {
+  implicit private class AuthorizedEndpoint[I, E, O](e: Endpoint[I, E, O, EntityBody[F]]) {
     def withUserId(): Endpoint[(I, UserId), E, O, EntityBody[F]] = e.in(header[UserId]("X-Authorization"))
   }
 
   private def mapToApiErrors(error: AppFailure): ApiError =
     error match {
-      case NotUnique(m)      => Conflict(m)
-      case NotOwner(m)       => Forbidden(m)
-      case EntityNotFound(m) => NotFound(m)
-      case InvalidTimeSpan   => Conflict("other task overlaps task time span")
-      case AlreadyDeleted(m) => Conflict(m)
+      case NotUnique(m)       => Conflict(m)
+      case NotOwner(m)        => Forbidden(m)
+      case EntityNotFound(m)  => NotFound(m)
+      case ProjectNotMatch(m) => NotFound(m)
+      case InvalidTimeSpan    => Conflict("other task overlaps task time span")
+      case AlreadyDeleted(m)  => Conflict(m)
     }
 }

@@ -8,7 +8,7 @@ import io.github.rpiotrow.ptt.api.model.TaskId
 import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 
 trait TaskReadSideRepository {
-  def add(task: TaskEntity): DBResult[TaskReadSideEntity]
+  def add(projectDbId: Long, task: TaskEntity): DBResult[TaskReadSideEntity]
   def get(taskId: TaskId): DBResult[Option[TaskReadSideEntity]]
   def getNotDeleted(projectDbId: Long): DBResult[List[TaskReadSideEntity]]
   def delete(dbId: Long, deletedAt: LocalDateTime): DBResult[Unit]
@@ -27,8 +27,8 @@ private[repository] class TaskReadSideRepositoryLive(private val ctx: DBContext)
 
   private val tasksReadSide = quote { querySchema[TaskReadSideEntity]("ptt_read_model.tasks") }
 
-  override def add(task: TaskEntity): DBResult[TaskReadSideEntity] = {
-    val readSideEntity = TaskReadSideEntity(task)
+  override def add(projectDbId: Long, task: TaskEntity): DBResult[TaskReadSideEntity] = {
+    val readSideEntity = TaskReadSideEntity(task, projectDbId)
     run(quote { tasksReadSide.insert(lift(readSideEntity)).returningGenerated(_.dbId) })
       .map(dbId => readSideEntity.copy(dbId = dbId))
   }
@@ -48,7 +48,7 @@ private[repository] class TaskReadSideRepositoryLive(private val ctx: DBContext)
       tasksReadSide
         .filter(t => t.dbId == lift(dbId) && t.deletedAt.isEmpty)
         .update(_.deletedAt -> lift(deletedAt.some))
-    }).map(logIfNotUpdated(s"no task with id '${dbId}'"))
+    }).map(logIfNotUpdated(s"no task with id '$dbId'"))
 
   override def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit] =
     run(quote {

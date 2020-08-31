@@ -31,7 +31,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
   describe(s"POST /projects/$projectId/tasks") {
     it("successful") {
       val taskService = mock[TaskService[IO]]
-      (taskService.add _).expects(projectId, taskInput, ownerId).returning(EitherT.right(IO(taskOutput)))
+      (taskService.add _).expects(projectId, taskInput, ownerId).returning(EitherT.right(IO(taskId)))
       val response    = makeAddTaskRequest(taskService)
 
       response.status should be(Status.Created)

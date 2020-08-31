@@ -21,7 +21,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected val taskReadSideRepositoryData =
     sql"""
-         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, updated_at, deleted_at, owner, duration_sum)
+         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (200, 'projectT1', '2020-08-17 10:00:00', '2020-08-17 16:00:00', NULL, '181ab738-1cb7-4adc-a3d6-24e0bdcf1ebf', 21600)
          |;
          |INSERT INTO ptt_read_model.tasks(db_id, task_id, project_db_id, deleted_at, owner, started_at, duration, volume, comment)
@@ -29,7 +29,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |    (202, '6f2a01a1-a66d-4127-844b-f95bee3d1ace', 200, NULL, '92d57572-3bee-44f2-b3cc-298e267c8ab6', '2020-08-20T08:00', 5*60*60, NULL, 'to-delete')
          |;
          |
-         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, updated_at, deleted_at, owner, duration_sum)
+         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (201, 'projectT2', '2020-08-17 10:00:00', '2020-08-17 16:00:00', NULL, '181ab738-1cb7-4adc-a3d6-24e0bdcf1ebf', 21600)
          |;
          |INSERT INTO ptt_read_model.tasks(db_id, task_id, project_db_id, deleted_at, owner, started_at, duration, volume, comment)
@@ -37,7 +37,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |    (204, '7e791302-e68b-4f5a-9cb5-d4e7e5d74220', 201, '2020-08-20T08:00', '92d57572-3bee-44f2-b3cc-298e267c8ab6', '2020-08-16T08:00', 6*60*60, NULL, 't2-deleted'),
          |    (205, '122099dc-cdb1-4b69-8ffb-c4e67bb9d828', 201, NULL, '92d57572-3bee-44f2-b3cc-298e267c8ab6', '2020-08-17T08:00', 7*60*60, 1, 't2-p3')
          |;
-         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, updated_at, deleted_at, owner, duration_sum)
+         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (202, 'projectT3', '2020-08-17 10:00:00', '2020-08-17 16:00:00', NULL, '181ab738-1cb7-4adc-a3d6-24e0bdcf1ebf', 21600)
          |;
          |INSERT INTO ptt_read_model.tasks(db_id, task_id, project_db_id, deleted_at, owner, started_at, duration, volume, comment)
@@ -114,15 +114,15 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     describe("add should") {
       it("store task in read model schema") {
         val entity   = task()
-        val readSide = taskReadSideRepo.add(entity).transact(tnx).unsafeRunSync()
+        val readSide = taskReadSideRepo.add(200, entity).transact(tnx).unsafeRunSync()
 
-        readTaskByDbId(readSide.dbId) should matchTo(taskReadModel(entity.taskId).some)
+        readTaskByDbId(readSide.dbId) should matchTo(taskReadModel(200, entity.taskId).some)
       }
       it("return read side task entity") {
         val entity   = task()
-        val readSide = taskReadSideRepo.add(entity).transact(tnx).unsafeRunSync()
+        val readSide = taskReadSideRepo.add(200, entity).transact(tnx).unsafeRunSync()
 
-        readSide should matchTo(taskReadModel(entity.taskId))
+        readSide should matchTo(taskReadModel(200, entity.taskId))
       }
     }
 
@@ -172,12 +172,13 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val taskStart                                     = LocalDateTime.now()
-  private def task(): TaskEntity                            =
+  private val taskStart                                      = LocalDateTime.now()
+  private def task(): TaskEntity                             =
     TaskEntity(
       dbId = 0,
       taskId = UUID.randomUUID(),
-      projectDbId = 200,
+      projectDbId = 2,
+      createdAt = LocalDateTime.now(),
       deletedAt = None,
       owner = taskOwner,
       startedAt = taskStart,
@@ -185,13 +186,13 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       volume = 10.some,
       comment = "some comment".some
     )
-  implicit private val ignoreDbId: Diff[TaskReadSideEntity] =
+  implicit private val ignoreDbId: Diff[TaskReadSideEntity]  =
     Derived[Diff[TaskReadSideEntity]].ignore[TaskReadSideEntity, Long](_.dbId)
-  private def taskReadModel(taskId: UUID)                   =
+  private def taskReadModel(projectDbId: Long, taskId: UUID) =
     TaskReadSideEntity(
       dbId = 0,
       taskId = taskId,
-      projectDbId = 200,
+      projectDbId = projectDbId,
       deletedAt = None,
       owner = taskOwner,
       startedAt = taskStart,

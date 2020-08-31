@@ -26,7 +26,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
   describe("POST /projects") {
     it("successful") {
       val projectService = mock[ProjectService[IO]]
-      (projectService.create _).expects(projectInput, ownerId).returning(EitherT.right(IO(projectOutput)))
+      (projectService.create _).expects(projectInput, ownerId).returning(EitherT.right(IO.unit))
       val response       = makeAddProjectRequest(projectService)
 
       response.status should be(Status.Created)

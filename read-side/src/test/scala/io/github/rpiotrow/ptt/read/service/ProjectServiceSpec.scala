@@ -24,7 +24,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     dbId = 1,
     projectId = "project one",
     createdAt = LocalDateTime.of(2020, 7, 29, 15, 0),
-    updatedAt = LocalDateTime.of(2020, 7, 29, 22, 0),
+    lastAddDurationAt = LocalDateTime.of(2020, 7, 29, 22, 0),
     deletedAt = None,
     owner = owner1Id,
     durationSum = Duration.ofHours(3)
@@ -33,7 +33,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     dbId = 2,
     projectId = "project two",
     createdAt = LocalDateTime.of(2020, 7, 30, 15, 0),
-    updatedAt = LocalDateTime.of(2020, 7, 30, 22, 0),
+    lastAddDurationAt = LocalDateTime.of(2020, 7, 30, 22, 0),
     deletedAt = None,
     owner = owner2Id,
     durationSum = Duration.ofHours(4)

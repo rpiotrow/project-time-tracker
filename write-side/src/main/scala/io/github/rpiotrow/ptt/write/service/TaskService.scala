@@ -6,14 +6,13 @@ import doobie.Transactor
 import doobie.implicits._
 import io.github.rpiotrow.ptt.api.input.TaskInput
 import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
-import io.github.rpiotrow.ptt.api.output.TaskOutput
-import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
+import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, TaskEntity}
 import io.github.rpiotrow.ptt.write.repository._
 
 trait TaskService[F[_]] {
-  def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput]
-  def update(taskId: TaskId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput]
-  def delete(taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit]
+  def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskId]
+  def update(projectId: ProjectId, taskId: TaskId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskId]
+  def delete(projectId: ProjectId, taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit]
 }
 
 private[service] class TaskServiceLive[F[_]: Sync](
@@ -24,37 +23,48 @@ private[service] class TaskServiceLive[F[_]: Sync](
 ) extends TaskService[F]
     with ServiceBase {
 
-  override def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput] = {
+  override def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskId] = {
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project       <- ifExists(projectOption, "project with given identifier does not exist")
       _             <- taskDoesNotOverlap(None, input, userId)
       task          <- EitherT.right[AppFailure](taskRepository.add(project.dbId, input, userId))
-      readModel     <- EitherT.right[AppFailure](readSideService.taskAdded(task))
-    } yield toOutput(readModel)).transact(tnx)
+      _             <- EitherT.right[AppFailure](readSideService.taskAdded(projectId.value, task))
+    } yield task.taskId).transact(tnx)
   }
 
-  override def update(taskId: TaskId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskOutput] = {
+  override def update(
+    projectId: ProjectId,
+    taskId: TaskId,
+    input: TaskInput,
+    userId: UserId
+  ): EitherT[F, AppFailure, TaskId] = {
     (for {
-      taskOption <- EitherT.right[AppFailure](taskRepository.get(taskId))
-      task       <- ifExists(taskOption, "task with given identifier does not exist")
-      _          <- checkOwner(task, userId)
-      _          <- taskDoesNotOverlap(Some(task), input, userId)
-      _          <- EitherT.right[AppFailure](taskRepository.delete(task))
-      newTask    <- EitherT.right[AppFailure](taskRepository.add(task.projectDbId, input, userId))
-      _          <- EitherT.right[AppFailure](readSideService.taskDeleted(task))
-      readModel  <- EitherT.right[AppFailure](readSideService.taskAdded(newTask))
-    } yield toOutput(readModel)).transact(tnx)
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      project       <- ifExists(projectOption, "project with given identifier does not exist")
+      taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
+      task          <- ifExists(taskOption, "task with given identifier does not exist")
+      _             <- checkOwner(task, userId)
+      _             <- checkProject(task, project)
+      _             <- taskDoesNotOverlap(Some(task), input, userId)
+      _             <- EitherT.right[AppFailure](taskRepository.delete(task))
+      newTask       <- EitherT.right[AppFailure](taskRepository.add(task.projectDbId, input, userId))
+      _             <- EitherT.right[AppFailure](readSideService.taskDeleted(task))
+      _             <- EitherT.right[AppFailure](readSideService.taskAdded(project.projectId, newTask))
+    } yield newTask.taskId).transact(tnx)
   }
 
-  override def delete(taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit] = {
+  override def delete(projectId: ProjectId, taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit] = {
     (for {
-      taskOption <- EitherT.right[AppFailure](taskRepository.get(taskId))
-      task       <- ifExists(taskOption, "task with given identifier does not exist")
-      _          <- checkOwner(task, userId)
-      _          <- checkNotDeletedAlready(task)
-      deleted    <- EitherT.right[AppFailure](taskRepository.delete(task))
-      _          <- EitherT.right[AppFailure](readSideService.taskDeleted(deleted))
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      project       <- ifExists(projectOption, "project with given identifier does not exist")
+      taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
+      task          <- ifExists(taskOption, "task with given identifier does not exist")
+      _             <- checkOwner(task, userId)
+      _             <- checkProject(task, project)
+      _             <- checkNotDeletedAlready(task)
+      deleted       <- EitherT.right[AppFailure](taskRepository.delete(task))
+      _             <- EitherT.right[AppFailure](readSideService.taskDeleted(deleted))
     } yield ()).transact(tnx)
   }
 
@@ -75,21 +85,17 @@ private[service] class TaskServiceLive[F[_]: Sync](
     EitherT.cond[DBResult](task.owner == user, (), NotOwner("only owner can delete task"))
   }
 
+  private def checkProject(task: TaskEntity, project: ProjectEntity): EitherT[DBResult, ProjectNotMatch, Unit] = {
+    EitherT.cond[DBResult](
+      task.projectDbId == project.dbId,
+      (),
+      ProjectNotMatch("task not in the project with given project identifier")
+    )
+  }
+
   private def checkNotDeletedAlready(task: TaskEntity): EitherT[DBResult, AlreadyDeleted, Unit] = {
     EitherT
       .cond[DBResult](task.deletedAt.isEmpty, (), AlreadyDeleted(s"task was already deleted at ${task.deletedAt.get}"))
-  }
-
-  private def toOutput(task: TaskReadSideEntity): TaskOutput = {
-    TaskOutput(
-      taskId = task.taskId,
-      owner = task.owner,
-      startedAt = task.startedAt,
-      duration = task.duration,
-      volume = task.volume,
-      comment = task.comment,
-      deletedAt = task.deletedAt
-    )
   }
 
 }

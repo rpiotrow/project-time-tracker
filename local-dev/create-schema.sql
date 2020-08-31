@@ -8,24 +8,25 @@ CREATE SCHEMA IF NOT EXISTS ptt_read_model;
 CREATE TABLE IF NOT EXISTS ptt_read_model.projects(
   db_id SERIAL PRIMARY KEY,
   project_id VARCHAR NOT NULL UNIQUE CONSTRAINT id_not_empty CHECK(project_id != ''),
-  deleted_at TIMESTAMP CONSTRAINT deleted_not_before_updated CHECK (deleted_at >= updated_at),
   created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL CONSTRAINT updated_not_before_created CHECK (updated_at >= created_at),
   owner UUID NOT NULL,
   duration_sum BIGINT NOT NULL
-    CONSTRAINT duration_sum_positive CHECK(duration_sum >= 0)
+    CONSTRAINT duration_sum_positive CHECK(duration_sum >= 0),
+  last_add_duration_at TIMESTAMP NOT NULL
+    CONSTRAINT updated_not_before_created CHECK (last_add_duration_at >= created_at),
+  deleted_at TIMESTAMP CONSTRAINT deleted_not_before_last_add_duration CHECK (deleted_at >= last_add_duration_at)
 );
 
 CREATE TABLE IF NOT EXISTS ptt_read_model.tasks(
   db_id SERIAL PRIMARY KEY,
   task_id UUID NOT NULL UNIQUE,
-  deleted_at TIMESTAMP,
   project_db_id BIGINT NOT NULL REFERENCES ptt_read_model.projects(db_id),
   owner UUID NOT NULL,
   started_at TIMESTAMP NOT NULL,
   duration BIGINT NOT NULL CONSTRAINT duration_positive CHECK (duration >= 0),
   volume INT CONSTRAINT volume_positive CHECK (volume >= 0),
-  comment TEXT
+  comment TEXT,
+  deleted_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS ptt_read_model.statistics(
@@ -49,22 +50,22 @@ CREATE TABLE IF NOT EXISTS ptt_read_model.statistics(
 CREATE TABLE IF NOT EXISTS ptt.projects(
   db_id SERIAL PRIMARY KEY,
   project_id VARCHAR NOT NULL UNIQUE CONSTRAINT id_not_empty CHECK(project_id != ''),
-  deleted_at TIMESTAMP CONSTRAINT deleted_not_before_updated CHECK (deleted_at >= updated_at),
   created_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL CONSTRAINT updated_not_before_created CHECK (updated_at >= created_at),
-  owner UUID NOT NULL
+  owner UUID NOT NULL,
+  deleted_at TIMESTAMP CONSTRAINT deleted_not_before_created CHECK (deleted_at >= created_at)
 );
 
 CREATE TABLE IF NOT EXISTS ptt.tasks(
   db_id SERIAL PRIMARY KEY,
   task_id UUID NOT NULL UNIQUE,
-  deleted_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL,
   project_db_id BIGINT NOT NULL REFERENCES ptt.projects(db_id),
   owner UUID NOT NULL,
   started_at TIMESTAMP NOT NULL,
   duration BIGINT NOT NULL CONSTRAINT duration_positive CHECK (duration >= 0),
   volume INT CONSTRAINT volume_positive CHECK (volume >= 0),
-  comment TEXT
+  comment TEXT,
+  deleted_at TIMESTAMP CONSTRAINT deleted_not_before_created CHECK (deleted_at >= created_at)
 );
 
 -- create users

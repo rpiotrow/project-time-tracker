@@ -29,7 +29,7 @@ private[repository] class ProjectRepositoryLive(
 
   override def create(projectId: String, owner: UUID): DBResult[ProjectEntity] = {
     val now    = LocalDateTime.now(clock)
-    val entity = ProjectEntity(projectId = projectId, createdAt = now, updatedAt = now, deletedAt = None, owner = owner)
+    val entity = ProjectEntity(projectId = projectId, createdAt = now, deletedAt = None, owner = owner)
     run(quote { projects.insert(lift(entity)).returningGenerated(_.dbId) })
       .map(dbId => entity.copy(dbId = dbId))
   }
@@ -39,13 +39,12 @@ private[repository] class ProjectRepositoryLive(
   }
 
   override def update(project: ProjectEntity, newProjectId: String): DBResult[ProjectEntity] = {
-    val now = LocalDateTime.now(clock)
     run(quote {
       projects
         .filter(_.projectId == lift(project.projectId))
         .update(_.projectId -> lift(newProjectId))
     }).map({
-      case 1 => project.copy(projectId = newProjectId, updatedAt = now)
+      case 1 => project.copy(projectId = newProjectId)
       case _ => throw new RuntimeException(s"Project '${project.projectId}' not updated !!!")
     })
   }
@@ -55,9 +54,9 @@ private[repository] class ProjectRepositoryLive(
     run(quote {
       projects
         .filter(e => e.projectId == lift(project.projectId) && e.deletedAt.isEmpty)
-        .update(_.deletedAt -> lift(now.some), _.updatedAt -> lift(now))
+        .update(_.deletedAt -> lift(now.some))
     }).map({
-      case 1 => project.copy(deletedAt = now.some, updatedAt = now)
+      case 1 => project.copy(deletedAt = now.some)
       case _ => throw new RuntimeException(s"Project '${project.projectId}' not deleted !!!")
     })
   }

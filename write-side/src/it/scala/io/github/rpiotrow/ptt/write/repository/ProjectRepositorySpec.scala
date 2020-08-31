@@ -99,6 +99,6 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   implicit private val ignoreDbId: Diff[ProjectEntity]   =
     Derived[Diff[ProjectEntity]].ignore[ProjectEntity, Long](_.dbId)
   private def expected(projectId: String): ProjectEntity =
-    ProjectEntity(projectId = projectId, createdAt = clockNow, updatedAt = clockNow, deletedAt = None, owner = owner1Id)
+    ProjectEntity(projectId = projectId, createdAt = clockNow, deletedAt = None, owner = owner1Id)
 
 }

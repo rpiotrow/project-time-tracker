@@ -10,11 +10,11 @@ import io.github.rpiotrow.ptt.write.repository._
 import org.slf4j.LoggerFactory
 
 trait ReadSideService {
-  def projectCreated(created: ProjectEntity): DBResult[ProjectReadSideEntity]
+  def projectCreated(created: ProjectEntity): DBResult[Unit]
   def projectUpdated(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit]
   def projectDeleted(deleted: ProjectEntity): DBResult[Unit]
 
-  def taskAdded(added: TaskEntity): DBResult[TaskReadSideEntity]
+  def taskAdded(projectId: String, added: TaskEntity): DBResult[Unit]
   def taskDeleted(deleted: TaskEntity): DBResult[Unit]
 }
 
@@ -34,7 +34,7 @@ private[service] class ReadSideServiceLive(
 
   private val logger = LoggerFactory.getLogger("ReadSideService")
 
-  override def projectCreated(created: ProjectEntity): DBResult[ProjectReadSideEntity] =
+  override def projectCreated(created: ProjectEntity): DBResult[Unit] =
     projectReadSideRepository.newProject(created)
 
   override def projectUpdated(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit] =
@@ -54,12 +54,18 @@ private[service] class ReadSideServiceLive(
       _     <- taskReadSideRepository.deleteAll(readModel.dbId, deletedAt)
     } yield ().some
 
-  override def taskAdded(added: TaskEntity): DBResult[TaskReadSideEntity] =
+  override def taskAdded(projectId: String, added: TaskEntity): DBResult[Unit] =
+    (for {
+      readModel <- OptionT(projectReadSideRepository.get(projectId))
+      _         <- OptionT(taskAdded(readModel.dbId, added))
+    } yield ()).getOrElse(logger.warn("Read model update failure: " + "project not found in read model"))
+
+  private def taskAdded(projectDbId: Long, added: TaskEntity): DBResult[Option[TaskReadSideEntity]] =
     for {
-      readModel <- taskReadSideRepository.add(added)
-      _         <- projectReadSideRepository.addDuration(readModel.projectDbId, readModel.duration)
+      readModel <- taskReadSideRepository.add(projectDbId, added)
+      _         <- projectReadSideRepository.addDuration(readModel.projectDbId, readModel.duration, added.createdAt)
       _         <- updateStatisticsForAddedTask(readModel)
-    } yield readModel
+    } yield readModel.some
 
   override def taskDeleted(deleted: TaskEntity): DBResult[Unit] =
     (for {

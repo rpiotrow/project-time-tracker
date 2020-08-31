@@ -2,10 +2,11 @@ package io.github.rpiotrow.ptt.write.web
 
 import java.util.UUID
 
+import eu.timepit.refined.auto._
 import cats.data.EitherT
 import cats.effect.IO
-import io.github.rpiotrow.ptt.api.model.TaskId
-import io.github.rpiotrow.ptt.write.service.{AlreadyDeleted, EntityNotFound, NotOwner, TaskService}
+import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId}
+import io.github.rpiotrow.ptt.write.service.{AlreadyDeleted, EntityNotFound, NotOwner, ProjectNotMatch, TaskService}
 import org.http4s._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
@@ -13,14 +14,15 @@ import org.scalatest.matchers.should
 
 class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
 
-  private val taskId: TaskId = UUID.fromString("ea48f025-d993-4052-8308-47db35d7ada0")
-  private val url            = s"/projects/bad/tasks/$taskId"
+  private val taskId: TaskId       = UUID.fromString("ea48f025-d993-4052-8308-47db35d7ada0")
+  private val projectId: ProjectId = "bad"
+  private val url                  = s"/projects/$projectId/tasks/$taskId"
 
   describe(s"DELETE $url") {
     it("successful") {
       val taskService = mock[TaskService[IO]]
-      (taskService.delete _).expects(taskId, ownerId).returning(EitherT.right(IO(())))
-      val response    = makeDeleteTaskRequest(taskId, taskService)
+      (taskService.delete _).expects(projectId, taskId, ownerId).returning(EitherT.right(IO(())))
+      val response    = makeDeleteTaskRequest(taskService)
 
       response.status should be(Status.Ok)
     }
@@ -28,34 +30,43 @@ class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
       it("when task does not exist") {
         val taskService = mock[TaskService[IO]]
         (taskService.delete _)
-          .expects(taskId, ownerId)
+          .expects(projectId, taskId, ownerId)
           .returning(EitherT.left(IO(EntityNotFound("task not exist"))))
-        val response    = makeDeleteTaskRequest(taskId, taskService)
+        val response    = makeDeleteTaskRequest(taskService)
 
         response.status should be(Status.NotFound)
       }
       it("when owner does not match authorized user") {
         val taskService = mock[TaskService[IO]]
         (taskService.delete _)
-          .expects(taskId, ownerId)
+          .expects(projectId, taskId, ownerId)
           .returning(EitherT.left(IO(NotOwner("only owner can delete task"))))
-        val response    = makeDeleteTaskRequest(taskId, taskService)
+        val response    = makeDeleteTaskRequest(taskService)
 
         response.status should be(Status.Forbidden)
+      }
+      it("when project id does not match") {
+        val taskService = mock[TaskService[IO]]
+        (taskService.delete _)
+          .expects(projectId, taskId, ownerId)
+          .returning(EitherT.left(IO(ProjectNotMatch("project does not match"))))
+        val response    = makeDeleteTaskRequest(taskService)
+
+        response.status should be(Status.NotFound)
       }
       it("when task is already deleted") {
         val taskService = mock[TaskService[IO]]
         (taskService.delete _)
-          .expects(taskId, ownerId)
+          .expects(projectId, taskId, ownerId)
           .returning(EitherT.left(IO(AlreadyDeleted("task was alread deleted"))))
-        val response    = makeDeleteTaskRequest(taskId, taskService)
+        val response    = makeDeleteTaskRequest(taskService)
 
         response.status should be(Status.Conflict)
       }
     }
   }
 
-  private def makeDeleteTaskRequest(projectId: TaskId, taskService: TaskService[IO]) = {
+  private def makeDeleteTaskRequest(taskService: TaskService[IO]) = {
     makeRequest(Request(method = Method.DELETE, uri = Uri.unsafeFromString(url)), taskService = taskService)
   }
 

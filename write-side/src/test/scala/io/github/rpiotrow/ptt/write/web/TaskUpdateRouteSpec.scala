@@ -32,7 +32,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
   describe(s"PUT /projects/$projectId/tasks/$taskId") {
     it("successful") {
       val taskService = mock[TaskService[IO]]
-      (taskService.update _).expects(taskId, taskInput, ownerId).returning(EitherT.right(IO(taskOutput)))
+      (taskService.update _).expects(projectId, taskId, taskInput, ownerId).returning(EitherT.right(IO(newTaskId)))
       val response    = makeUpdateTaskRequest(taskService)
 
       response.status should be(Status.Ok)
@@ -44,7 +44,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
       it("when project does not exist") {
         val taskService = mock[TaskService[IO]]
         (taskService.update _)
-          .expects(taskId, taskInput, ownerId)
+          .expects(projectId, taskId, taskInput, ownerId)
           .returning(EitherT.left(IO(EntityNotFound("project with given projectId does not exist"))))
         val response    = makeUpdateTaskRequest(taskService)
 
@@ -54,17 +54,26 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
       it("when owner does not match authorized user") {
         val taskService = mock[TaskService[IO]]
         (taskService.update _)
-          .expects(taskId, taskInput, ownerId)
+          .expects(projectId, taskId, taskInput, ownerId)
           .returning(EitherT.left(IO(NotOwner("only owner can update task"))))
         val response    = makeUpdateTaskRequest(taskService)
 
         response.status should be(Status.Forbidden)
       }
+      it("when project id does not match") {
+        val taskService = mock[TaskService[IO]]
+        (taskService.update _)
+          .expects(projectId, taskId, taskInput, ownerId)
+          .returning(EitherT.left(IO(ProjectNotMatch("project does not match"))))
+        val response    = makeUpdateTaskRequest(taskService)
+
+        response.status should be(Status.NotFound)
+      }
       it("when task time span is invalid") {
         val taskService            = mock[TaskService[IO]]
         val appFailure: AppFailure = InvalidTimeSpan
         (taskService.update _)
-          .expects(taskId, taskInput, ownerId)
+          .expects(projectId, taskId, taskInput, ownerId)
           .returning(EitherT.left(IO(appFailure)))
         val response               = makeUpdateTaskRequest(taskService)
 

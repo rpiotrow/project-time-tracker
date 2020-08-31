@@ -55,12 +55,12 @@ object ProjectEndpoints {
       .and(
         query[Option[ProjectOrderingField]]("orderBy")
           .description(
-            "Sort projects by create date or update date (date of the last added task or create date for empty projects)"
+            "Sort projects by create date or last add duration date (date of the last added task or create date for empty projects)"
           )
           .examples(
             List(
               Example(CreatedAt.some, "by create date".some, None),
-              Example(UpdatedAt.some, "by update date".some, None)
+              Example(LastAddDurationAt.some, "by last add duration date".some, None)
             )
           )
       )

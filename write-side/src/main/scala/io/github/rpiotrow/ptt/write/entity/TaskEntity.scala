@@ -8,6 +8,7 @@ case class TaskEntity(
   dbId: Long,
   taskId: TaskId,
   projectDbId: Long,
+  createdAt: LocalDateTime,
   deletedAt: Option[LocalDateTime],
   owner: UserId,
   startedAt: LocalDateTime,

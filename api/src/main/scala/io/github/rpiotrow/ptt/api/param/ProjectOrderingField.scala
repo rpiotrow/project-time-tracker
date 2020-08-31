@@ -6,6 +6,6 @@ sealed trait ProjectOrderingField extends EnumEntry
 
 object ProjectOrderingField extends Enum[ProjectOrderingField] with CirceEnum[ProjectOrderingField] {
   val values = findValues
-  case object CreatedAt extends ProjectOrderingField
-  case object UpdatedAt extends ProjectOrderingField
+  case object CreatedAt         extends ProjectOrderingField
+  case object LastAddDurationAt extends ProjectOrderingField
 }

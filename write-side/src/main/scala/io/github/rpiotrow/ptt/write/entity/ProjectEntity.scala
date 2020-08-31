@@ -7,7 +7,6 @@ case class ProjectEntity(
   dbId: Long = 0L,
   projectId: String,
   createdAt: LocalDateTime,
-  updatedAt: LocalDateTime,
   deletedAt: Option[LocalDateTime],
   owner: UUID
 )

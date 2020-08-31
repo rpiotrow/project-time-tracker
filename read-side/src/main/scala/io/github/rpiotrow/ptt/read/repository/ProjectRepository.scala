@@ -58,9 +58,9 @@ private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends P
 
   private def projectOrderingField[T](order: Option[ProjectOrderingField], p: dc.Quoted[ProjectEntity]) = {
     order match {
-      case Some(CreatedAt) => quote(p.createdAt)
-      case Some(UpdatedAt) => quote(p.updatedAt)
-      case None            => quote(p.dbId)
+      case Some(CreatedAt)         => quote(p.createdAt)
+      case Some(LastAddDurationAt) => quote(p.lastAddDurationAt)
+      case None                    => quote(p.dbId)
     }
   }
 

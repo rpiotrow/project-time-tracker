@@ -8,7 +8,7 @@ import doobie.implicits._
 import eu.timepit.refined.auto._
 import io.github.rpiotrow.ptt.api.param.OrderingDirection.{Ascending, Descending}
 import io.github.rpiotrow.ptt.api.param.ProjectListParams
-import io.github.rpiotrow.ptt.api.param.ProjectOrderingField.{CreatedAt, UpdatedAt}
+import io.github.rpiotrow.ptt.api.param.ProjectOrderingField.{CreatedAt, LastAddDurationAt}
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -21,7 +21,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   val insertProjects =
     sql"""
-         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, updated_at, deleted_at, owner, duration_sum)
+         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (1, 'first', '2020-07-22 15:00:00', '2020-07-22 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 14400),
          |    (2, 'second', '2020-07-22 15:10:00', '2020-07-22 17:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 0),
          |    (3, 'deleted', '2020-07-31 15:00:00', '2020-07-31 18:00:00', '2020-07-31 18:00:00', '41a854e4-4262-4672-a7df-c781f535d6ee', 0)
@@ -33,7 +33,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 1,
     projectId = "first",
     createdAt = LocalDateTime.of(2020, 7, 22, 15, 0),
-    updatedAt = LocalDateTime.of(2020, 7, 22, 18, 0),
+    lastAddDurationAt = LocalDateTime.of(2020, 7, 22, 18, 0),
     deletedAt = None,
     owner = owner1Id,
     durationSum = Duration.ofHours(4)
@@ -42,7 +42,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 2,
     projectId = "second",
     createdAt = LocalDateTime.of(2020, 7, 22, 15, 10),
-    updatedAt = LocalDateTime.of(2020, 7, 22, 17, 0),
+    lastAddDurationAt = LocalDateTime.of(2020, 7, 22, 17, 0),
     deletedAt = None,
     owner = owner1Id,
     durationSum = Duration.ZERO
@@ -51,7 +51,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 3,
     projectId = "deleted",
     createdAt = LocalDateTime.of(2020, 7, 31, 15, 0),
-    updatedAt = LocalDateTime.of(2020, 7, 31, 18, 0),
+    lastAddDurationAt = LocalDateTime.of(2020, 7, 31, 18, 0),
     deletedAt = Some(LocalDateTime.of(2020, 7, 31, 18, 0)),
     owner = owner1Id,
     durationSum = Duration.ZERO
@@ -125,13 +125,13 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
       }
       it("return order list by updatedAt ascending") {
         val result = zio.Runtime.default.unsafeRun(
-          projectRepo.list(defaultParams.copy(orderBy = Some(UpdatedAt), orderDirection = Some(Ascending)))
+          projectRepo.list(defaultParams.copy(orderBy = Some(LastAddDurationAt), orderDirection = Some(Ascending)))
         )
         result should matchTo(List(p2, p1, p3))
       }
       it("return order list by updatedAt descending") {
         val result = zio.Runtime.default.unsafeRun(
-          projectRepo.list(defaultParams.copy(orderBy = Some(UpdatedAt), orderDirection = Some(Descending)))
+          projectRepo.list(defaultParams.copy(orderBy = Some(LastAddDurationAt), orderDirection = Some(Descending)))
         )
         result should matchTo(List(p3, p1, p2))
       }

@@ -20,7 +20,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected val projectReadSideRepositoryData =
     sql"""
-         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, updated_at, deleted_at, owner, duration_sum)
+         |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (100, 'projectD1', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
          |    (101, 'projectD2', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
          |    (102, 'duration-sum-zero', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 0),
@@ -34,7 +34,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 100,
     projectId = "projectD1",
     createdAt = LocalDateTime.parse("2020-08-16T08:00:00"),
-    updatedAt = LocalDateTime.parse("2020-08-16T18:00:00"),
+    lastAddDurationAt = LocalDateTime.parse("2020-08-16T18:00:00"),
     deletedAt = None,
     owner = UUID.fromString("41a854e4-4262-4672-a7df-c781f535d6ee"),
     durationSum = Duration.ofSeconds(240)
@@ -49,7 +49,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       dbId = 106,
       projectId = "project-get-one",
       createdAt = LocalDateTime.parse("2020-08-21T08:00:00"),
-      updatedAt = LocalDateTime.parse("2020-08-21T23:00:00"),
+      lastAddDurationAt = LocalDateTime.parse("2020-08-21T23:00:00"),
       durationSum = Duration.ofHours(2)
     )
 
@@ -69,16 +69,10 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
     describe("newProject should") {
       it("return entity") {
-        val projectId      = "project1"
-        val readSideEntity = projectReadSideRepo.newProject(project(2, projectId)).transact(tnx).unsafeRunSync()
+        val projectId = "project1"
+        val result    = projectReadSideRepo.newProject(project(2, projectId)).transact(tnx).unsafeRunSync()
 
-        readSideEntity should matchTo(projectReadModel(projectId))
-      }
-      it("write entity that is possible to find by dbId") {
-        val projectId      = "project2"
-        val readSideEntity = projectReadSideRepo.newProject(project(4, projectId)).transact(tnx).unsafeRunSync()
-
-        readProjectByDbId(readSideEntity.dbId) should matchTo(projectReadModel(projectId).some)
+        result should be(())
       }
       it("write entity that is possible to find by projectId") {
         val projectId = "project3"
@@ -90,7 +84,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     describe("deletedProject should") {
       it("soft delete project from read model") {
         val now      = LocalDateTime.now()
-        val expected = projectD1.copy(deletedAt = now.some, updatedAt = now, durationSum = Duration.ZERO)
+        val expected = projectD1.copy(deletedAt = now.some, durationSum = Duration.ZERO)
 
         projectReadSideRepo.deleteProject(projectD1.dbId, projectD1.projectId, now).transact(tnx).unsafeRunSync()
 
@@ -98,22 +92,24 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       }
     }
     describe("addDuration should") {
-      it("add duration of task to durationSum when sum is zero") {
+      it("update project on the read side when durationSum is zero") {
+        val dateTime = LocalDateTime.now()
         projectReadSideRepo
-          .addDuration(durationSumZero.dbId, Duration.ofMinutes(30))
+          .addDuration(durationSumZero.dbId, Duration.ofMinutes(30), dateTime)
           .transact(tnx)
           .unsafeRunSync()
 
-        val expected = durationSumZero.copy(durationSum = Duration.ofMinutes(30))
+        val expected = durationSumZero.copy(durationSum = Duration.ofMinutes(30), lastAddDurationAt = dateTime)
         readProjectByDbId(durationSumZero.dbId) should matchTo(expected.some)
       }
-      it("add duration of task to durationSum when sum is positive") {
+      it("update project on the read side when durationSum is positive") {
+        val dateTime = LocalDateTime.now()
         projectReadSideRepo
-          .addDuration(durationSum30.dbId, Duration.ofMinutes(30))
+          .addDuration(durationSum30.dbId, Duration.ofMinutes(30), dateTime)
           .transact(tnx)
           .unsafeRunSync()
 
-        val expected = durationSum30.copy(durationSum = Duration.ofMinutes(60))
+        val expected = durationSum30.copy(durationSum = Duration.ofMinutes(60), lastAddDurationAt = dateTime)
         readProjectByDbId(durationSum30.dbId) should matchTo(expected.some)
       }
     }
@@ -133,20 +129,12 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   private val owner1Id                                                 = UUID.randomUUID()
   private val writeSideNow                                             = LocalDateTime.now()
   private def project(dbId: Long, projectId: String): ProjectEntity    =
-    ProjectEntity(
-      dbId = dbId,
-      projectId = projectId,
-      createdAt = writeSideNow,
-      updatedAt = writeSideNow,
-      deletedAt = None,
-      owner = owner1Id
-    )
+    ProjectEntity(dbId = dbId, projectId = projectId, createdAt = writeSideNow, deletedAt = None, owner = owner1Id)
   private def project(readModel: ProjectReadSideEntity): ProjectEntity =
     ProjectEntity(
       dbId = readModel.dbId,
       projectId = readModel.projectId,
       createdAt = readModel.createdAt,
-      updatedAt = readModel.updatedAt,
       deletedAt = readModel.deletedAt,
       owner = readModel.owner
     )
@@ -158,7 +146,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       dbId = 0,
       projectId = projectId,
       createdAt = writeSideNow,
-      updatedAt = writeSideNow,
+      lastAddDurationAt = writeSideNow,
       deletedAt = None,
       owner = owner1Id,
       durationSum = Duration.ZERO
@@ -172,6 +160,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       deletedAt = None,
       owner = UUID.randomUUID(),
       startedAt = LocalDateTime.now(),
+      createdAt = LocalDateTime.now(),
       duration = Duration.ofMinutes(30),
       volume = 10.some,
       comment = None

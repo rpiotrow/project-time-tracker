@@ -4,16 +4,16 @@ import java.time.{Duration, LocalDateTime}
 
 import cats.implicits._
 import io.getquill.{idiom => _}
-import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity, TaskReadSideEntity}
+import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
 
 trait ProjectReadSideRepository {
   def get(projectId: String): DBResult[Option[ProjectReadSideEntity]]
 
-  def newProject(project: ProjectEntity): DBResult[ProjectReadSideEntity]
+  def newProject(project: ProjectEntity): DBResult[Unit]
   def updateProject(projectId: String, updated: ProjectEntity): DBResult[Unit]
   def deleteProject(dbId: Long, projectId: String, deletedAt: LocalDateTime): DBResult[Unit]
 
-  def addDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
+  def addDuration(projectDbId: Long, duration: Duration, dateTime: LocalDateTime): DBResult[Unit]
   def subtractDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
 }
 
@@ -35,44 +35,40 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
         .filter(_.projectId == lift(projectId))
     }).map(_.headOption)
 
-  override def newProject(project: ProjectEntity): DBResult[ProjectReadSideEntity] = {
+  override def newProject(project: ProjectEntity): DBResult[Unit] = {
     val entity = ProjectReadSideEntity(project)
     run(quote { projectsReadSide.insert(lift(entity)).returningGenerated(_.dbId) })
-      .map(dbId => entity.copy(dbId = dbId))
+      .map(_ => ())
   }
 
   override def updateProject(projectId: String, updated: ProjectEntity): DBResult[Unit] = {
     run(quote {
       projectsReadSide
         .filter(_.projectId == lift(projectId))
-        .update(_.projectId -> lift(updated.projectId), _.updatedAt -> lift(updated.updatedAt))
-    }).map(logIfNotUpdated(s"no project '${projectId}' in read model"))
+        .update(_.projectId -> lift(updated.projectId))
+    }).map(logIfNotUpdated(s"no project '$projectId' in read model"))
   }
 
   override def deleteProject(dbId: Long, projectId: String, deletedAt: LocalDateTime): DBResult[Unit] = {
     run(quote {
       projectsReadSide
         .filter(p => p.dbId == lift(dbId) && p.deletedAt.isEmpty)
-        .update(
-          _.deletedAt   -> lift(deletedAt.some),
-          _.updatedAt   -> lift(deletedAt),
-          _.durationSum -> lift(Duration.ZERO)
-        )
+        .update(_.deletedAt -> lift(deletedAt.some), _.durationSum -> lift(Duration.ZERO))
     }).map(logIfNotUpdated(s"no project '$projectId' in read model"))
   }
 
-  override def addDuration(projectDbId: Long, duration: Duration): DBResult[Unit] =
+  override def addDuration(projectDbId: Long, duration: Duration, dateTime: LocalDateTime): DBResult[Unit] =
     run(quote {
       projectsReadSide
         .filter(_.dbId == lift(projectDbId))
-        .update(e => e.durationSum -> (e.durationSum + lift(duration)))
-    }).map(logIfNotUpdated(s"no project with dbId ${projectDbId} in read model"))
+        .update(e => e.durationSum -> (e.durationSum + lift(duration)), _.lastAddDurationAt -> lift(dateTime))
+    }).map(logIfNotUpdated(s"no project with dbId $projectDbId in read model"))
 
   override def subtractDuration(projectDbId: Long, duration: Duration): DBResult[Unit] =
     run(quote {
       projectsReadSide
         .filter(_.dbId == lift(projectDbId))
         .update(e => e.durationSum -> (e.durationSum - lift(duration)))
-    }).map(logIfNotUpdated(s"no project with dbId ${projectDbId} in read model"))
+    }).map(logIfNotUpdated(s"no project with dbId $projectDbId in read model"))
 
 }
