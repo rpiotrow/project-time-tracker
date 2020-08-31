@@ -117,7 +117,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val notOwnerId = UUID.randomUUID()
         val result     = service.update(projectId, taskId, updateInput, notOwnerId).value.unsafeRunSync()
 
-        result should be(NotOwner("only owner can delete task").asLeft[Unit])
+        result should be(NotOwner("only owner can update task").asLeft[Unit])
       }
       it("do not update when new time range overlaps another task time span") {
         val projectRepository = mock[ProjectRepository]
@@ -135,7 +135,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         result should be(InvalidTimeSpan.asLeft[TaskOutput])
       }
-      it("when task is not from given project") {
+      it("return error when task is not from given project") {
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]
         val readSideService   = mock[ReadSideService]
@@ -149,6 +149,22 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val result = service.update(differentProjectId, taskId, updateInput, ownerId).value.unsafeRunSync()
 
         result should be(ProjectNotMatch("task not in the project with given project identifier").asLeft[TaskOutput])
+      }
+      it("return error when task is deleted") {
+        val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
+        val readSideService   = mock[ReadSideService]
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
+
+        val now         = LocalDateTime.now()
+        val deletedTask = task.copy(deletedAt = now.some)
+
+        (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
+        (taskRepository.get _).expects(taskId).returning(Option(deletedTask).pure[DBResult])
+
+        val result = service.update(projectId, taskId, updateInput, ownerId).value.unsafeRunSync()
+
+        result should be(AlreadyDeleted(s"task was already deleted at $now").asLeft[TaskOutput])
       }
     }
 

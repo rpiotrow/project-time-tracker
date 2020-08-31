@@ -68,6 +68,31 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         result should be(().asRight[AppFailure])
       }
+      it("change projectId for deleted project") {
+        val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
+        val readSideService   = mock[ReadSideService]
+        val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
+
+        val now                   = LocalDateTime.now()
+        val deletedProject        = project.copy(deletedAt = now.some)
+        val deletedProjectUpdated = projectUpdated.copy(deletedAt = now.some)
+
+        (projectRepository.get _)
+          .expects(projectIdForUpdate.value)
+          .returning(Option.empty[ProjectEntity].pure[DBResult])
+        (projectRepository.get _).expects(projectId.value).returning(deletedProject.some.pure[DBResult])
+        (projectRepository.update _)
+          .expects(deletedProject, projectIdForUpdate.value)
+          .returning(deletedProjectUpdated.pure[DBResult])
+        (readSideService.projectUpdated _)
+          .expects(projectId, deletedProjectUpdated)
+          .returning(Monad[DBResult].unit)
+
+        val result = service.update(projectId, projectUpdateInput, ownerId).value.unsafeRunSync()
+
+        result should be(().asRight[AppFailure])
+      }
       it("return error when project with given id does not exist") {
         val projectRepository = mock[ProjectRepository]
         val taskRepository    = mock[TaskRepository]

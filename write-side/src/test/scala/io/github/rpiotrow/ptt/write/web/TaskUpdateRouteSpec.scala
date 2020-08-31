@@ -80,6 +80,16 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         response.status should be(Status.Conflict)
         response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
       }
+      it("when task is deleted") {
+        val taskService = mock[TaskService[IO]]
+        (taskService.update _)
+          .expects(projectId, taskId, taskInput, ownerId)
+          .returning(EitherT.left(IO(AlreadyDeleted("task was deleted"))))
+        val response    = makeUpdateTaskRequest(taskService)
+
+        response.status should be(Status.Conflict)
+        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+      }
     }
   }
 

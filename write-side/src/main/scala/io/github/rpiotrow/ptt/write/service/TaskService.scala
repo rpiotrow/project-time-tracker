@@ -44,12 +44,13 @@ private[service] class TaskServiceLive[F[_]: Sync](
       project       <- ifExists(projectOption, "project with given identifier does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
       task          <- ifExists(taskOption, "task with given identifier does not exist")
-      _             <- checkOwner(task, userId)
+      _             <- checkOwner(task, userId, "update")
       _             <- checkProject(task, project)
+      _             <- checkNotDeletedAlready(task)
       _             <- taskDoesNotOverlap(Some(task), input, userId)
-      _             <- EitherT.right[AppFailure](taskRepository.delete(task))
+      deletedTask   <- EitherT.right[AppFailure](taskRepository.delete(task))
       newTask       <- EitherT.right[AppFailure](taskRepository.add(task.projectDbId, input, userId))
-      _             <- EitherT.right[AppFailure](readSideService.taskDeleted(task))
+      _             <- EitherT.right[AppFailure](readSideService.taskDeleted(deletedTask))
       _             <- EitherT.right[AppFailure](readSideService.taskAdded(project.projectId, newTask))
     } yield newTask.taskId).transact(tnx)
   }
@@ -60,7 +61,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
       project       <- ifExists(projectOption, "project with given identifier does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
       task          <- ifExists(taskOption, "task with given identifier does not exist")
-      _             <- checkOwner(task, userId)
+      _             <- checkOwner(task, userId, "delete")
       _             <- checkProject(task, project)
       _             <- checkNotDeletedAlready(task)
       deleted       <- EitherT.right[AppFailure](taskRepository.delete(task))
@@ -81,8 +82,8 @@ private[service] class TaskServiceLive[F[_]: Sync](
     } yield check
   }
 
-  private def checkOwner(task: TaskEntity, user: UserId): EitherT[DBResult, NotOwner, Unit] = {
-    EitherT.cond[DBResult](task.owner == user, (), NotOwner("only owner can delete task"))
+  private def checkOwner(task: TaskEntity, user: UserId, action: String): EitherT[DBResult, NotOwner, Unit] = {
+    EitherT.cond[DBResult](task.owner == user, (), NotOwner(s"only owner can $action task"))
   }
 
   private def checkProject(task: TaskEntity, project: ProjectEntity): EitherT[DBResult, ProjectNotMatch, Unit] = {
