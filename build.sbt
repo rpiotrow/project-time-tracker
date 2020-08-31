@@ -146,4 +146,4 @@ lazy val compilerOptions = Seq(
 )
 
 addCommandAlias("checks", ";test;it:test")
-addCommandAlias("runAll", ";project gateway;bgRun;project read-side;bgRun;project write-side;bgRun")
+addCommandAlias("runAll", ";project gateway;bgRun;project read-side;bgRun;project write-side;run")

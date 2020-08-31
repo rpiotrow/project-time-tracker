@@ -45,8 +45,11 @@ object model {
 
   object NonEmptyUserIdList {
     private[api] val example = NonEmptyList(
-      UUID.fromString("500cd26f-4c42-4051-9600-2e4ad2fab3b8"),
-      List(UUID.fromString("33f7d94f-a223-4dc6-afd9-9246f6204807"))
+      UUID.fromString("907e591f-44cd-4c70-8ea9-707e30ada160"),
+      List(
+        UUID.fromString("40c728cc-8540-4ba0-81f8-c2834dd1098f"),
+        UUID.fromString("b5d09d4c-06f0-44d8-81e6-e4da7ece5e0")
+      )
     )
   }
 

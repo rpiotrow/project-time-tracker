@@ -27,7 +27,7 @@ object StatisticsEndpoints {
       .and(
         query[YearMonth]("to")
           .description("Return statistics until given year and month")
-          .example(YearMonth.of(2020, 9))
+          .example(YearMonth.of(2020, 12))
       )
       .mapTo(StatisticsParams)
       .validate(Validator.custom(input => !input.to.isBefore(input.from), "`from` before or equal `to`"))

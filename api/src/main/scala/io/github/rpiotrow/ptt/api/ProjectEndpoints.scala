@@ -38,12 +38,12 @@ object ProjectEndpoints {
       .and(
         query[Option[LocalDateTime]]("from")
           .description("Filter projects created after given date")
-          .example(LocalDateTime.parse("2020-09-01T10:00:00").some)
+          .example(LocalDateTime.parse("2020-01-01T10:00:00").some)
       )
       .and(
         query[Option[LocalDateTime]]("to")
           .description("Filter projects created before given date")
-          .example(LocalDateTime.parse("2020-09-30T10:00:00").some)
+          .example(LocalDateTime.parse("2020-12-31T10:00:00").some)
       )
       .and(
         query[Option[Boolean]]("deleted")

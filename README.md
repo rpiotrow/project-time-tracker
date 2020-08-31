@@ -25,8 +25,14 @@ Data are stored in PostgreSQL database. There are separate schemas in SQL databa
 ## Run
 
 ### Local database:
+
 ```
 $ docker-compose -f local-dev/docker-compose.yml up -d
+```
+
+To remove docker volume to be able to start a fresh version without any data:
+```
+$ docker stop project-time-tracker-postgresql && docker rm project-time-tracker-postgresql && docker volume rm local-dev_project-time-tracker-postgresql-data
 ```
 
 ### Applications
@@ -81,6 +87,9 @@ need to provide dates in UTC without time zone. Services use and expect
   "comment": "a new shiny task"
 }
 ```
+
+Note: Date and time with `Z` (e.g. `2020-01-01T10:00Z`) works in query parameters, but does not work
+in JSON body.
 
 ## Libraries used
 
