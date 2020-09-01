@@ -37,7 +37,7 @@ private[service] class ProjectServiceLive[F[_]: Sync](
   override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
       projectOption  <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project        <- ifExists(projectOption, "project with given projectId does not exists")
+      project        <- ifExists(projectOption, s"project '$projectId' does not exist")
       _              <- checkOwner(project, user, "update")
       existingOption <- EitherT.right[AppFailure](projectRepository.get(input.projectId.value))
       _              <- checkUniqueness(existingOption)
@@ -48,7 +48,7 @@ private[service] class ProjectServiceLive[F[_]: Sync](
   override def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project       <- ifExists(projectOption, "project with given projectId does not exists")
+      project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       _             <- checkOwner(project, user, "delete")
       _             <- checkNotAlreadyDeleted(project)
       deleted       <- EitherT.right[AppFailure](projectRepository.delete(project))
@@ -59,9 +59,9 @@ private[service] class ProjectServiceLive[F[_]: Sync](
   // FIXME: check Uniqueness should take id, read form db and return Unit, this one is more like checkDoesNotExist
   private def checkUniqueness(existingOption: Option[ProjectEntity]): EitherT[DBResult, NotUnique, Unit] =
     existingOption match {
-      case Some(_) =>
-        EitherT.left[Unit](NotUnique("project with given projectId already exists").pure[DBResult])
-      case None    =>
+      case Some(project) =>
+        EitherT.left[Unit](NotUnique(s"project '${project.projectId}' already exists").pure[DBResult])
+      case None          =>
         EitherT.right[NotUnique](().pure[DBResult])
     }
 
@@ -72,7 +72,7 @@ private[service] class ProjectServiceLive[F[_]: Sync](
     EitherT.cond[DBResult](
       project.deletedAt.isEmpty,
       (),
-      AlreadyDeleted(s"project was already deleted at ${project.deletedAt.get}")
+      AlreadyDeleted(s"project '${project.projectId}' deleted at ${project.deletedAt.get}")
     )
 
 }

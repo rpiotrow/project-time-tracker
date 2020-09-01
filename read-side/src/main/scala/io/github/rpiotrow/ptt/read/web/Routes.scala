@@ -76,7 +76,7 @@ private class RoutesLive(
     projectService
       .one(decodedInput)
       .catchAll {
-        case EntityNotFound         => ZIO.fail(NotFound("project with given identifier not found"))
+        case EntityNotFound(id)     => ZIO.fail(NotFound(s"project '$id' not found"))
         case RepositoryThrowable(_) => ZIO.fail(ServerError("server.error"))
       }
   }

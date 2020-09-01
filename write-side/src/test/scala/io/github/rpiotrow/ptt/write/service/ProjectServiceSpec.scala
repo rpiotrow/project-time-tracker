@@ -6,7 +6,6 @@ import java.util.UUID
 import cats.Monad
 import cats.effect.IO
 import cats.implicits._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
 import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository, TaskRepository}
@@ -44,7 +43,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         val result = service.create(projectCreateInput, ownerId).value.unsafeRunSync()
 
-        result should be(NotUnique("project with given projectId already exists").asLeft[ProjectOutput])
+        result should be(NotUnique(s"project '$projectId' already exists").asLeft[ProjectOutput])
       }
     }
 
@@ -104,7 +103,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val notOwnerId = UUID.randomUUID()
         val result     = service.update(projectId, projectUpdateInput, notOwnerId).value.unsafeRunSync()
 
-        result should be(EntityNotFound("project with given projectId does not exists").asLeft[Unit])
+        result should be(EntityNotFound(s"project '$projectId' does not exist").asLeft[Unit])
       }
       it("return error when given not owner wants to update project") {
         val projectRepository = mock[ProjectRepository]
@@ -132,7 +131,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         val result = service.update(projectId, projectUpdateInput, ownerId).value.unsafeRunSync()
 
-        result should be(NotUnique("project with given projectId already exists").asLeft[ProjectOutput])
+        result should be(NotUnique(s"project '$projectId' already exists").asLeft[ProjectOutput])
       }
       it("return failure when repository update is not successful") {
         val projectRepository = mock[ProjectRepository]
@@ -185,7 +184,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         val result = service.delete(projectId, ownerId).value.unsafeRunSync()
 
-        result should be(EntityNotFound("project with given projectId does not exists").asLeft[Unit])
+        result should be(EntityNotFound(s"project '$projectId' does not exist").asLeft[Unit])
       }
       it("return error when not owner of the project wants to delete it") {
         val projectRepository = mock[ProjectRepository]
@@ -213,7 +212,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         val result = service.delete(projectId, ownerId).value.unsafeRunSync()
 
-        result should be(AlreadyDeleted(s"project was already deleted at $deletedAt").asLeft[Unit])
+        result should be(AlreadyDeleted(s"project '$projectId' deleted at $deletedAt").asLeft[Unit])
       }
     }
   }

@@ -26,7 +26,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
   override def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskId] = {
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project       <- ifExists(projectOption, "project with given identifier does not exist")
+      project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       _             <- taskDoesNotOverlap(None, input, userId)
       task          <- EitherT.right[AppFailure](taskRepository.add(project.dbId, input, userId))
       _             <- EitherT.right[AppFailure](readSideService.taskAdded(projectId.value, task))
@@ -41,9 +41,9 @@ private[service] class TaskServiceLive[F[_]: Sync](
   ): EitherT[F, AppFailure, TaskId] = {
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project       <- ifExists(projectOption, "project with given identifier does not exist")
+      project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
-      task          <- ifExists(taskOption, "task with given identifier does not exist")
+      task          <- ifExists(taskOption, s"task $taskId does not exist")
       _             <- checkOwner(task, userId, "update")
       _             <- checkProject(task, project)
       _             <- checkNotDeletedAlready(task)
@@ -58,9 +58,9 @@ private[service] class TaskServiceLive[F[_]: Sync](
   override def delete(projectId: ProjectId, taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit] = {
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project       <- ifExists(projectOption, "project with given identifier does not exist")
+      project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
-      task          <- ifExists(taskOption, "task with given identifier does not exist")
+      task          <- ifExists(taskOption, s"task $taskId does not exist")
       _             <- checkOwner(task, userId, "delete")
       _             <- checkProject(task, project)
       _             <- checkNotDeletedAlready(task)
@@ -90,13 +90,18 @@ private[service] class TaskServiceLive[F[_]: Sync](
     EitherT.cond[DBResult](
       task.projectDbId == project.dbId,
       (),
-      ProjectNotMatch("task not in the project with given project identifier")
+      ProjectNotMatch(s"task ${task.taskId} not in the project '${project.projectId}'")
     )
   }
 
   private def checkNotDeletedAlready(task: TaskEntity): EitherT[DBResult, AlreadyDeleted, Unit] = {
     EitherT
-      .cond[DBResult](task.deletedAt.isEmpty, (), AlreadyDeleted(s"task was already deleted at ${task.deletedAt.get}"))
+      .cond[DBResult](
+        task.deletedAt.isEmpty,
+        (),
+        AlreadyDeleted(s"task ${task.taskId} deleted at ${task.deletedAt.get}")
+      )
+  }
   }
 
 }

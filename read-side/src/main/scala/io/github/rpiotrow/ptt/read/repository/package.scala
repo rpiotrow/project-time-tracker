@@ -22,7 +22,7 @@ package object repository {
   type Repositories = StatisticsRepository with ProjectRepository with TaskRepository
 
   sealed trait RepositoryFailure
-  case object EntityNotFound                    extends RepositoryFailure
+  case class EntityNotFound(id: String)         extends RepositoryFailure
   case class RepositoryThrowable(ex: Throwable) extends RepositoryFailure
 
   def postgreSQLRepositories(connectEC: ExecutionContext): ZLayer[RepositoryEnv, Throwable, Repositories] =

@@ -45,7 +45,7 @@ class ProjectRoutesSpec extends AnyFunSpec with RoutesSpecBase {
     it(s"$projects/not-existing") {
       val projectService       = mock[ProjectService.Service]
       val projectId: ProjectId = "not-existing"
-      (projectService.one _).expects(projectId).returning(zio.IO.fail(EntityNotFound))
+      (projectService.one _).expects(projectId).returning(zio.IO.fail(EntityNotFound(projectId.value)))
 
       val url      = s"$projects/not-existing"
       val response = makeRequest(Request(uri = Uri.unsafeFromString(url)), projectService)

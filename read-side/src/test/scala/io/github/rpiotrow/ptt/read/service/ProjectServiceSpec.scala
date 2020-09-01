@@ -136,12 +136,12 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         val projectRepository = mock[ProjectRepository.Service]
         val taskRepository    = mock[TaskRepository.Service]
 
-        (projectRepository.one _).expects("test").returning(zio.IO.fail(EntityNotFound))
+        (projectRepository.one _).expects("test").returning(zio.IO.fail(EntityNotFound("test")))
 
         val service = ProjectService.live(projectRepository, taskRepository)
         val result  = zio.Runtime.default.unsafeRun(service.one("test").either)
 
-        result should be(Left(EntityNotFound))
+        result should be(Left(EntityNotFound("test")))
       }
     }
     describe("list() should") {

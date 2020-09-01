@@ -72,7 +72,7 @@ trait TaskRepositorySpec {
       val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(project2Id)))
       result should matchTo(List(t3))
     }
-    it("return empty list when tasks for given projects does not exists") {
+    it("return empty list when tasks for given projects does not exist") {
       val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(666)))
       result should be(List())
     }

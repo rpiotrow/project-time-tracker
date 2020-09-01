@@ -34,7 +34,7 @@ private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends P
       .map(_.headOption)
       .transact(tnx)
       .mapError(RepositoryThrowable)
-      .flatMap(ZIO.fromOption(_).orElseFail(EntityNotFound))
+      .flatMap(ZIO.fromOption(_).orElseFail(EntityNotFound(id)))
   }
 
   override def list(params: ProjectListParams) = {

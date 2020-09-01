@@ -64,8 +64,8 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
         result should matchTo(p2)
       }
       it("return not found error when entity not exists") {
-        val result = zio.Runtime.default.unsafeRun(projectRepo.one("none").either)
-        result should be(Left(EntityNotFound))
+        val result = zio.Runtime.default.unsafeRun(projectRepo.one("not-existing-one").either)
+        result should be(Left(EntityNotFound("not-existing-one")))
       }
     }
     describe("list() should") {
