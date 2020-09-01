@@ -1,5 +1,6 @@
 package io.github.rpiotrow.ptt.write.service
 
+import cats.Monad
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
@@ -25,24 +26,22 @@ private[service] class ProjectServiceLive[F[_]: Sync](
     with ServiceBase {
 
   override def create(input: ProjectInput, owner: UserId): EitherT[F, AppFailure, Unit] = {
-    val projectId = input.projectId.value
+    val projectId = input.projectId
     (for {
-      existingOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
-      _              <- checkUniqueness(existingOption)
-      project        <- EitherT.right[AppFailure](projectRepository.create(projectId, owner))
-      _              <- EitherT.right[AppFailure](readSideService.projectCreated(project))
+      _       <- checkUniqueness(input.projectId)
+      project <- EitherT.right[AppFailure](projectRepository.create(projectId.value, owner))
+      _       <- EitherT.right[AppFailure](readSideService.projectCreated(project))
     } yield ()).transact(tnx)
   }
 
   override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
-      projectOption  <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
-      project        <- ifExists(projectOption, s"project '$projectId' does not exist")
-      _              <- checkOwner(project, user, "update")
-      existingOption <- EitherT.right[AppFailure](projectRepository.get(input.projectId.value))
-      _              <- checkUniqueness(existingOption)
-      updated        <- EitherT.right[AppFailure](projectRepository.update(project, input.projectId.value))
-      _              <- EitherT.right[AppFailure](readSideService.projectUpdated(projectId, updated))
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      project       <- ifExists(projectOption, s"project '$projectId' does not exist")
+      _             <- checkOwner(project, user, "update")
+      _             <- checkUniqueness(input.projectId)
+      updated       <- EitherT.right[AppFailure](projectRepository.update(project, input.projectId.value))
+      _             <- EitherT.right[AppFailure](readSideService.projectUpdated(projectId, updated))
     } yield ()).transact(tnx)
 
   override def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit] =
@@ -56,13 +55,18 @@ private[service] class ProjectServiceLive[F[_]: Sync](
       _             <- EitherT.right[AppFailure](readSideService.projectDeleted(deleted))
     } yield ()).transact(tnx)
 
-  // FIXME: check Uniqueness should take id, read form db and return Unit, this one is more like checkDoesNotExist
-  private def checkUniqueness(existingOption: Option[ProjectEntity]): EitherT[DBResult, NotUnique, Unit] =
-    existingOption match {
+  private def checkUniqueness(projectId: ProjectId): EitherT[DBResult, NotUnique, Unit] =
+    for {
+      projectOption <- EitherT.right[NotUnique](projectRepository.get(projectId.value))
+      result        <- checkIsEmpty(projectOption)
+    } yield result
+
+  private def checkIsEmpty(projectOption: Option[ProjectEntity]): EitherT[DBResult, NotUnique, Unit] =
+    projectOption match {
       case Some(project) =>
         EitherT.left[Unit](NotUnique(s"project '${project.projectId}' already exists").pure[DBResult])
       case None          =>
-        EitherT.right[NotUnique](().pure[DBResult])
+        EitherT.right[NotUnique](Monad[DBResult].unit)
     }
 
   private def checkOwner(project: ProjectEntity, user: UserId, actionName: String): EitherT[DBResult, NotOwner, Unit] =
