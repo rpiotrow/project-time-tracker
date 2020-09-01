@@ -12,9 +12,9 @@ import io.circe.Encoder._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.github.rpiotrow.ptt.api.input.TaskInput
-import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId}
+import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output.TaskOutput
-import io.github.rpiotrow.ptt.write.service.{AppFailure, EntityNotFound, InvalidTimeSpan, TaskService}
+import io.github.rpiotrow.ptt.write.service._
 import org.http4s.headers.Location
 import org.http4s.util.CaseInsensitiveString
 import org.http4s.{Method, Request, Status, Uri}
@@ -57,6 +57,16 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
           .expects(projectId, taskInput, ownerId)
           .returning(EitherT.left(IO(appFailure)))
         val response               = makeAddTaskRequest(taskService)
+
+        response.status should be(Status.Conflict)
+        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+      }
+      it("when project is deleted") {
+        val taskService = mock[TaskService[IO]]
+        (taskService.add _)
+          .expects(projectId, taskInput, ownerId)
+          .returning(EitherT.left(IO(AlreadyDeleted("project was deleted"))))
+        val response    = makeAddTaskRequest(taskService)
 
         response.status should be(Status.Conflict)
         response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)

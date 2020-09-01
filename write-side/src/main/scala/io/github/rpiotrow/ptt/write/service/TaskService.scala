@@ -27,6 +27,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
+      _             <- checkNotDeletedAlready(project)
       _             <- taskDoesNotOverlap(None, input, userId)
       task          <- EitherT.right[AppFailure](taskRepository.add(project.dbId, input, userId))
       _             <- EitherT.right[AppFailure](readSideService.taskAdded(projectId.value, task))
@@ -102,6 +103,14 @@ private[service] class TaskServiceLive[F[_]: Sync](
         AlreadyDeleted(s"task ${task.taskId} deleted at ${task.deletedAt.get}")
       )
   }
+
+  private def checkNotDeletedAlready(project: ProjectEntity): EitherT[DBResult, AlreadyDeleted, Unit] = {
+    EitherT
+      .cond[DBResult](
+        project.deletedAt.isEmpty,
+        (),
+        AlreadyDeleted(s"project '${project.projectId}' deleted at ${project.deletedAt.get}")
+      )
   }
 
 }

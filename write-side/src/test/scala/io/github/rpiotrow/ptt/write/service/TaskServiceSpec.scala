@@ -65,6 +65,20 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         result should be(EntityNotFound(s"project '$projectId' does not exist").asLeft[TaskOutput])
       }
+      it("do not create task for deleted project") {
+        val projectRepository = mock[ProjectRepository]
+        val taskRepository    = mock[TaskRepository]
+        val readSideService   = mock[ReadSideService]
+        val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
+
+        val now            = LocalDateTime.now()
+        val deletedProject = project.copy(deletedAt = now.some)
+        (projectRepository.get _).expects(projectId.value).returning(deletedProject.some.pure[DBResult])
+
+        val result = service.add(projectId, taskInput, userId).value.unsafeRunSync()
+
+        result should be(AlreadyDeleted(s"project '$projectId' deleted at $now").asLeft[TaskOutput])
+      }
     }
 
     describe("update should") {
