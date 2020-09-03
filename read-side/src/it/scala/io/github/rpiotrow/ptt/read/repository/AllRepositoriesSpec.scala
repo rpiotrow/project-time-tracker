@@ -9,6 +9,7 @@ import doobie.Transactor
 import doobie.implicits._
 import doobie.util.ExecutionContexts
 import doobie.util.update.Update0
+import io.github.rpiotrow.ptt.api.model.UserId
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers._
 import zio._
@@ -29,8 +30,8 @@ class AllRepositoriesSpec
     commonJdbcParams = JdbcDatabaseContainer.CommonParams(startupTimeout = 240.seconds, connectTimeout = 240.seconds)
   )
 
-  override val owner1Id = UUID.fromString("41a854e4-4262-4672-a7df-c781f535d6ee")
-  override val owner2Id = UUID.fromString("66ffc00e-083b-48aa-abb5-8ef46ac0e06e")
+  override val owner1Id = UserId("41a854e4-4262-4672-a7df-c781f535d6ee")
+  override val owner2Id = UserId("66ffc00e-083b-48aa-abb5-8ef46ac0e06e")
 
   // use HikariConfig and HikariDataSource since it is not possible to set schema in Transactor
   private lazy val hikariConfig = {

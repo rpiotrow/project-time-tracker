@@ -9,7 +9,7 @@ import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.write.entity.TaskEntity
 
 trait TaskRepository {
-  def add(projectId: Long, input: TaskInput, owner: UUID): DBResult[TaskEntity]
+  def add(projectId: Long, input: TaskInput, owner: UserId): DBResult[TaskEntity]
   def get(taskId: TaskId): DBResult[Option[TaskEntity]]
   def delete(task: TaskEntity): DBResult[TaskEntity]
   def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit]
@@ -30,7 +30,7 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext, private
   override def add(projectDbId: Long, input: TaskInput, owner: UserId): DBResult[TaskEntity] = {
     val entity = TaskEntity(
       dbId = 0,
-      taskId = UUID.randomUUID(),
+      taskId = TaskId.random(),
       projectDbId = projectDbId,
       createdAt = LocalDateTime.now(clock),
       deletedAt = None,

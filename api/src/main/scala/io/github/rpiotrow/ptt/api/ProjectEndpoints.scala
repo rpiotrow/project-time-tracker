@@ -5,7 +5,6 @@ import java.time.LocalDateTime
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
 import io.circe.refined._
-import io.github.rpiotrow.ptt.api.model._
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.codec.enumeratum._
@@ -13,6 +12,7 @@ import sttp.tapir.codec.refined._
 import sttp.tapir.json.circe._
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.input._
+import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output._
 import io.github.rpiotrow.ptt.api.param.OrderingDirection._
 import io.github.rpiotrow.ptt.api.param.ProjectOrderingField._
@@ -22,7 +22,8 @@ import sttp.tapir.EndpointIO.Example
 object ProjectEndpoints {
 
   import Base._
-  import CustomCodecs._
+  import CirceMappings._
+  import TapirMappings._
   import Paging._
 
   private[api] val projectsBaseEndpoint = baseEndpoint

@@ -102,7 +102,7 @@ private class RoutesLive[F[_]: Async](
     taskService
       .add(projectId, input, userId)
       .leftMap(mapToApiErrors)
-      .map(taskId => new LocationHeader(s"$gatewayAddress/projects/$projectId/tasks/$taskId"))
+      .map(taskId => new LocationHeader(s"$gatewayAddress/projects/$projectId/tasks/${taskId.id}"))
       .value
 
   private def taskUpdate(
@@ -114,7 +114,7 @@ private class RoutesLive[F[_]: Async](
     taskService
       .update(projectId, taskId, input, userId)
       .leftMap(mapToApiErrors)
-      .map(taskId => new LocationHeader(s"$gatewayAddress/projects/$projectId/tasks/$taskId"))
+      .map(taskId => new LocationHeader(s"$gatewayAddress/projects/$projectId/tasks/${taskId.id}"))
       .value
 
   private def taskDelete(projectId: ProjectId, taskId: TaskId, userId: UserId): F[Either[ApiError, Unit]] =
@@ -123,6 +123,7 @@ private class RoutesLive[F[_]: Async](
       .leftMap(mapToApiErrors)
       .value
 
+  import io.github.rpiotrow.ptt.api.TapirMappings.userIdCodec
   implicit private class AuthorizedEndpoint[I, E, O](e: Endpoint[I, E, O, EntityBody[F]]) {
     def withUserId(): Endpoint[(I, UserId), E, O, EntityBody[F]] = e.in(header[UserId]("X-Authorization"))
   }

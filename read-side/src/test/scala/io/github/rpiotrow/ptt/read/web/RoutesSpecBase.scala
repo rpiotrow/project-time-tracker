@@ -13,6 +13,7 @@ import org.scalatest.matchers.should
 import zio.Runtime.default.unsafeRun
 import zio._
 import io.circe.generic.auto._
+import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import org.http4s._
@@ -23,7 +24,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
   val projects   = "/projects"
   val statistics = "/statistics"
 
-  val owner1Id                           = UUID.randomUUID()
+  val owner1Id                           = UserId(UUID.randomUUID())
   val projectOutput1                     = ProjectOutput(
     projectId = "project one",
     createdAt = LocalDateTime.now(),
@@ -32,7 +33,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
     durationSum = Duration.ofHours(3),
     tasks = List(
       TaskOutput(
-        taskId = UUID.randomUUID(),
+        taskId = TaskId.random(),
         owner = owner1Id,
         startedAt = LocalDateTime.now(),
         duration = Duration.ofHours(2),
@@ -41,7 +42,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
         deletedAt = None
       ),
       TaskOutput(
-        taskId = UUID.randomUUID(),
+        taskId = TaskId.random(),
         owner = owner1Id,
         startedAt = LocalDateTime.now(),
         duration = Duration.ofHours(1),

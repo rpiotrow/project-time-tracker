@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.{RejectionHandler, RequestContext, Route, RouteResult}
 import io.github.rpiotrow.ptt.api.allEndpointsWithAuth
+import io.github.rpiotrow.ptt.api.model.UserId
 import sttp.tapir.docs.openapi._
 import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
@@ -22,7 +23,7 @@ object Routes {
   def serviceRoute(authorization: Authorization, readSideProxy: ServiceProxy, writeSideProxy: ServiceProxy): Route = {
     Route {
       handleRejections(jsonRejections) {
-        authenticateOAuth2[String](realm = "ptt", jwtAuthenticator(authorization)) { userId => context =>
+        authenticateOAuth2[UserId](realm = "ptt", jwtAuthenticator(authorization)) { userId => context =>
           val uriPath = context.request.uri.path.toString()
 
           if (uriPath.startsWith("/projects")) {
@@ -37,9 +38,9 @@ object Routes {
     }
   }
 
-  private def jwtAuthenticator(authorization: Authorization)(credentials: Credentials): Option[String] =
+  private def jwtAuthenticator(authorization: Authorization)(credentials: Credentials): Option[UserId] =
     credentials match {
-      case Credentials.Provided(rawToken) => authorization.getUserId(rawToken).map(_.toString)
+      case Credentials.Provided(rawToken) => authorization.getUserId(rawToken)
       case _                              => None
     }
 
@@ -60,7 +61,7 @@ object Routes {
 
   private def handleProjectsRequest(
     context: RequestContext,
-    userId: String,
+    userId: UserId,
     readSideProxy: ServiceProxy,
     writeSideProxy: ServiceProxy
   ): Future[RouteResult] = {
@@ -68,7 +69,9 @@ object Routes {
       val eventualResponse = readSideProxy.queueRequest(context.request)
       context.complete(eventualResponse)
     } else if (writeMethods.contains(context.request.method)) {
-      context.complete(writeSideProxy.queueRequest(context.request.addHeader(RawHeader("X-Authorization", userId))))
+      context.complete(
+        writeSideProxy.queueRequest(context.request.addHeader(RawHeader("X-Authorization", userId.id.toString)))
+      )
     } else {
       context.complete(MethodNotAllowed, jsonError("HTTP method not allowed, supported methods: GET,PUT,POST,DELETE"))
     }

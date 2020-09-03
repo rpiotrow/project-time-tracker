@@ -5,6 +5,7 @@ import java.util.UUID
 
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._
+import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.read.entity.TaskEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -12,11 +13,11 @@ import org.scalatest.matchers.should
 trait TaskRepositorySpec {
   this: AnyFunSpec with should.Matchers =>
 
-  def owner1Id: UUID
+  def owner1Id: UserId
 
-  private val t1Id = UUID.fromString("aa37e5a5-2f5b-46d9-896a-28422df74ff1")
-  private val t2Id = UUID.fromString("f445a2cd-6c21-4d10-ae96-2e1b1199c09d")
-  private val t3Id = UUID.fromString("5c4c4b21-7ba2-47e7-a0e4-e477231648ee")
+  private val t1Id = TaskId("aa37e5a5-2f5b-46d9-896a-28422df74ff1")
+  private val t2Id = TaskId("f445a2cd-6c21-4d10-ae96-2e1b1199c09d")
+  private val t3Id = TaskId("5c4c4b21-7ba2-47e7-a0e4-e477231648ee")
 
   def taskRepo: TaskRepository.Service
 

@@ -2,8 +2,8 @@ package io.github.rpiotrow.ptt.gateway.web
 
 import java.util.UUID
 
-import akka.http.scaladsl.model.headers.{OAuth2BearerToken, RawHeader, Authorization => AkkaAuthorizationHeader}
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{OAuth2BearerToken, RawHeader, Authorization => AkkaAuthorizationHeader}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import io.github.rpiotrow.ptt.api.model.UserId
@@ -72,7 +72,8 @@ class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest wit
     }
   }
 
-  private val userId            = UUID.randomUUID()
+  private val userIdUUID        = "67f410d5-9aaf-4186-8be5-f7e22740854c"
+  private val userId            = UserId(userIdUUID)
   private val noOpAuthorization = new Authorization {
     override def getUserId(rawJwtToken: String): Option[UserId] =
       if (rawJwtToken == "token") Some(userId) else None
@@ -88,7 +89,7 @@ class RoutesSpec extends AnyFunSpec with MockFactory with ScalatestRouteTest wit
     val authRequest  = request.addHeader(AkkaAuthorizationHeader(OAuth2BearerToken("token")))
     val proxyRequest =
       if (request.method == HttpMethods.GET) authRequest
-      else authRequest.addHeader(RawHeader("X-Authorization", userId.toString))
+      else authRequest.addHeader(RawHeader("X-Authorization", userIdUUID))
 
     (proxy.queueRequest _)
       .expects(proxyRequest)

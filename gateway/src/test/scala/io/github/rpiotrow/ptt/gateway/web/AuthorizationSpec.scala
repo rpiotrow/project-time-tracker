@@ -3,6 +3,7 @@ package io.github.rpiotrow.ptt.gateway.web
 import java.time.Instant
 import java.util.UUID
 
+import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.gateway.configuration.AuthorizationConfig
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -15,11 +16,11 @@ class AuthorizationSpec extends AnyFunSpec with should.Matchers {
 
   private val authorization = new AuthorizationLive(AuthorizationConfig(jwtKey, algorithm.toString))
 
-  private val userId = UUID.randomUUID()
+  private val userId = UserId(UUID.randomUUID())
   private val claim  = JwtClaim(
     expiration = Some(Instant.now.plusSeconds(120).getEpochSecond),
     issuedAt = Some(Instant.now.getEpochSecond),
-    subject = Some(userId.toString)
+    subject = Some(userId.id.toString)
   )
 
   describe("Authorization") {
@@ -58,7 +59,7 @@ class AuthorizationSpec extends AnyFunSpec with should.Matchers {
           val claim = JwtClaim(
             expiration = Some(Instant.now.plusSeconds(120).getEpochSecond),
             issuedAt = Some(Instant.now.getEpochSecond),
-            subject = Some(userId.toString)
+            subject = Some(userId.id.toString)
           )
           val token = JwtCirce.encode(claim, jwtKey, algorithm)
           authorization.getUserId(token) should be(Some(userId))

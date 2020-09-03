@@ -12,7 +12,8 @@ import sttp.tapir.json.circe._
 
 object TaskEndpoints {
 
-  import CustomCodecs._
+  import CirceMappings._
+  import TapirMappings._
 
   private val tasksBaseEndpoint      = projectWithIdBaseEndpoint
     .in("tasks")

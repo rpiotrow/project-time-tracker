@@ -1,14 +1,14 @@
 package io.github.rpiotrow.ptt.write.repository
 
 import java.time.{Clock, LocalDateTime}
-import java.util.UUID
 
 import cats.implicits._
 import io.getquill.{idiom => _}
+import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
 
 trait ProjectRepository {
-  def create(projectId: String, owner: UUID): DBResult[ProjectEntity]
+  def create(projectId: String, owner: UserId): DBResult[ProjectEntity]
   def get(projectId: String): DBResult[Option[ProjectEntity]]
   def update(project: ProjectEntity, newProjectId: String): DBResult[ProjectEntity]
   def delete(project: ProjectEntity): DBResult[ProjectEntity]
@@ -27,7 +27,7 @@ private[repository] class ProjectRepositoryLive(
 
   private val projects = quote { querySchema[ProjectEntity]("ptt.projects") }
 
-  override def create(projectId: String, owner: UUID): DBResult[ProjectEntity] = {
+  override def create(projectId: String, owner: UserId): DBResult[ProjectEntity] = {
     val now    = LocalDateTime.now(clock)
     val entity = ProjectEntity(projectId = projectId, createdAt = now, deletedAt = None, owner = owner)
     run(quote { projects.insert(lift(entity)).returningGenerated(_.dbId) })

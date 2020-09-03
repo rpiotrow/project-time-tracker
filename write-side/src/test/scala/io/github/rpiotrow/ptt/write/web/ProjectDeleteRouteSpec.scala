@@ -1,7 +1,5 @@
 package io.github.rpiotrow.ptt.write.web
 
-import java.util.UUID
-
 import cats.data.EitherT
 import cats.effect.IO
 import eu.timepit.refined.auto._

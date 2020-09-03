@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.api
 
-import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId}
+import model.{ProjectId, TaskId}
 
 package object output {
 

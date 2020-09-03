@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.read.service
 
-import io.github.rpiotrow.ptt.api.model.ProjectId
+import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.api.output.{ProjectOutput, TaskOutput}
 import io.github.rpiotrow.ptt.api.param.ProjectListParams
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
@@ -26,14 +26,14 @@ private class ProjectServiceLive(
   private val taskRepository: TaskRepository.Service
 ) extends ProjectService.Service {
 
-  override def one(id: ProjectId) = {
+  override def one(id: ProjectId): IO[RepositoryFailure, ProjectOutput] = {
     for {
-      project <- projectRepository.one(id.value)
+      project <- projectRepository.one(id)
       tasks   <- taskRepository.read(List(project.dbId))
     } yield toOutput(project, tasks)
   }
 
-  override def list(params: ProjectListParams) = {
+  override def list(params: ProjectListParams): IO[RepositoryThrowable, List[ProjectOutput]] = {
     for {
       projects <- projectRepository.list(params)
       ids = projects.map(_.dbId)

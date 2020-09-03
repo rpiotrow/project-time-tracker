@@ -1,7 +1,6 @@
 package io.github.rpiotrow.ptt.write.web
 
 import java.time.{Duration, LocalDateTime}
-import java.util.UUID
 
 import cats.data.EitherT
 import cats.effect.IO
@@ -26,10 +25,10 @@ import sttp.model.HeaderNames
 class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
 
   private val projectId: ProjectId = "pp1"
-  private val taskId: TaskId       = UUID.randomUUID()
-  private val newTaskId: TaskId    = UUID.randomUUID()
+  private val taskId: TaskId       = TaskId.random()
+  private val newTaskId: TaskId    = TaskId.random()
 
-  describe(s"PUT /projects/$projectId/tasks/$taskId") {
+  describe(s"PUT /projects/$projectId/tasks/${taskId.id}") {
     it("successful") {
       val taskService = mock[TaskService[IO]]
       (taskService.update _).expects(projectId, taskId, taskInput, ownerId).returning(EitherT.right(IO(newTaskId)))
@@ -37,7 +36,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
 
       response.status should be(Status.Ok)
       response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
-        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/$projectId/tasks/$newTaskId")))
+        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/$projectId/tasks/${newTaskId.id}")))
       )
     }
     describe("failure") {
@@ -110,7 +109,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
   )
 
   private def makeUpdateTaskRequest(taskService: TaskService[IO]) = {
-    val url  = s"/projects/$projectId/tasks/$taskId"
+    val url  = s"/projects/$projectId/tasks/${taskId.id}"
     val body = Stream.evalSeq(IO { taskInput.asJson.toString().getBytes.toSeq })
     makeRequest(
       request = Request(method = Method.PUT, uri = Uri.unsafeFromString(url), body = body),

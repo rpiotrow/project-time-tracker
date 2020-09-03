@@ -7,13 +7,13 @@ import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output._
 import io.github.rpiotrow.ptt.api.param._
 import sttp.tapir._
-import sttp.tapir.integ.cats.codec._
 import sttp.tapir.json.circe._
 
 object StatisticsEndpoints {
 
   import Base._
-  import CustomCodecs._
+  import CirceMappings._
+  import TapirMappings._
 
   private val statisticsInput: EndpointInput[StatisticsParams] =
     query[NonEmptyUserIdList]("ids")

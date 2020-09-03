@@ -14,9 +14,9 @@ import org.scalatest.matchers.should
 
 class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
 
-  private val taskId: TaskId       = UUID.fromString("ea48f025-d993-4052-8308-47db35d7ada0")
+  private val taskId: TaskId       = TaskId.random()
   private val projectId: ProjectId = "bad"
-  private val url                  = s"/projects/$projectId/tasks/$taskId"
+  private val url                  = s"/projects/$projectId/tasks/${taskId.id}"
 
   describe(s"DELETE $url") {
     it("successful") {
@@ -58,7 +58,7 @@ class TaskDeleteRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         val taskService = mock[TaskService[IO]]
         (taskService.delete _)
           .expects(projectId, taskId, ownerId)
-          .returning(EitherT.left(IO(AlreadyDeleted("task was alread deleted"))))
+          .returning(EitherT.left(IO(AlreadyDeleted("task was already deleted"))))
         val response    = makeDeleteTaskRequest(taskService)
 
         response.status should be(Status.Conflict)

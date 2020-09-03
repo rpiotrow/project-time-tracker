@@ -9,6 +9,7 @@ import com.softwaremill.diffx.scalatest.DiffMatcher.{matchTo, _}
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
+import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -74,7 +75,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val owner1Id = UUID.randomUUID()
+  private val owner1Id = UserId(UUID.randomUUID())
 
   private val projects = liveContext.quote { liveContext.querySchema[ProjectEntity]("ptt.projects") }
 

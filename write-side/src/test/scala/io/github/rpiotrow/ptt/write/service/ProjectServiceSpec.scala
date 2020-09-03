@@ -6,6 +6,7 @@ import java.util.UUID
 import cats.Monad
 import cats.effect.IO
 import cats.implicits._
+import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
 import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository, TaskRepository}
@@ -100,7 +101,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
 
-        val notOwnerId = UUID.randomUUID()
+        val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.update(projectId, projectUpdateInput, notOwnerId).value.unsafeRunSync()
 
         result should be(EntityNotFound(s"project '$projectId' does not exist").asLeft[Unit])
@@ -113,7 +114,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
 
-        val notOwnerId = UUID.randomUUID()
+        val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.update(projectId, projectUpdateInput, notOwnerId).value.unsafeRunSync()
 
         result should be(NotOwner("only owner can update project").asLeft[Unit])
@@ -194,7 +195,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
 
-        val notOwnerId = UUID.randomUUID()
+        val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.delete(projectId, notOwnerId).value.unsafeRunSync()
 
         result should be(NotOwner("only owner can delete project").asLeft[Unit])

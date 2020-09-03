@@ -3,13 +3,15 @@ package io.github.rpiotrow.ptt.write.entity
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
+import io.github.rpiotrow.ptt.api.model.UserId
+
 case class ProjectReadSideEntity(
   dbId: Long,
   projectId: String,
   createdAt: LocalDateTime,
   lastAddDurationAt: LocalDateTime,
   deletedAt: Option[LocalDateTime],
-  owner: UUID,
+  owner: UserId,
   durationSum: Duration
 )
 

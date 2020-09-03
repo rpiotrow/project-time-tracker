@@ -7,15 +7,16 @@ lazy val api = project
   .settings(
     commonSettings,
     libraryDependencies ++= Seq(
-      "io.circe"                    %% "circe-generic"    % Versions.circe,
-      "io.circe"                    %% "circe-refined"    % Versions.circe,
-      "com.beachape"                %% "enumeratum"       % Versions.enumeratum,
-      "com.beachape"                %% "enumeratum-circe" % Versions.enumeratum,
-      "com.softwaremill.sttp.tapir" %% "tapir-core"       % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-enumeratum" % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-refined"    % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-cats"       % Versions.tapir
+      "io.circe"                    %% "circe-generic"        % Versions.circe,
+      "io.circe"                    %% "circe-refined"        % Versions.circe,
+      "io.circe"                    %% "circe-generic-extras" % Versions.circe,
+      "com.beachape"                %% "enumeratum"           % Versions.enumeratum,
+      "com.beachape"                %% "enumeratum-circe"     % Versions.enumeratum,
+      "com.softwaremill.sttp.tapir" %% "tapir-core"           % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-json-circe"     % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-enumeratum"     % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-refined"        % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-cats"           % Versions.tapir
     )
   )
 
@@ -68,6 +69,7 @@ lazy val `read-side` = project
       "org.http4s"                  %% "http4s-dsl"                      % Versions.http4s,
       "io.circe"                    %% "circe-generic"                   % Versions.circe,
       "io.circe"                    %% "circe-refined"                   % Versions.circe,
+      "io.circe"                    %% "circe-generic-extras"            % Versions.circe,
       "org.tpolecat"                %% "doobie-core"                     % Versions.doobie,
       "org.tpolecat"                %% "doobie-postgres"                 % Versions.doobie,
       "org.tpolecat"                %% "doobie-hikari"                   % Versions.doobie,
@@ -105,6 +107,7 @@ lazy val `write-side` = project
       "org.http4s"                  %% "http4s-dsl"                      % Versions.http4s,
       "io.circe"                    %% "circe-generic"                   % Versions.circe,
       "io.circe"                    %% "circe-refined"                   % Versions.circe,
+      "io.circe"                    %% "circe-generic-extras"            % Versions.circe,
       "org.tpolecat"                %% "doobie-core"                     % Versions.doobie,
       "org.tpolecat"                %% "doobie-postgres"                 % Versions.doobie,
       "org.tpolecat"                %% "doobie-hikari"                   % Versions.doobie,

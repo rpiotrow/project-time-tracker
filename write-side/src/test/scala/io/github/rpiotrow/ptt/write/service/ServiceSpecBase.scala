@@ -30,8 +30,8 @@ trait ServiceSpecBase { this: MockFactory =>
   )
 
   protected val now                  = LocalDateTime.now()
-  protected val ownerId: UUID        = UUID.randomUUID()
-  protected val userId: UUID         = UUID.randomUUID()
+  protected val ownerId: UserId      = UserId(UUID.randomUUID())
+  protected val userId: UserId       = UserId(UUID.randomUUID())
   protected val projectId: ProjectId = "p1"
   protected val projectCreateInput   = ProjectInput(projectId)
   protected val projectOutput        = ProjectOutput(
@@ -59,7 +59,7 @@ trait ServiceSpecBase { this: MockFactory =>
   protected val projectUpdated                = project.copy(projectId = projectIdForUpdate)
   protected val projectUpdatedReadModel       = projectReadModel.copy(projectId = projectIdForUpdate)
 
-  protected val taskId: TaskId             = UUID.randomUUID()
+  protected val taskId: TaskId             = TaskId.random()
   protected val taskStartedAt              = LocalDateTime.parse("2020-08-18T17:30:00")
   protected val taskStartedAtYearMonth     = YearMonth.of(2020, 8)
   protected val taskDuration               = Duration.ofMinutes(30)
@@ -90,7 +90,7 @@ trait ServiceSpecBase { this: MockFactory =>
   )
   protected val taskReadModel              = TaskReadSideEntity(task, 111)
 
-  protected val taskIdUpdated        = UUID.randomUUID()
+  protected val taskIdUpdated        = TaskId.random()
   protected val updateInput          = taskInput.copy(duration = Duration.ofMinutes(45))
   protected val taskUpdated          = task.copy(taskId = taskIdUpdated, duration = Duration.ofMinutes(45))
   protected val taskUpdatedReadModel = taskReadModel.copy(taskId = taskIdUpdated, duration = Duration.ofMinutes(45))

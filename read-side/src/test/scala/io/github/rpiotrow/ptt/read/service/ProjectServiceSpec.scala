@@ -3,9 +3,11 @@ package io.github.rpiotrow.ptt.read.service
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
+import eu.timepit.refined.auto._
 import cats.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import eu.timepit.refined.auto._
+import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
 import io.github.rpiotrow.ptt.api.output._
 import io.github.rpiotrow.ptt.api.param._
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
@@ -17,8 +19,8 @@ import zio.ZIO
 
 class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matchers {
 
-  val owner1Id = UUID.randomUUID()
-  val owner2Id = UUID.randomUUID()
+  val owner1Id = UserId(UUID.randomUUID())
+  val owner2Id = UserId(UUID.randomUUID())
 
   val p1 = ProjectEntity(
     dbId = 1,
@@ -39,7 +41,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     durationSum = Duration.ofHours(4)
   )
   val t1 = TaskEntity(
-    taskId = UUID.randomUUID(),
+    taskId = TaskId.random(),
     projectDbId = p1.dbId,
     deletedAt = None,
     owner = owner1Id,
@@ -49,7 +51,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     comment = Some("first task")
   )
   val t2 = TaskEntity(
-    taskId = UUID.randomUUID(),
+    taskId = TaskId.random(),
     projectDbId = p1.dbId,
     deletedAt = None,
     owner = owner1Id,
@@ -59,7 +61,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     comment = Some("second task")
   )
   val t3 = TaskEntity(
-    taskId = UUID.randomUUID(),
+    taskId = TaskId.random(),
     projectDbId = p2.dbId,
     deletedAt = None,
     owner = owner2Id,
@@ -103,7 +105,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           )
         )
 
-        (projectRepository.one _).expects("project one").returning(ZIO.succeed(p1))
+        val projectId: ProjectId = "project one"
+        (projectRepository.one _).expects(projectId).returning(ZIO.succeed(p1))
         (taskRepository.read _).expects(List(p1.dbId)).returning(ZIO.succeed(List(t1, t2)))
 
         val service = ProjectService.live(projectRepository, taskRepository)
@@ -124,7 +127,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
           tasks = List()
         )
 
-        (projectRepository.one _).expects("project one").returning(ZIO.succeed(p1))
+        val projectId: ProjectId = "project one"
+        (projectRepository.one _).expects(projectId).returning(ZIO.succeed(p1))
         (taskRepository.read _).expects(List(p1.dbId)).returning(ZIO.succeed(List()))
 
         val service = ProjectService.live(projectRepository, taskRepository)
@@ -136,7 +140,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         val projectRepository = mock[ProjectRepository.Service]
         val taskRepository    = mock[TaskRepository.Service]
 
-        (projectRepository.one _).expects("test").returning(zio.IO.fail(EntityNotFound("test")))
+        val projectId: ProjectId = "test"
+        (projectRepository.one _).expects(projectId).returning(zio.IO.fail(EntityNotFound("test")))
 
         val service = ProjectService.live(projectRepository, taskRepository)
         val result  = zio.Runtime.default.unsafeRun(service.one("test").either)

@@ -16,6 +16,8 @@ import zio.interop.catz._
 
 class ProjectRoutesSpec extends AnyFunSpec with RoutesSpecBase {
 
+  import io.github.rpiotrow.ptt.api.CirceMappings._
+
   private def project(id: ProjectId) = {
     val projectService = mock[ProjectService.Service]
     (projectService.one _).expects(id).returning(zio.IO.succeed(projectOutput1))

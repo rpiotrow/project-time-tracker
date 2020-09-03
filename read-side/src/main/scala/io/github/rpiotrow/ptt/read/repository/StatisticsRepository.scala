@@ -22,7 +22,7 @@ object StatisticsRepository {
 
       private val statistics = quote { querySchema[StatisticsEntity]("statistics") }
 
-      override def list(params: StatisticsParams) = {
+      override def list(params: StatisticsParams): IO[RepositoryThrowable, List[StatisticsEntity]] = {
         run(quote {
           statistics
             .filter(e => liftQuery(params.ids.toList).contains(e.owner))

@@ -3,7 +3,6 @@ package io.github.rpiotrow.ptt.read.service
 import java.time.{Duration, YearMonth}
 import java.util.UUID
 
-import cats.data.NonEmptyList
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import io.github.rpiotrow.ptt.api.output.StatisticsOutput
 import io.github.rpiotrow.ptt.api.param.StatisticsParams
@@ -12,14 +11,15 @@ import io.github.rpiotrow.ptt.read.repository.StatisticsRepository
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
-
 import cats.implicits._
+import io.github.rpiotrow.ptt.api.model.{NonEmptyUserIdList, UserId}
+
 import scala.math.BigDecimal.RoundingMode
 
 class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matchers {
 
   val params = StatisticsParams(
-    NonEmptyList.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()),
+    NonEmptyUserIdList.of(UserId(UUID.randomUUID()), UserId(UUID.randomUUID()), UserId(UUID.randomUUID())),
     YearMonth.of(2020, 1),
     YearMonth.of(2020, 12)
   )
@@ -40,7 +40,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val service              = StatisticsService.live(statisticsRepository)
 
       val entity = StatisticsEntity(
-        owner = params.ids.head,
+        owner = params.ids.list.head,
         year = 2020,
         month = 1,
         numberOfTasks = 4,
@@ -66,7 +66,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val service              = StatisticsService.live(statisticsRepository)
 
       val entity1 = StatisticsEntity(
-        owner = params.ids.head,
+        owner = params.ids.list.head,
         year = 2020,
         month = 1,
         numberOfTasks = 2,
@@ -76,7 +76,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         volumeWeightedTaskDurationSum = Duration.ofMinutes(300).some // 60*2 + 180*1
       )
       val entity2 = StatisticsEntity(
-        owner = params.ids.head,
+        owner = params.ids.list.head,
         year = 2020,
         month = 1,
         numberOfTasks = 3,
@@ -102,7 +102,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val service              = StatisticsService.live(statisticsRepository)
 
       val entity1 = StatisticsEntity(
-        owner = params.ids.head,
+        owner = params.ids.list.head,
         year = 2020,
         month = 1,
         numberOfTasks = 2,
@@ -112,7 +112,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         volumeWeightedTaskDurationSum = Duration.ofMinutes(300).some // 60*2 + 180*1
       )
       val entity2 = StatisticsEntity(
-        owner = params.ids.head,
+        owner = params.ids.list.head,
         year = 2020,
         month = 1,
         numberOfTasks = 3,
@@ -149,7 +149,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val service              = StatisticsService.live(statisticsRepository)
 
       val entity1 = StatisticsEntity(
-        owner = params.ids.head,
+        owner = params.ids.list.head,
         year = 2020,
         month = 1,
         numberOfTasks = 2,
@@ -159,7 +159,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
         volumeWeightedTaskDurationSum = None
       )
       val entity2 = StatisticsEntity(
-        owner = params.ids.head,
+        owner = params.ids.list.head,
         year = 2020,
         month = 1,
         numberOfTasks = 3,

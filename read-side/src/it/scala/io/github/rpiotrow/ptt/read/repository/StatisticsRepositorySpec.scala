@@ -12,11 +12,12 @@ import io.github.rpiotrow.ptt.api.param.StatisticsParams
 import java.time.{Duration, YearMonth}
 
 import cats.data.NonEmptyList
+import io.github.rpiotrow.ptt.api.model.{NonEmptyUserIdList, UserId}
 
 trait StatisticsRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
-  def owner1Id: UUID
-  def owner2Id: UUID
+  def owner1Id: UserId
+  def owner2Id: UserId
 
   def statisticsRepo: StatisticsRepository.Service
 
@@ -37,22 +38,28 @@ trait StatisticsRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   describe("StatisticsRepository list() should") {
     it("return list for both owners") {
-      val params = StatisticsParams(NonEmptyList.of(owner1Id, owner2Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
+      val params =
+        StatisticsParams(NonEmptyUserIdList.of(owner1Id, owner2Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
       val result = zio.Runtime.default.unsafeRun(statisticsRepo.list(params))
       result should matchTo(List(s1, s2, s3))
     }
     it("return list for one owner") {
-      val params = StatisticsParams(NonEmptyList.of(owner2Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
+      val params = StatisticsParams(NonEmptyUserIdList.of(owner2Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
       val result = zio.Runtime.default.unsafeRun(statisticsRepo.list(params))
       result should matchTo(List(s3))
     }
     it("return list for one month") {
-      val params = StatisticsParams(NonEmptyList.of(owner1Id, owner2Id), YearMonth.of(2020, 7), YearMonth.of(2020, 7))
+      val params =
+        StatisticsParams(NonEmptyUserIdList.of(owner1Id, owner2Id), YearMonth.of(2020, 7), YearMonth.of(2020, 7))
       val result = zio.Runtime.default.unsafeRun(statisticsRepo.list(params))
       result should matchTo(List(s1, s3))
     }
     it("return empty list for unknown owner") {
-      val params = StatisticsParams(NonEmptyList.of(UUID.randomUUID()), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
+      val params = StatisticsParams(
+        NonEmptyUserIdList.of(UserId(UUID.randomUUID())),
+        YearMonth.of(2020, 1),
+        YearMonth.of(2020, 12)
+      )
       val result = zio.Runtime.default.unsafeRun(statisticsRepo.list(params))
       result should be(List())
     }

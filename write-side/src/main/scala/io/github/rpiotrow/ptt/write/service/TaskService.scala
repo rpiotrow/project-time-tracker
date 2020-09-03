@@ -44,7 +44,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
-      task          <- ifExists(taskOption, s"task $taskId does not exist")
+      task          <- ifExists(taskOption, s"task ${taskId.id} does not exist")
       _             <- checkOwner(task, userId, "update")
       _             <- checkProject(task, project)
       _             <- checkNotDeletedAlready(task)
@@ -61,7 +61,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
-      task          <- ifExists(taskOption, s"task $taskId does not exist")
+      task          <- ifExists(taskOption, s"task ${taskId.id} does not exist")
       _             <- checkOwner(task, userId, "delete")
       _             <- checkProject(task, project)
       _             <- checkNotDeletedAlready(task)
@@ -91,7 +91,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
     EitherT.cond[DBResult](
       task.projectDbId == project.dbId,
       (),
-      ProjectNotMatch(s"task ${task.taskId} not in the project '${project.projectId}'")
+      ProjectNotMatch(s"task ${task.taskId.id} not in the project '${project.projectId}'")
     )
   }
 
@@ -100,7 +100,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
       .cond[DBResult](
         task.deletedAt.isEmpty,
         (),
-        AlreadyDeleted(s"task ${task.taskId} deleted at ${task.deletedAt.get}")
+        AlreadyDeleted(s"task ${task.taskId.id} deleted at ${task.deletedAt.get}")
       )
   }
 

@@ -7,7 +7,7 @@ import eu.timepit.refined.auto._
 import cats.implicits._
 import cats.Monad
 import cats.effect.IO
-import io.github.rpiotrow.ptt.api.model.ProjectId
+import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.api.output.TaskOutput
 import io.github.rpiotrow.ptt.write.entity._
 import io.github.rpiotrow.ptt.write.repository._
@@ -117,7 +117,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         val result = service.update(projectId, taskId, updateInput, ownerId).value.unsafeRunSync()
 
-        result should be(EntityNotFound(s"task $taskId does not exist").asLeft[Unit])
+        result should be(EntityNotFound(s"task ${taskId.id} does not exist").asLeft[Unit])
       }
       it("return error when not owner of the task wants to delete it") {
         val projectRepository = mock[ProjectRepository]
@@ -128,7 +128,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
 
-        val notOwnerId = UUID.randomUUID()
+        val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.update(projectId, taskId, updateInput, notOwnerId).value.unsafeRunSync()
 
         result should be(NotOwner("only owner can update task").asLeft[Unit])
@@ -162,7 +162,9 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         val result = service.update(differentProjectId, taskId, updateInput, ownerId).value.unsafeRunSync()
 
-        result should be(ProjectNotMatch(s"task $taskId not in the project '$differentProjectId'").asLeft[TaskOutput])
+        result should be(
+          ProjectNotMatch(s"task ${taskId.id} not in the project '$differentProjectId'").asLeft[TaskOutput]
+        )
       }
       it("return error when task is deleted") {
         val projectRepository = mock[ProjectRepository]
@@ -178,7 +180,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         val result = service.update(projectId, taskId, updateInput, ownerId).value.unsafeRunSync()
 
-        result should be(AlreadyDeleted(s"task $taskId deleted at $now").asLeft[TaskOutput])
+        result should be(AlreadyDeleted(s"task ${taskId.id} deleted at $now").asLeft[TaskOutput])
       }
     }
 
@@ -213,7 +215,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         val result = service.delete(projectId, taskId, ownerId).value.unsafeRunSync()
 
-        result should be(EntityNotFound(s"task $taskId does not exist").asLeft[Unit])
+        result should be(EntityNotFound(s"task ${taskId.id} does not exist").asLeft[Unit])
       }
       it("return error when not owner of the task wants to delete it") {
         val projectRepository = mock[ProjectRepository]
@@ -224,7 +226,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
 
-        val notOwnerId = UUID.randomUUID()
+        val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.delete(projectId, taskId, notOwnerId).value.unsafeRunSync()
 
         result should be(NotOwner("only owner can delete task").asLeft[Unit])
@@ -243,7 +245,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         val result = service.delete(projectId, taskId, ownerId).value.unsafeRunSync()
 
-        result should be(AlreadyDeleted(s"task $taskId deleted at $deletedAt").asLeft[Unit])
+        result should be(AlreadyDeleted(s"task ${taskId.id} deleted at $deletedAt").asLeft[Unit])
       }
       it("when task is not from given project") {
         val projectRepository = mock[ProjectRepository]
@@ -259,7 +261,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         val result = service.delete(differentProjectId, taskId, ownerId).value.unsafeRunSync()
 
-        result should be(ProjectNotMatch(s"task $taskId not in the project '$differentProjectId'").asLeft[Unit])
+        result should be(ProjectNotMatch(s"task ${taskId.id} not in the project '$differentProjectId'").asLeft[Unit])
       }
     }
   }

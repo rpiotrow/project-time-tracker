@@ -10,6 +10,7 @@ import doobie.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import doobie.Transactor
 import io.github.rpiotrow.ptt.api.input.TaskInput
+import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.write.entity.TaskEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -67,10 +68,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |;
          |""".stripMargin
 
-  private val taskOwner: UUID                  = UUID.fromString("ae15ea88-06d6-472c-95e4-a7caf366c337")
+  private val taskOwner: UserId                = UserId("ae15ea88-06d6-472c-95e4-a7caf366c337")
   private val p1: TaskEntity                   = TaskEntity(
     dbId = 201,
-    taskId = UUID.fromString("35631327-4dea-41aa-8f0a-1e6f335eef99"),
+    taskId = TaskId("35631327-4dea-41aa-8f0a-1e6f335eef99"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -82,7 +83,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val p1a: TaskEntity                  = TaskEntity(
     dbId = 202,
-    taskId = UUID.fromString("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
+    taskId = TaskId("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -94,7 +95,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val p2: TaskEntity                   = TaskEntity(
     dbId = 203,
-    taskId = UUID.fromString("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
+    taskId = TaskId("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -106,7 +107,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val p2a: TaskEntity                  = TaskEntity(
     dbId = 204,
-    taskId = UUID.fromString("f990af84-b711-485c-9f01-47dc9d830d4e"),
+    taskId = TaskId("f990af84-b711-485c-9f01-47dc9d830d4e"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -118,7 +119,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val p3: TaskEntity                   = TaskEntity(
     dbId = 205,
-    taskId = UUID.fromString("6158b42a-6cf1-4597-bf68-ad3f834d0633"),
+    taskId = TaskId("6158b42a-6cf1-4597-bf68-ad3f834d0633"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -130,7 +131,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val p4: TaskEntity                   = TaskEntity(
     dbId = 206,
-    taskId = UUID.fromString("ce78dda0-3561-439d-b225-fd905a0521b2"),
+    taskId = TaskId("ce78dda0-3561-439d-b225-fd905a0521b2"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -142,7 +143,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val p5: TaskEntity                   = TaskEntity(
     dbId = 207,
-    taskId = UUID.fromString("16d1d978-91c9-446a-9138-8ef8f8f4f415"),
+    taskId = TaskId("16d1d978-91c9-446a-9138-8ef8f8f4f415"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -154,7 +155,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val notDeleted: TaskEntity           = TaskEntity(
     dbId = 213,
-    taskId = UUID.fromString("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
+    taskId = TaskId("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -166,7 +167,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val owned: TaskEntity                = TaskEntity(
     dbId = 214,
-    taskId = UUID.fromString("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
+    taskId = TaskId("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2020-08-01T01:00"),
     deletedAt = None,
@@ -178,7 +179,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val toDelete1: TaskEntity            = TaskEntity(
     dbId = 216,
-    taskId = UUID.fromString("18caffa9-7b3a-493e-a299-a4fba1efd9ae"),
+    taskId = TaskId("18caffa9-7b3a-493e-a299-a4fba1efd9ae"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2015-02-13T01:00"),
     deletedAt = None,
@@ -190,7 +191,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val toDelete2: TaskEntity            = TaskEntity(
     dbId = 217,
-    taskId = UUID.fromString("d8ce26d3-722c-41ab-86d0-0630f2d51c04"),
+    taskId = TaskId("d8ce26d3-722c-41ab-86d0-0630f2d51c04"),
     projectDbId = 100,
     createdAt = LocalDateTime.parse("2015-02-13T01:00"),
     deletedAt = None,
@@ -202,7 +203,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val toDeleteWithProject1: TaskEntity = TaskEntity(
     dbId = 218,
-    taskId = UUID.fromString("a5f39662-0a01-4fd9-b35b-15f788518228"),
+    taskId = TaskId("a5f39662-0a01-4fd9-b35b-15f788518228"),
     projectDbId = 101,
     createdAt = LocalDateTime.parse("2015-02-13T01:00"),
     deletedAt = None,
@@ -214,7 +215,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val toDeleteWithProject2: TaskEntity = TaskEntity(
     dbId = 219,
-    taskId = UUID.fromString("6c9d75b6-c7d7-46e5-9186-b496b1a2880c"),
+    taskId = TaskId("6c9d75b6-c7d7-46e5-9186-b496b1a2880c"),
     projectDbId = 101,
     createdAt = LocalDateTime.parse("2015-02-13T01:00"),
     deletedAt = LocalDateTime.parse("2020-08-21T18:00").some,
@@ -226,7 +227,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val toDeleteWithProject3: TaskEntity = TaskEntity(
     dbId = 220,
-    taskId = UUID.fromString("03610471-816b-4d3b-a321-5ba662954a1a"),
+    taskId = TaskId("03610471-816b-4d3b-a321-5ba662954a1a"),
     projectDbId = 101,
     createdAt = LocalDateTime.parse("2015-02-13T01:00"),
     deletedAt = None,
@@ -240,13 +241,13 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   describe("TaskRepository") {
     describe("add should") {
       it("return entity") {
-        val taskOwner = UUID.randomUUID()
+        val taskOwner = UserId(UUID.randomUUID())
         val entity    = taskRepo.add(100, taskInput, taskOwner).transact(tnx).unsafeRunSync()
 
         entity should matchTo(taskEntity(100, taskOwner))
       }
       it("write entity that is possible to find by dbId") {
-        val taskOwner = UUID.randomUUID()
+        val taskOwner = UserId(UUID.randomUUID())
         val entity    = taskRepo.add(100, taskInput, taskOwner).transact(tnx).unsafeRunSync()
 
         readTaskByDbId(entity.dbId) should matchTo(taskEntity(100, taskOwner).some)
@@ -345,7 +346,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
         optionTask should matchTo(p1.some)
       }
       it("return None when task with given taskId does not exist") {
-        val optionTask = taskRepo.get(UUID.randomUUID()).transact(tnx).unsafeRunSync()
+        val optionTask = taskRepo.get(TaskId.random()).transact(tnx).unsafeRunSync()
 
         optionTask should be(Option.empty)
       }
@@ -388,11 +389,11 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
   private val taskInput                                      =
     TaskInput(startedAt = now, duration = Duration.ofMinutes(30), volume = 10.some, comment = "text".some)
   implicit private val ignoreDbIdAndTaskId: Diff[TaskEntity] =
-    Derived[Diff[TaskEntity]].ignore[TaskEntity, Long](_.dbId).ignore[TaskEntity, UUID](_.taskId)
-  private def taskEntity(projectDbId: Long, owner: UUID)     =
+    Derived[Diff[TaskEntity]].ignore[TaskEntity, Long](_.dbId).ignore[TaskEntity, TaskId](_.taskId)
+  private def taskEntity(projectDbId: Long, owner: UserId)   =
     TaskEntity(
       dbId = 0,
-      taskId = UUID.randomUUID(),
+      taskId = TaskId.random(),
       projectDbId = projectDbId,
       createdAt = clockNow,
       deletedAt = None,

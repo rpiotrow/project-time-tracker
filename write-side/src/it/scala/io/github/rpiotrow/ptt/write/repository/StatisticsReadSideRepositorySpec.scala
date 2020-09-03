@@ -9,6 +9,7 @@ import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
+import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.write.entity.StatisticsReadSideEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -25,7 +26,7 @@ trait StatisticsReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =
          |    (101, '41a854e4-4262-4672-a7df-c781f535d6ee', 2020, 8, 1, NULL, 7200, NULL, NULL)
          |;
          |""".stripMargin
-  private val taskOwner                          = UUID.fromString("41a854e4-4262-4672-a7df-c781f535d6ee")
+  private val taskOwner                          = UserId("41a854e4-4262-4672-a7df-c781f535d6ee")
   lazy private val s1                            =
     StatisticsReadSideEntity(
       dbId = 100,

@@ -26,7 +26,7 @@ import sttp.model.HeaderNames
 class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
 
   private val projectId: ProjectId = "pp1"
-  private val taskId: TaskId       = UUID.randomUUID()
+  private val taskId: TaskId       = TaskId.random()
 
   describe(s"POST /projects/$projectId/tasks") {
     it("successful") {
@@ -36,7 +36,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
 
       response.status should be(Status.Created)
       response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
-        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/$projectId/tasks/$taskId")))
+        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/$projectId/tasks/${taskId.id}")))
       )
     }
     describe("failure") {

@@ -7,15 +7,15 @@ import io.getquill.{idiom => _, _}
 import io.github.rpiotrow.ptt.api.param.OrderingDirection._
 import io.github.rpiotrow.ptt.api.param.ProjectOrderingField._
 import io.github.rpiotrow.ptt.api.param.{ProjectListParams, _}
-import io.github.rpiotrow.ptt.api._
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
 import zio.{IO, Task, ZIO}
 import zio.interop.catz._
 import eu.timepit.refined.auto._
+import io.github.rpiotrow.ptt.api.model.ProjectId
 
 object ProjectRepository {
   trait Service {
-    def one(id: String): IO[RepositoryFailure, ProjectEntity]
+    def one(projectId: ProjectId): IO[RepositoryFailure, ProjectEntity]
     def list(params: ProjectListParams): IO[RepositoryThrowable, List[ProjectEntity]]
   }
 
@@ -29,15 +29,15 @@ private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends P
 
   private val projects = quote { querySchema[ProjectEntity]("projects") }
 
-  override def one(id: String) = {
-    run(projects.filter(_.projectId == lift(id)))
+  override def one(projectId: ProjectId): IO[RepositoryFailure, ProjectEntity] = {
+    run(projects.filter(_.projectId == lift(projectId.value)))
       .map(_.headOption)
       .transact(tnx)
       .mapError(RepositoryThrowable)
-      .flatMap(ZIO.fromOption(_).orElseFail(EntityNotFound(id)))
+      .flatMap(ZIO.fromOption(_).orElseFail(EntityNotFound(projectId.value)))
   }
 
-  override def list(params: ProjectListParams) = {
+  override def list(params: ProjectListParams): IO[RepositoryThrowable, List[ProjectEntity]] = {
     val projectIds = params.ids.map(_.value)
     val pageNumber = params.pageNumber
     val pageSize   = params.pageSize

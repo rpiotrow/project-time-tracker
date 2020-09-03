@@ -9,6 +9,7 @@ import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
+import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -46,10 +47,10 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |    (208, 'a2e3ffde-b359-4826-b265-f887adf6720b', 202, NULL, '92d57572-3bee-44f2-b3cc-298e267c8ab6', '2020-08-17T08:00', 7*60*60, 1, 't3-p3')
          |;
          |""".stripMargin
-  private val taskOwner: UUID              = UUID.fromString("92d57572-3bee-44f2-b3cc-298e267c8ab6")
+  private val taskOwner: UserId            = UserId("92d57572-3bee-44f2-b3cc-298e267c8ab6")
   private val readSideTask1                = TaskReadSideEntity(
     dbId = 201,
-    taskId = UUID.fromString("fcedfe83-42c5-45ee-9ed0-80a70c9b0231"),
+    taskId = TaskId("fcedfe83-42c5-45ee-9ed0-80a70c9b0231"),
     projectDbId = 200,
     deletedAt = None,
     owner = taskOwner,
@@ -59,14 +60,10 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     comment = Some("p1")
   )
   private val toDelete                     =
-    readSideTask1.copy(
-      dbId = 202,
-      taskId = UUID.fromString("6f2a01a1-a66d-4127-844b-f95bee3d1ace"),
-      comment = "to-delete".some
-    )
+    readSideTask1.copy(dbId = 202, taskId = TaskId("6f2a01a1-a66d-4127-844b-f95bee3d1ace"), comment = "to-delete".some)
   private val t2p1                         = TaskReadSideEntity(
     dbId = 203,
-    taskId = UUID.fromString("dd63a5db-1a08-4fea-907b-6b23dd06c971"),
+    taskId = TaskId("dd63a5db-1a08-4fea-907b-6b23dd06c971"),
     projectDbId = 201,
     deletedAt = None,
     owner = taskOwner,
@@ -77,7 +74,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val t2p3                         = TaskReadSideEntity(
     dbId = 205,
-    taskId = UUID.fromString("122099dc-cdb1-4b69-8ffb-c4e67bb9d828"),
+    taskId = TaskId("122099dc-cdb1-4b69-8ffb-c4e67bb9d828"),
     projectDbId = 201,
     deletedAt = None,
     owner = taskOwner,
@@ -88,13 +85,13 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val t3p1                         = t2p1.copy(
     dbId = 206,
-    taskId = UUID.fromString("2b7be86b-ea79-44c2-b02f-ab7d99f05b29"),
+    taskId = TaskId("2b7be86b-ea79-44c2-b02f-ab7d99f05b29"),
     projectDbId = 202,
     comment = Some("t3-p1")
   )
   private val t3p2                         = TaskReadSideEntity(
     dbId = 207,
-    taskId = UUID.fromString("032bc426-241e-4fea-9e7b-39a17db36628"),
+    taskId = TaskId("032bc426-241e-4fea-9e7b-39a17db36628"),
     projectDbId = 202,
     deletedAt = LocalDateTime.parse("2020-08-20T08:00").some,
     owner = taskOwner,
@@ -105,7 +102,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   )
   private val t3p3                         = t2p3.copy(
     dbId = 208,
-    taskId = UUID.fromString("a2e3ffde-b359-4826-b265-f887adf6720b"),
+    taskId = TaskId("a2e3ffde-b359-4826-b265-f887adf6720b"),
     projectDbId = 202,
     comment = Some("t3-p3")
   )
@@ -133,7 +130,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         optionTask should matchTo(readSideTask1.some)
       }
       it("return None when task with given taskId does not exist") {
-        val optionTask = taskReadSideRepo.get(UUID.randomUUID()).transact(tnx).unsafeRunSync()
+        val optionTask = taskReadSideRepo.get(TaskId.random()).transact(tnx).unsafeRunSync()
 
         optionTask should be(None)
       }
@@ -172,11 +169,11 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val taskStart                                      = LocalDateTime.now()
-  private def task(): TaskEntity                             =
+  private val taskStart                                        = LocalDateTime.now()
+  private def task(): TaskEntity                               =
     TaskEntity(
       dbId = 0,
-      taskId = UUID.randomUUID(),
+      taskId = TaskId.random(),
       projectDbId = 2,
       createdAt = LocalDateTime.now(),
       deletedAt = None,
@@ -186,9 +183,9 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       volume = 10.some,
       comment = "some comment".some
     )
-  implicit private val ignoreDbId: Diff[TaskReadSideEntity]  =
+  implicit private val ignoreDbId: Diff[TaskReadSideEntity]    =
     Derived[Diff[TaskReadSideEntity]].ignore[TaskReadSideEntity, Long](_.dbId)
-  private def taskReadModel(projectDbId: Long, taskId: UUID) =
+  private def taskReadModel(projectDbId: Long, taskId: TaskId) =
     TaskReadSideEntity(
       dbId = 0,
       taskId = taskId,

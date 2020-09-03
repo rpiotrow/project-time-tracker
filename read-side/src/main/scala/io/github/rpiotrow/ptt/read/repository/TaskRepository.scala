@@ -19,7 +19,7 @@ object TaskRepository {
 
       private val tasks = quote { querySchema[TaskEntity]("tasks") }
 
-      override def read(projectIds: List[Long]) = {
+      override def read(projectIds: List[Long]): IO[RepositoryThrowable, List[TaskEntity]] = {
         run(quote {
           tasks.filter(e => liftQuery(projectIds).contains(e.projectDbId))
         })

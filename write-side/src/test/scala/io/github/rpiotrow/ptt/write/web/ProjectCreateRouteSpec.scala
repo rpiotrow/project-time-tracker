@@ -1,7 +1,5 @@
 package io.github.rpiotrow.ptt.write.web
 
-import java.time.{Duration, LocalDateTime}
-
 import cats.data.EitherT
 import cats.effect.IO
 import eu.timepit.refined.auto._
@@ -11,7 +9,6 @@ import io.circe.generic.auto._
 import io.circe.refined._
 import io.circe.syntax._
 import io.github.rpiotrow.ptt.api.input.ProjectInput
-import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.service.{NotUnique, ProjectService}
 import org.http4s._
 import org.http4s.headers.Location
@@ -48,15 +45,7 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
     }
   }
 
-  private val projectInput  = ProjectInput(projectId = "project1")
-  private val projectOutput = ProjectOutput(
-    projectId = "project1",
-    owner = ownerId,
-    createdAt = LocalDateTime.now(),
-    deletedAt = None,
-    durationSum = Duration.ZERO,
-    tasks = List()
-  )
+  private val projectInput = ProjectInput(projectId = "project1")
 
   private def makeAddProjectRequest(projectService: ProjectService[IO]) = {
     val url  = "/projects"

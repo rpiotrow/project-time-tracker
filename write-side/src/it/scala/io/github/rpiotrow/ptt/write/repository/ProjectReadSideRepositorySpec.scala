@@ -9,6 +9,7 @@ import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
+import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -36,7 +37,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     createdAt = LocalDateTime.parse("2020-08-16T08:00:00"),
     lastAddDurationAt = LocalDateTime.parse("2020-08-16T18:00:00"),
     deletedAt = None,
-    owner = UUID.fromString("41a854e4-4262-4672-a7df-c781f535d6ee"),
+    owner = UserId("41a854e4-4262-4672-a7df-c781f535d6ee"),
     durationSum = Duration.ofSeconds(240)
   )
   private val durationSumZero = projectD1.copy(dbId = 102, projectId = "duration-sum-zero", durationSum = Duration.ZERO)
@@ -126,19 +127,10 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val owner1Id                                                 = UUID.randomUUID()
-  private val writeSideNow                                             = LocalDateTime.now()
-  private def project(dbId: Long, projectId: String): ProjectEntity    =
+  private val owner1Id                                                   = UserId(UUID.randomUUID())
+  private val writeSideNow                                               = LocalDateTime.now()
+  private def project(dbId: Long, projectId: String): ProjectEntity      =
     ProjectEntity(dbId = dbId, projectId = projectId, createdAt = writeSideNow, deletedAt = None, owner = owner1Id)
-  private def project(readModel: ProjectReadSideEntity): ProjectEntity =
-    ProjectEntity(
-      dbId = readModel.dbId,
-      projectId = readModel.projectId,
-      createdAt = readModel.createdAt,
-      deletedAt = readModel.deletedAt,
-      owner = readModel.owner
-    )
-
   implicit private val ignoreDbId: Diff[ProjectReadSideEntity]           =
     Derived[Diff[ProjectReadSideEntity]].ignore[ProjectReadSideEntity, Long](_.dbId)
   private def projectReadModel(projectId: String): ProjectReadSideEntity =
@@ -150,20 +142,6 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       deletedAt = None,
       owner = owner1Id,
       durationSum = Duration.ZERO
-    )
-
-  private def taskReadModel(projectDbId: Long) =
-    TaskEntity(
-      dbId = 11,
-      taskId = UUID.randomUUID(),
-      projectDbId = projectDbId,
-      deletedAt = None,
-      owner = UUID.randomUUID(),
-      startedAt = LocalDateTime.now(),
-      createdAt = LocalDateTime.now(),
-      duration = Duration.ofMinutes(30),
-      volume = 10.some,
-      comment = None
     )
 
   private val projects = liveContext.quote { liveContext.querySchema[ProjectReadSideEntity]("ptt_read_model.projects") }
