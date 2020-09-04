@@ -2,6 +2,7 @@ package io.github.rpiotrow.ptt.read.web
 
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
+import io.circe.refined._
 import io.github.rpiotrow.ptt.api.error.ServerError
 import io.github.rpiotrow.ptt.api.model.ProjectId
 import io.github.rpiotrow.ptt.api.output.ProjectOutput

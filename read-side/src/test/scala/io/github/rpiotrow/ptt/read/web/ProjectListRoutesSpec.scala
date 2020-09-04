@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 import cats.implicits._
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
+import io.circe.refined._
 import io.github.rpiotrow.ptt.api.error.ServerError
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.api.param.OrderingDirection.{Ascending, Descending}

@@ -24,13 +24,13 @@ object ProjectRepository {
 
 private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends ProjectRepository.Service {
 
-  private val dc = new DoobieContext.Postgres(SnakeCase) with LocalDateTimeQuotes with DurationDecoder
+  private val dc = new DoobieContext.Postgres(SnakeCase) with LocalDateTimeQuotes with CustomDecoders
   import dc._
 
   private val projects = quote { querySchema[ProjectEntity]("projects") }
 
   override def one(projectId: ProjectId): IO[RepositoryFailure, ProjectEntity] = {
-    run(projects.filter(_.projectId == lift(projectId.value)))
+    run(projects.filter(_.projectId == lift(projectId)))
       .map(_.headOption)
       .transact(tnx)
       .mapError(RepositoryThrowable)

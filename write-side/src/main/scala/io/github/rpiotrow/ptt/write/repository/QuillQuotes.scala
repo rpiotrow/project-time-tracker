@@ -4,11 +4,8 @@ import java.time.{Duration, LocalDateTime}
 
 import io.getquill.context.jdbc.{Decoders, JdbcContextBase}
 
-trait DurationMapping extends Decoders {
+trait QuillQuotes extends Decoders {
   this: JdbcContextBase[_, _] =>
-
-  implicit val decodeDuration = MappedEncoding[Long, Duration](Duration.ofSeconds)
-  implicit val encodeDuration = MappedEncoding[Duration, Long](_.toSeconds)
 
   implicit class DurationQuotes(left: Duration) {
     def +(right: Duration) = quote(infix"$left + $right".as[Duration])
@@ -22,4 +19,5 @@ trait DurationMapping extends Decoders {
           .as[Boolean]
       )
   }
+
 }

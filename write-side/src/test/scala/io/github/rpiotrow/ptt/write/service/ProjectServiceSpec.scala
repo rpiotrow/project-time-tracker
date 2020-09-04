@@ -24,8 +24,8 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
-        (projectRepository.create _).expects(projectId.value, ownerId).returning(project.pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(Option.empty[ProjectEntity].pure[DBResult])
+        (projectRepository.create _).expects(projectId, ownerId).returning(project.pure[DBResult])
         (readSideService.projectCreated _)
           .expects(project)
           .returning(Monad[DBResult].unit)
@@ -40,7 +40,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(project.some.pure[DBResult])
 
         val result = service.create(projectCreateInput, ownerId).value.unsafeRunSync()
 
@@ -56,10 +56,10 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _)
-          .expects(projectIdForUpdate.value)
+          .expects(projectIdForUpdate)
           .returning(Option.empty[ProjectEntity].pure[DBResult])
-        (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
-        (projectRepository.update _).expects(project, projectIdForUpdate.value).returning(projectUpdated.pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(project.some.pure[DBResult])
+        (projectRepository.update _).expects(project, projectIdForUpdate).returning(projectUpdated.pure[DBResult])
         (readSideService.projectUpdated _)
           .expects(projectId, projectUpdated)
           .returning(Monad[DBResult].unit)
@@ -79,11 +79,11 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val deletedProjectUpdated = projectUpdated.copy(deletedAt = now.some)
 
         (projectRepository.get _)
-          .expects(projectIdForUpdate.value)
+          .expects(projectIdForUpdate)
           .returning(Option.empty[ProjectEntity].pure[DBResult])
-        (projectRepository.get _).expects(projectId.value).returning(deletedProject.some.pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(deletedProject.some.pure[DBResult])
         (projectRepository.update _)
-          .expects(deletedProject, projectIdForUpdate.value)
+          .expects(deletedProject, projectIdForUpdate)
           .returning(deletedProjectUpdated.pure[DBResult])
         (readSideService.projectUpdated _)
           .expects(projectId, deletedProjectUpdated)
@@ -99,7 +99,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(Option.empty[ProjectEntity].pure[DBResult])
 
         val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.update(projectId, projectUpdateInput, notOwnerId).value.unsafeRunSync()
@@ -112,7 +112,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(project.some.pure[DBResult])
 
         val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.update(projectId, projectUpdateInput, notOwnerId).value.unsafeRunSync()
@@ -125,9 +125,9 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(project.some.pure[DBResult])
         (projectRepository.get _)
-          .expects(projectIdForUpdate.value)
+          .expects(projectIdForUpdate)
           .returning(project.some.pure[DBResult])
 
         val result = service.update(projectId, projectUpdateInput, ownerId).value.unsafeRunSync()
@@ -141,12 +141,12 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
         (projectRepository.get _)
-          .expects(projectIdForUpdate.value)
+          .expects(projectIdForUpdate)
           .returning(Option.empty[ProjectEntity].pure[DBResult])
-        (projectRepository.get _).expects(projectId.value).returning(project.some.pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(project.some.pure[DBResult])
         val runtimeException = new RuntimeException("someone.changed.projectId.in.the.mean.time")
         (projectRepository.update _)
-          .expects(project, projectIdForUpdate.value)
+          .expects(project, projectIdForUpdate)
           .throwing(runtimeException)
 
         val result = service.update(projectId, projectUpdateInput, ownerId).value.attempt.unsafeRunSync()
@@ -164,7 +164,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
 
         val deletedProject = project.copy(deletedAt = now.some)
 
-        (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
         (projectRepository.delete _).expects(project).returning(deletedProject.pure[DBResult])
         (taskRepository.deleteAll _).expects(deletedProject.dbId, now).returning(Monad[DBResult].unit)
         (readSideService.projectDeleted _)
@@ -181,7 +181,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        (projectRepository.get _).expects(projectId.value).returning(Option.empty[ProjectEntity].pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(Option.empty[ProjectEntity].pure[DBResult])
 
         val result = service.delete(projectId, ownerId).value.unsafeRunSync()
 
@@ -193,7 +193,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        (projectRepository.get _).expects(projectId.value).returning(Option(project).pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
 
         val notOwnerId = UserId(UUID.randomUUID())
         val result     = service.delete(projectId, notOwnerId).value.unsafeRunSync()
@@ -209,7 +209,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val deletedAt      = LocalDateTime.now
         val deletedProject = project.copy(deletedAt = deletedAt.some)
 
-        (projectRepository.get _).expects(projectId.value).returning(Option(deletedProject).pure[DBResult])
+        (projectRepository.get _).expects(projectId).returning(Option(deletedProject).pure[DBResult])
 
         val result = service.delete(projectId, ownerId).value.unsafeRunSync()
 

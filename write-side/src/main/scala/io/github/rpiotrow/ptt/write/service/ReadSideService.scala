@@ -14,7 +14,7 @@ trait ReadSideService {
   def projectUpdated(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit]
   def projectDeleted(deleted: ProjectEntity): DBResult[Unit]
 
-  def taskAdded(projectId: String, added: TaskEntity): DBResult[Unit]
+  def taskAdded(projectId: ProjectId, added: TaskEntity): DBResult[Unit]
   def taskDeleted(deleted: TaskEntity): DBResult[Unit]
 }
 
@@ -38,7 +38,7 @@ private[service] class ReadSideServiceLive(
     projectReadSideRepository.newProject(created)
 
   override def projectUpdated(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit] =
-    projectReadSideRepository.updateProject(projectId.value, updated)
+    projectReadSideRepository.updateProject(projectId, updated)
 
   override def projectDeleted(deleted: ProjectEntity): DBResult[Unit] =
     (for {
@@ -54,7 +54,7 @@ private[service] class ReadSideServiceLive(
       _     <- taskReadSideRepository.deleteAll(readModel.dbId, deletedAt)
     } yield ().some
 
-  override def taskAdded(projectId: String, added: TaskEntity): DBResult[Unit] =
+  override def taskAdded(projectId: ProjectId, added: TaskEntity): DBResult[Unit] =
     (for {
       readModel <- OptionT(projectReadSideRepository.get(projectId))
       _         <- OptionT(taskAdded(readModel.dbId, added))

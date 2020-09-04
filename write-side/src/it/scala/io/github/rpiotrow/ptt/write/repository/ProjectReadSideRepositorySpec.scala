@@ -3,13 +3,14 @@ package io.github.rpiotrow.ptt.write.repository
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
+import eu.timepit.refined.auto._
 import cats.effect.IO
 import cats.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
-import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
+import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -70,13 +71,13 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
     describe("newProject should") {
       it("return entity") {
-        val projectId = "project1"
-        val result    = projectReadSideRepo.newProject(project(2, projectId)).transact(tnx).unsafeRunSync()
+        val projectId: ProjectId = "project1"
+        val result: Unit         = projectReadSideRepo.newProject(project(2, projectId)).transact(tnx).unsafeRunSync()
 
         result should be(())
       }
       it("write entity that is possible to find by projectId") {
-        val projectId = "project3"
+        val projectId: ProjectId = "project3"
         projectReadSideRepo.newProject(project(7, projectId)).transact(tnx).unsafeRunSync()
 
         readProjectByProjectId(projectId) should matchTo(projectReadModel(projectId).some)
@@ -127,13 +128,13 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val owner1Id                                                   = UserId(UUID.randomUUID())
-  private val writeSideNow                                               = LocalDateTime.now()
-  private def project(dbId: Long, projectId: String): ProjectEntity      =
+  private val owner1Id                                                      = UserId(UUID.randomUUID())
+  private val writeSideNow                                                  = LocalDateTime.now()
+  private def project(dbId: Long, projectId: ProjectId): ProjectEntity      =
     ProjectEntity(dbId = dbId, projectId = projectId, createdAt = writeSideNow, deletedAt = None, owner = owner1Id)
-  implicit private val ignoreDbId: Diff[ProjectReadSideEntity]           =
+  implicit private val ignoreDbId: Diff[ProjectReadSideEntity]              =
     Derived[Diff[ProjectReadSideEntity]].ignore[ProjectReadSideEntity, Long](_.dbId)
-  private def projectReadModel(projectId: String): ProjectReadSideEntity =
+  private def projectReadModel(projectId: ProjectId): ProjectReadSideEntity =
     ProjectReadSideEntity(
       dbId = 0,
       projectId = projectId,
@@ -155,7 +156,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       .unsafeRunSync()
   }
 
-  private def readProjectByProjectId(projectId: String): Option[ProjectReadSideEntity] = {
+  private def readProjectByProjectId(projectId: ProjectId): Option[ProjectReadSideEntity] = {
     import liveContext._
     liveContext
       .run(liveContext.quote { projects.filter(_.projectId == lift(projectId)) })

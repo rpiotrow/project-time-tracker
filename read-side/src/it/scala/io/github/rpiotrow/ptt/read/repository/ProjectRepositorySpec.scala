@@ -1,7 +1,6 @@
 package io.github.rpiotrow.ptt.read.repository
 
 import java.time.{Duration, LocalDateTime}
-import java.util.UUID
 
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._

@@ -4,14 +4,15 @@ import java.time.{Duration, LocalDateTime}
 
 import cats.implicits._
 import io.getquill.{idiom => _}
+import io.github.rpiotrow.ptt.api.model.ProjectId
 import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
 
 trait ProjectReadSideRepository {
-  def get(projectId: String): DBResult[Option[ProjectReadSideEntity]]
+  def get(projectId: ProjectId): DBResult[Option[ProjectReadSideEntity]]
 
   def newProject(project: ProjectEntity): DBResult[Unit]
-  def updateProject(projectId: String, updated: ProjectEntity): DBResult[Unit]
-  def deleteProject(dbId: Long, projectId: String, deletedAt: LocalDateTime): DBResult[Unit]
+  def updateProject(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit]
+  def deleteProject(dbId: Long, projectId: ProjectId, deletedAt: LocalDateTime): DBResult[Unit]
 
   def addDuration(projectDbId: Long, duration: Duration, dateTime: LocalDateTime): DBResult[Unit]
   def subtractDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
@@ -29,7 +30,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
 
   private val projectsReadSide = quote { querySchema[ProjectReadSideEntity]("ptt_read_model.projects") }
 
-  override def get(projectId: String): DBResult[Option[ProjectReadSideEntity]] =
+  override def get(projectId: ProjectId): DBResult[Option[ProjectReadSideEntity]] =
     run(quote {
       projectsReadSide
         .filter(_.projectId == lift(projectId))
@@ -41,7 +42,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
       .map(_ => ())
   }
 
-  override def updateProject(projectId: String, updated: ProjectEntity): DBResult[Unit] = {
+  override def updateProject(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit] = {
     run(quote {
       projectsReadSide
         .filter(_.projectId == lift(projectId))
@@ -49,7 +50,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
     }).map(logIfNotUpdated(s"no project '$projectId' in read model"))
   }
 
-  override def deleteProject(dbId: Long, projectId: String, deletedAt: LocalDateTime): DBResult[Unit] = {
+  override def deleteProject(dbId: Long, projectId: ProjectId, deletedAt: LocalDateTime): DBResult[Unit] = {
     run(quote {
       projectsReadSide
         .filter(p => p.dbId == lift(dbId) && p.deletedAt.isEmpty)

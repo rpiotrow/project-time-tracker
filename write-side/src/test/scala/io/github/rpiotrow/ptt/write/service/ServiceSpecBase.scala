@@ -35,7 +35,7 @@ trait ServiceSpecBase { this: MockFactory =>
   protected val projectId: ProjectId = "p1"
   protected val projectCreateInput   = ProjectInput(projectId)
   protected val projectOutput        = ProjectOutput(
-    projectId = projectId.value,
+    projectId = projectId,
     owner = ownerId,
     createdAt = now,
     deletedAt = None,
@@ -43,10 +43,10 @@ trait ServiceSpecBase { this: MockFactory =>
     tasks = List()
   )
   protected val project              =
-    ProjectEntity(dbId = 1, projectId = projectId.value, createdAt = now, deletedAt = None, owner = ownerId)
+    ProjectEntity(dbId = 1, projectId = projectId, createdAt = now, deletedAt = None, owner = ownerId)
   protected val projectReadModel     = ProjectReadSideEntity(
     dbId = 111,
-    projectId = projectId.value,
+    projectId = projectId,
     createdAt = now,
     lastAddDurationAt = now,
     deletedAt = None,

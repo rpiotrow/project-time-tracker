@@ -14,7 +14,7 @@ object TaskRepository {
   }
   def live(tnx: Transactor[Task]): Service =
     new Service {
-      private val dc = new DoobieContext.Postgres(SnakeCase) with DurationDecoder
+      private val dc = new DoobieContext.Postgres(SnakeCase) with CustomDecoders
       import dc._
 
       private val tasks = quote { querySchema[TaskEntity]("tasks") }

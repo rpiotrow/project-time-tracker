@@ -3,6 +3,7 @@ package io.github.rpiotrow.ptt.read.web
 import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
+import eu.timepit.refined.auto._
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.error.DecodeFailure
 import io.github.rpiotrow.ptt.api.output.{ProjectOutput, StatisticsOutput, TaskOutput}

@@ -29,24 +29,24 @@ private[service] class ProjectServiceLive[F[_]: Sync](
     val projectId = input.projectId
     (for {
       _       <- checkUniqueness(input.projectId)
-      project <- EitherT.right[AppFailure](projectRepository.create(projectId.value, owner))
+      project <- EitherT.right[AppFailure](projectRepository.create(projectId, owner))
       _       <- EitherT.right[AppFailure](readSideService.projectCreated(project))
     } yield ()).transact(tnx)
   }
 
   override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
-      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       _             <- checkOwner(project, user, "update")
       _             <- checkUniqueness(input.projectId)
-      updated       <- EitherT.right[AppFailure](projectRepository.update(project, input.projectId.value))
+      updated       <- EitherT.right[AppFailure](projectRepository.update(project, input.projectId))
       _             <- EitherT.right[AppFailure](readSideService.projectUpdated(projectId, updated))
     } yield ()).transact(tnx)
 
   override def delete(projectId: ProjectId, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
-      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       _             <- checkOwner(project, user, "delete")
       _             <- checkNotAlreadyDeleted(project)
@@ -57,7 +57,7 @@ private[service] class ProjectServiceLive[F[_]: Sync](
 
   private def checkUniqueness(projectId: ProjectId): EitherT[DBResult, NotUnique, Unit] =
     for {
-      projectOption <- EitherT.right[NotUnique](projectRepository.get(projectId.value))
+      projectOption <- EitherT.right[NotUnique](projectRepository.get(projectId))
       result        <- checkIsEmpty(projectOption)
     } yield result
 

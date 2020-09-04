@@ -1,13 +1,12 @@
 package io.github.rpiotrow.ptt.read.entity
 
 import java.time.{Duration, LocalDateTime}
-import java.util.UUID
 
-import io.github.rpiotrow.ptt.api.model.UserId
+import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 
 case class ProjectEntity(
   dbId: Long,
-  projectId: String,
+  projectId: ProjectId,
   createdAt: LocalDateTime,
   lastAddDurationAt: LocalDateTime,
   deletedAt: Option[LocalDateTime],

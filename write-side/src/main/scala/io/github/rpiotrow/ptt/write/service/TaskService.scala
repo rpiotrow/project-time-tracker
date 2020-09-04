@@ -25,12 +25,12 @@ private[service] class TaskServiceLive[F[_]: Sync](
 
   override def add(projectId: ProjectId, input: TaskInput, userId: UserId): EitherT[F, AppFailure, TaskId] = {
     (for {
-      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       _             <- checkNotDeletedAlready(project)
       _             <- taskDoesNotOverlap(None, input, userId)
       task          <- EitherT.right[AppFailure](taskRepository.add(project.dbId, input, userId))
-      _             <- EitherT.right[AppFailure](readSideService.taskAdded(projectId.value, task))
+      _             <- EitherT.right[AppFailure](readSideService.taskAdded(projectId, task))
     } yield task.taskId).transact(tnx)
   }
 
@@ -41,7 +41,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
     userId: UserId
   ): EitherT[F, AppFailure, TaskId] = {
     (for {
-      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
       task          <- ifExists(taskOption, s"task ${taskId.id} does not exist")
@@ -58,7 +58,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
 
   override def delete(projectId: ProjectId, taskId: TaskId, userId: UserId): EitherT[F, AppFailure, Unit] = {
     (for {
-      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId.value))
+      projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId))
       project       <- ifExists(projectOption, s"project '$projectId' does not exist")
       taskOption    <- EitherT.right[AppFailure](taskRepository.get(taskId))
       task          <- ifExists(taskOption, s"task ${taskId.id} does not exist")

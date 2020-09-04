@@ -1,7 +1,5 @@
 package io.github.rpiotrow.ptt.write.web
 
-import java.util.UUID
-
 import cats.effect.{ContextShift, IO}
 import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.write.service.{ProjectService, TaskService}

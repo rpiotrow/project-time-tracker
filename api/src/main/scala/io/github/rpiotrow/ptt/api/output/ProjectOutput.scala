@@ -1,13 +1,13 @@
 package io.github.rpiotrow.ptt.api.output
 
 import java.time.{Duration, LocalDateTime}
-import java.util.UUID
 
+import eu.timepit.refined.auto._
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
 
 case class ProjectOutput(
-  projectId: String,
+  projectId: ProjectId,
   createdAt: LocalDateTime,
   deletedAt: Option[LocalDateTime],
   owner: UserId,
