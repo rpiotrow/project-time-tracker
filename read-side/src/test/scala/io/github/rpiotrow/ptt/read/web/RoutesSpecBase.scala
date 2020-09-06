@@ -68,6 +68,11 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
     volumeWeightedAverageTaskDuration = Duration.ofMinutes(44).some
   )
 
+  def bodyAsJson(response: Response[Task]) = {
+    import io.circe.parser._
+    parse(unsafeRun(response.bodyText.compile.string))
+  }
+
   def makeRequest(
     request: Request[Task],
     projectService: ProjectService.Service = mock[ProjectService.Service],

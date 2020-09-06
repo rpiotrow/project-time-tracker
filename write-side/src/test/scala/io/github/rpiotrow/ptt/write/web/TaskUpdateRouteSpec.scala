@@ -1,6 +1,7 @@
 package io.github.rpiotrow.ptt.write.web
 
 import java.time.{Duration, LocalDateTime}
+import java.util.UUID
 
 import cats.data.EitherT
 import cats.effect.IO
@@ -24,9 +25,10 @@ import sttp.model.HeaderNames
 
 class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
 
-  private val projectId: ProjectId = "pp1"
+  private val projectId: ProjectId = "pp3"
   private val taskId: TaskId       = TaskId.random()
-  private val newTaskId: TaskId    = TaskId.random()
+  private val newTaskIdUUID        = UUID.randomUUID()
+  private val newTaskId: TaskId    = TaskId(newTaskIdUUID)
 
   describe(s"PUT /projects/$projectId/tasks/${taskId.id}") {
     it("successful") {
@@ -36,7 +38,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
 
       response.status should be(Status.Ok)
       response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
-        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/$projectId/tasks/${newTaskId.id}")))
+        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/pp3/tasks/$newTaskIdUUID")))
       )
     }
     describe("failure") {

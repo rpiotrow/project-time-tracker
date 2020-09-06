@@ -1,13 +1,15 @@
 package io.github.rpiotrow.ptt.read.web
 
-import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
+import java.time.{LocalDateTime, OffsetDateTime, ZoneOffset}
 
 import cats.implicits._
 import eu.timepit.refined.auto._
+import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.refined._
 import io.github.rpiotrow.ptt.api.error.ServerError
-import io.github.rpiotrow.ptt.api.output.ProjectOutput
+import io.github.rpiotrow.ptt.api.output.{ProjectOutput, TaskOutput}
 import io.github.rpiotrow.ptt.api.param.OrderingDirection.{Ascending, Descending}
 import io.github.rpiotrow.ptt.api.param.ProjectListParams
 import io.github.rpiotrow.ptt.api.param.ProjectOrderingField.{CreatedAt, LastAddDurationAt}
@@ -22,25 +24,6 @@ import zio.interop.catz._
 
 class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
 
-  import io.github.rpiotrow.ptt.api.CirceMappings._
-
-  private def projectList(params: ProjectListParams) = {
-    val projectService = mock[ProjectService.Service]
-    (projectService.list _).expects(params).returning(zio.IO.succeed(List(projectOutput1, projectOutput2)))
-    projectService
-  }
-
-  private def checkProjectList(url: String, params: ProjectListParams) = {
-    val request = makeRequest(Request(uri = Uri.unsafeFromString(url)), projectList(params))
-
-    request.status should be(Status.Ok)
-    body(request) should be(List(projectOutput1, projectOutput2))
-  }
-
-  private def body(request: Response[Task]) = {
-    unsafeRun(request.as[List[ProjectOutput]])
-  }
-
   private val emptyParams = ProjectListParams(List(), None, None, None, None, None, 0, 25)
 
   describe("valid parameters") {
@@ -53,6 +36,11 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
       val url    = s"$projects?ids=project%20one&ids=project%20without%20tasks"
       val params = emptyParams.copy(ids = List("project one", "project without tasks"))
       checkProjectList(url, params)
+    }
+    it("check JSON") {
+      val url    = s"$projects?ids=project%20one&ids=project%20without%20tasks"
+      val params = emptyParams.copy(ids = List("project one", "project without tasks"))
+      checkJson(url, params)
     }
     it(s"$projects?from=2020-02-03T10:11:50") {
       val url    = s"$projects?from=2020-02-03T10:11:50"
@@ -190,6 +178,68 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
       response.status should be(Status.InternalServerError)
       body should be(ServerError("server.error"))
     }
+  }
+
+  private def projectList(params: ProjectListParams) = {
+    val projectService = mock[ProjectService.Service]
+    (projectService.list _).expects(params).returning(zio.IO.succeed(List(projectOutput1, projectOutput2)))
+    projectService
+  }
+
+  private def checkProjectList(url: String, params: ProjectListParams) = {
+    val response = makeRequest(Request(uri = Uri.unsafeFromString(url)), projectList(params))
+
+    response.status should be(Status.Ok)
+    bodyAsProjectOutputList(response) should be(List(projectOutput1, projectOutput2))
+  }
+
+  private def checkJson(url: String, params: ProjectListParams) = {
+    def taskToJsonObject(task: TaskOutput) = {
+      Json.obj(
+        "taskId"    -> Json.fromString(task.taskId.id.toString),
+        "owner"     -> Json.fromString(task.owner.id.toString),
+        "startedAt" -> Json.fromString(dateTimeString(task.startedAt)),
+        "duration"  -> Json.fromString(task.duration.toString),
+        "volume"    -> task.volume.map(Json.fromInt).getOrElse(Json.Null),
+        "comment"   -> task.comment.map(Json.fromString).getOrElse(Json.Null),
+        "deletedAt" -> task.deletedAt.map(e => Json.fromString(dateTimeString(e))).getOrElse(Json.Null)
+      )
+    }
+
+    val response = makeRequest(Request(uri = Uri.unsafeFromString(url)), projectList(params))
+
+    bodyAsJson(response) should be(
+      Right(
+        Json.fromValues(
+          List(
+            Json.obj(
+              "projectId"   -> Json.fromString(projectOutput1.projectId.toString),
+              "createdAt"   -> Json.fromString(dateTimeString(projectOutput1.createdAt)),
+              "deletedAt"   -> Json.Null,
+              "owner"       -> Json.fromString(projectOutput1.owner.id.toString),
+              "durationSum" -> Json.fromString(projectOutput1.durationSum.toString),
+              "tasks"       -> Json
+                .fromValues(List(taskToJsonObject(projectOutput1.tasks(0)), taskToJsonObject(projectOutput1.tasks(1))))
+            ),
+            Json.obj(
+              "projectId"   -> Json.fromString(projectOutput2.projectId.toString),
+              "createdAt"   -> Json.fromString(dateTimeString(projectOutput2.createdAt)),
+              "deletedAt"   -> Json.Null,
+              "owner"       -> Json.fromString(projectOutput2.owner.id.toString),
+              "durationSum" -> Json.fromString(projectOutput2.durationSum.toString),
+              "tasks"       -> Json.fromValues(List())
+            )
+          )
+        )
+      )
+    )
+  }
+
+  private def dateTimeString(localDateTime: LocalDateTime): String = localDateTime.format(ISO_LOCAL_DATE_TIME)
+
+  private def bodyAsProjectOutputList(request: Response[Task]) = {
+    import io.github.rpiotrow.ptt.api.CirceMappings._
+    unsafeRun(request.as[List[ProjectOutput]])
   }
 
 }

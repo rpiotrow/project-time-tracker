@@ -1,9 +1,8 @@
 package io.github.rpiotrow.ptt.read.web
 
 import java.time.YearMonth
-import java.util.UUID
 
-import cats.data.NonEmptyList
+import io.circe.Json
 import io.circe.generic.auto._
 import io.github.rpiotrow.ptt.api.error.ServerError
 import io.github.rpiotrow.ptt.api.model.{NonEmptyUserIdList, UserId}
@@ -20,25 +19,6 @@ import zio.interop.catz._
 
 class StatisticsRoutesSpec extends AnyFunSpec with RoutesSpecBase {
 
-  import io.github.rpiotrow.ptt.api.CirceMappings._
-
-  private def statisticsService(params: StatisticsParams) = {
-    val mockService = mock[StatisticsService.Service]
-    (mockService.read _).expects(params).returning(zio.IO.succeed(statisticsOutput))
-    mockService
-  }
-
-  private def checkStatistics(url: String, params: StatisticsParams) = {
-    val request = makeRequest(Request(uri = Uri.unsafeFromString(url)), statisticsService = statisticsService(params))
-
-    request.status should be(Status.Ok)
-    body(request) should be(statisticsOutput)
-  }
-
-  private def body(response: Response[Task]): StatisticsOutput = {
-    unsafeRun(response.as[StatisticsOutput])
-  }
-
   private val user1IdUUID = "1ce7e1e2-8bd6-4e2a-936f-342bc2ad5b1d"
   private val user1Id     = UserId(user1IdUUID)
   private val user2IdUUID = "b53ebacb-b6ce-4454-bfee-3b139bcc0d96"
@@ -49,6 +29,11 @@ class StatisticsRoutesSpec extends AnyFunSpec with RoutesSpecBase {
       val url    = s"$statistics?ids=$user1IdUUID&from=2020-01&to=2020-12"
       val params = StatisticsParams(NonEmptyUserIdList.of(user1Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
       checkStatistics(url, params)
+    }
+    it("check JSON") {
+      val url    = s"$statistics?ids=$user1IdUUID&from=2020-01&to=2020-12"
+      val params = StatisticsParams(NonEmptyUserIdList.of(user1Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
+      checkJson(url, params)
     }
     it(s"$statistics?ids=$user1IdUUID&from=2020-01&to=2020-01") {
       val url    = s"$statistics?ids=$user1IdUUID&from=2020-01&to=2020-01"
@@ -124,6 +109,44 @@ class StatisticsRoutesSpec extends AnyFunSpec with RoutesSpecBase {
 
     response.status should be(Status.InternalServerError)
     body should be(ServerError("server.error"))
+  }
+
+  private def statisticsService(params: StatisticsParams) = {
+    val mockService = mock[StatisticsService.Service]
+    (mockService.read _).expects(params).returning(zio.IO.succeed(statisticsOutput))
+    mockService
+  }
+
+  private def checkStatistics(url: String, params: StatisticsParams) = {
+    val request = makeRequest(Request(uri = Uri.unsafeFromString(url)), statisticsService = statisticsService(params))
+
+    request.status should be(Status.Ok)
+    bodyAsStatisticsOutput(request) should be(statisticsOutput)
+  }
+
+  private def checkJson(url: String, params: StatisticsParams) = {
+    val request = makeRequest(Request(uri = Uri.unsafeFromString(url)), statisticsService = statisticsService(params))
+
+    bodyAsJson(request) should be(
+      Right(
+        Json.obj(
+          "numberOfTasks"                     -> Json.fromInt(statisticsOutput.numberOfTasks),
+          "averageTaskDuration"               -> statisticsOutput.averageTaskDuration
+            .map(d => Json.fromString(d.toString))
+            .getOrElse(Json.Null),
+          "averageTaskVolume"                 -> statisticsOutput.averageTaskVolume
+            .map(v => Json.fromBigDecimal(v))
+            .getOrElse(Json.Null),
+          "volumeWeightedAverageTaskDuration" -> statisticsOutput.volumeWeightedAverageTaskDuration
+            .map(d => Json.fromString(d.toString))
+            .getOrElse(Json.Null)
+        )
+      )
+    )
+  }
+
+  private def bodyAsStatisticsOutput(response: Response[Task]): StatisticsOutput = {
+    unsafeRun(response.as[StatisticsOutput])
   }
 
 }
