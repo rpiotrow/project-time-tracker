@@ -3,31 +3,29 @@ lazy val root = project
   .settings(commonSettings)
   .aggregate(api, gateway, `read-side`, `write-side`, `e2e-tests`)
 
+lazy val apiLibraryDependencies = Seq(
+  "eu.timepit"                  %% "refined"              % Versions.refined,
+  "io.circe"                    %% "circe-generic"        % Versions.circe,
+  "io.circe"                    %% "circe-refined"        % Versions.circe,
+  "io.circe"                    %% "circe-generic-extras" % Versions.circe,
+  "com.beachape"                %% "enumeratum"           % Versions.enumeratum,
+  "com.beachape"                %% "enumeratum-circe"     % Versions.enumeratum,
+  "com.softwaremill.sttp.tapir" %% "tapir-core"           % Versions.tapir,
+  "com.softwaremill.sttp.tapir" %% "tapir-json-circe"     % Versions.tapir,
+  "com.softwaremill.sttp.tapir" %% "tapir-enumeratum"     % Versions.tapir,
+  "com.softwaremill.sttp.tapir" %% "tapir-refined"        % Versions.tapir,
+  "com.softwaremill.sttp.tapir" %% "tapir-cats"           % Versions.tapir
+)
+
 lazy val api = project
-  .settings(
-    commonSettings,
-    libraryDependencies ++= Seq(
-      "io.circe"                    %% "circe-generic"        % Versions.circe,
-      "io.circe"                    %% "circe-refined"        % Versions.circe,
-      "io.circe"                    %% "circe-generic-extras" % Versions.circe,
-      "com.beachape"                %% "enumeratum"           % Versions.enumeratum,
-      "com.beachape"                %% "enumeratum-circe"     % Versions.enumeratum,
-      "com.softwaremill.sttp.tapir" %% "tapir-core"           % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe"     % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-enumeratum"     % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-refined"        % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-cats"           % Versions.tapir
-    )
-  )
+  .settings(commonSettings, libraryDependencies ++= apiLibraryDependencies)
 
 lazy val gateway = project
   .configs(IntegrationTest)
   .settings(
     commonSettings,
     Defaults.itSettings,
-    libraryDependencies ++= Seq(
-      "eu.timepit"                  %% "refined"                    % Versions.refined,
-      "com.beachape"                %% "enumeratum"                 % Versions.enumeratum,
+    libraryDependencies ++= apiLibraryDependencies ++ Seq(
       "com.typesafe.akka"           %% "akka-http"                  % Versions.akkaHttp,
       "com.typesafe.akka"           %% "akka-stream"                % Versions.akkaStream,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-akka-http" % Versions.tapir,
@@ -51,27 +49,16 @@ lazy val `read-side` = project
   .settings(
     commonSettings,
     Defaults.itSettings,
-    libraryDependencies ++= Seq(
-      "eu.timepit"                  %% "refined"                         % Versions.refined,
-      "com.beachape"                %% "enumeratum"                      % Versions.enumeratum,
-      "com.beachape"                %% "enumeratum-circe"                % Versions.enumeratum,
+    libraryDependencies ++= apiLibraryDependencies ++ Seq(
       "dev.zio"                     %% "zio"                             % Versions.zio,
       "dev.zio"                     %% "zio-config"                      % Versions.zioConfig,
       "dev.zio"                     %% "zio-config-magnolia"             % Versions.zioConfig,
       "dev.zio"                     %% "zio-config-typesafe"             % Versions.zioConfig,
       "dev.zio"                     %% "zio-interop-cats"                % Versions.zioInteropCats,
-      "com.softwaremill.sttp.tapir" %% "tapir-core"                      % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe"                % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-enumeratum"                % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-refined"                   % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-cats"                      % Versions.tapir,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server"             % Versions.tapir,
       "org.http4s"                  %% "http4s-blaze-server"             % Versions.http4s,
       "org.http4s"                  %% "http4s-circe"                    % Versions.http4s,
       "org.http4s"                  %% "http4s-dsl"                      % Versions.http4s,
-      "io.circe"                    %% "circe-generic"                   % Versions.circe,
-      "io.circe"                    %% "circe-refined"                   % Versions.circe,
-      "io.circe"                    %% "circe-generic-extras"            % Versions.circe,
       "org.tpolecat"                %% "doobie-core"                     % Versions.doobie,
       "org.tpolecat"                %% "doobie-postgres"                 % Versions.doobie,
       "org.tpolecat"                %% "doobie-hikari"                   % Versions.doobie,
@@ -92,24 +79,13 @@ lazy val `write-side` = project
   .settings(
     commonSettings,
     Defaults.itSettings,
-    libraryDependencies ++= Seq(
-      "eu.timepit"                  %% "refined"                         % Versions.refined,
-      "com.beachape"                %% "enumeratum"                      % Versions.enumeratum,
-      "com.beachape"                %% "enumeratum-circe"                % Versions.enumeratum,
+    libraryDependencies ++= apiLibraryDependencies ++ Seq(
       "org.typelevel"               %% "cats-core"                       % Versions.cats,
       "com.github.pureconfig"       %% "pureconfig"                      % Versions.pureConfig,
-      "com.softwaremill.sttp.tapir" %% "tapir-core"                      % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe"                % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-enumeratum"                % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-refined"                   % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-cats"                      % Versions.tapir,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server"             % Versions.tapir,
       "org.http4s"                  %% "http4s-blaze-server"             % Versions.http4s,
       "org.http4s"                  %% "http4s-circe"                    % Versions.http4s,
       "org.http4s"                  %% "http4s-dsl"                      % Versions.http4s,
-      "io.circe"                    %% "circe-generic"                   % Versions.circe,
-      "io.circe"                    %% "circe-refined"                   % Versions.circe,
-      "io.circe"                    %% "circe-generic-extras"            % Versions.circe,
       "org.tpolecat"                %% "doobie-core"                     % Versions.doobie,
       "org.tpolecat"                %% "doobie-postgres"                 % Versions.doobie,
       "org.tpolecat"                %% "doobie-hikari"                   % Versions.doobie,
