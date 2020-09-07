@@ -26,6 +26,7 @@ lazy val gateway = project
     commonSettings,
     Defaults.itSettings,
     libraryDependencies ++= Seq(
+      "eu.timepit"                  %% "refined"                    % Versions.refined,
       "com.typesafe.akka"           %% "akka-http"                  % Versions.akkaHttp,
       "com.typesafe.akka"           %% "akka-stream"                % Versions.akkaStream,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-akka-http" % Versions.tapir,
