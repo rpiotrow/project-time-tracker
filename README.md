@@ -1,3 +1,5 @@
+<img src="https://github.com/rpiotrow/project-time-tracker/workflows/Checks/badge.svg"/>
+
 # Project Time Tracker
 
 API for tracking time of projects. The time is tracked in tasks. Statistics are gathered per user.
