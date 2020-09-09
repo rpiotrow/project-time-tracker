@@ -1,5 +1,7 @@
 package io.github.rpiotrow.ptt.api
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.collection.NonEmpty
 import io.circe.generic.auto._
 import io.github.rpiotrow.ptt.api.ProjectEndpoints.projectWithIdBaseEndpoint
 import io.github.rpiotrow.ptt.api.input._
@@ -20,17 +22,20 @@ object TaskEndpoints {
   private val taskWithIdBaseEndpoint = tasksBaseEndpoint
     .in(path[TaskId]("id").description("task identifier").example(TaskId.example))
 
-  val taskCreateEndpoint = tasksBaseEndpoint.post
-    .in(jsonBody[TaskInput].example(TaskInput.example))
-    .out(header[LocationHeader]("location").example(LocationHeader.exampleTaskLocation))
-    .out(statusCode(StatusCode.Created))
+  val taskCreateEndpoint: Endpoint[(ProjectId, TaskInput), error.ApiError, LocationHeader, Nothing] =
+    tasksBaseEndpoint.post
+      .in(jsonBody[TaskInput].example(TaskInput.example))
+      .out(header[LocationHeader]("location").example(LocationHeader.exampleTaskLocation))
+      .out(statusCode(StatusCode.Created))
 
-  val taskUpdateEndpoint = taskWithIdBaseEndpoint.put
-    .in(jsonBody[TaskInput].example(TaskInput.example))
-    .out(header[LocationHeader]("location").example(LocationHeader.exampleTaskLocation))
-    .out(statusCode(StatusCode.Ok))
+  val taskUpdateEndpoint: Endpoint[(ProjectId, TaskId, TaskInput), error.ApiError, LocationHeader, Nothing] =
+    taskWithIdBaseEndpoint.put
+      .in(jsonBody[TaskInput].example(TaskInput.example))
+      .out(header[LocationHeader]("location").example(LocationHeader.exampleTaskLocation))
+      .out(statusCode(StatusCode.Ok))
 
-  val taskDeleteEndpoint = taskWithIdBaseEndpoint.delete
-    .out(statusCode(StatusCode.Ok))
+  val taskDeleteEndpoint: Endpoint[(ProjectId, TaskId), error.ApiError, Unit, Nothing] =
+    taskWithIdBaseEndpoint.delete
+      .out(statusCode(StatusCode.Ok))
 
 }

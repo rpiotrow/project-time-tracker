@@ -32,10 +32,11 @@ object StatisticsEndpoints {
       .mapTo(StatisticsParams)
       .validate(Validator.custom(input => !input.to.isBefore(input.from), "`from` before or equal `to`"))
 
-  val statisticsEndpoint = baseEndpoint
-    .in("statistics")
-    .get
-    .in(statisticsInput)
-    .out(jsonBody[StatisticsOutput].example(StatisticsOutput.example))
+  val statisticsEndpoint: Endpoint[StatisticsParams, error.ApiError, StatisticsOutput, Nothing] =
+    baseEndpoint
+      .in("statistics")
+      .get
+      .in(statisticsInput)
+      .out(jsonBody[StatisticsOutput].example(StatisticsOutput.example))
 
 }

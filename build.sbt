@@ -101,8 +101,30 @@ lazy val `write-side` = project
   )
   .dependsOn(api)
 
+lazy val EndToEndTest = config("e2e") extend (Runtime)
+lazy val e2eSettings  =
+  inConfig(EndToEndTest)(Defaults.testSettings) ++
+    Seq(
+      fork in EndToEndTest := false,
+      parallelExecution in EndToEndTest := false,
+      scalaSource in EndToEndTest := baseDirectory.value / "src/e2e/scala"
+    )
+
 lazy val `e2e-tests` = project
-  .settings(commonSettings)
+  .configs(EndToEndTest)
+  .settings(
+    commonSettings,
+    e2eSettings,
+    libraryDependencies ++= apiLibraryDependencies ++ Seq(
+      "com.github.pureconfig"       %% "pureconfig"        % Versions.pureConfig % "e2e",
+      "com.pauldijou"               %% "jwt-circe"         % Versions.jwt        % "e2e",
+      "org.scalactic"               %% "scalactic"         % Versions.scalatest  % "e2e",
+      "org.scalatest"               %% "scalatest"         % Versions.scalatest  % "e2e",
+      "com.softwaremill.diffx"      %% "diffx-scalatest"   % Versions.diffx      % "e2e",
+      "com.softwaremill.sttp.tapir" %% "tapir-sttp-client" % Versions.tapir      % "e2e"
+    )
+  )
+  .dependsOn(api)
 
 lazy val commonSettings = Seq(
   organization := "io.github.rpiotrow",

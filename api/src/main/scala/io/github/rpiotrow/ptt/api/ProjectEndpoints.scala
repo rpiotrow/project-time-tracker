@@ -11,6 +11,8 @@ import sttp.tapir.codec.enumeratum._
 import sttp.tapir.codec.refined._
 import sttp.tapir.json.circe._
 import cats.implicits._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.collection.NonEmpty
 import io.github.rpiotrow.ptt.api.input._
 import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output._
@@ -79,32 +81,37 @@ object ProjectEndpoints {
       .and(pageSizeInput)
       .mapTo(ProjectListParams)
 
-  val projectListEndpoint = projectsBaseEndpoint.get
-    .in(projectListInput)
-    .out(jsonBody[List[ProjectOutput]].example(List(ProjectOutput.example)))
+  val projectListEndpoint: Endpoint[ProjectListParams, error.ApiError, List[ProjectOutput], Nothing] =
+    projectsBaseEndpoint.get
+      .in(projectListInput)
+      .out(jsonBody[List[ProjectOutput]].example(List(ProjectOutput.example)))
 
-  val projectDetailEndpoint = projectWithIdBaseEndpoint.get
-    .out(jsonBody[ProjectOutput].example(ProjectOutput.example))
+  val projectDetailEndpoint: Endpoint[ProjectId, error.ApiError, ProjectOutput, Nothing] =
+    projectWithIdBaseEndpoint.get
+      .out(jsonBody[ProjectOutput].example(ProjectOutput.example))
 
-  val projectCreateEndpoint = projectsBaseEndpoint.post
-    .in(jsonBody[ProjectInput].example(ProjectInput.example))
-    .out(
-      header[LocationHeader]("location")
-        .description("URI of created project")
-        .example(LocationHeader.exampleProjectLocation)
-    )
-    .out(statusCode(StatusCode.Created))
+  val projectCreateEndpoint: Endpoint[ProjectInput, error.ApiError, LocationHeader, Nothing] =
+    projectsBaseEndpoint.post
+      .in(jsonBody[ProjectInput].example(ProjectInput.example))
+      .out(
+        header[LocationHeader]("location")
+          .description("URI of created project")
+          .example(LocationHeader.exampleProjectLocation)
+      )
+      .out(statusCode(StatusCode.Created))
 
-  val projectUpdateEndpoint = projectWithIdBaseEndpoint.put
-    .in(jsonBody[ProjectInput].example(ProjectInput.example))
-    .out(
-      header[LocationHeader]("location")
-        .description("URI of updated project")
-        .example(LocationHeader.exampleProjectLocation)
-    )
-    .out(statusCode(StatusCode.Ok))
+  val projectUpdateEndpoint: Endpoint[(ProjectId, ProjectInput), error.ApiError, LocationHeader, Nothing] =
+    projectWithIdBaseEndpoint.put
+      .in(jsonBody[ProjectInput].example(ProjectInput.example))
+      .out(
+        header[LocationHeader]("location")
+          .description("URI of updated project")
+          .example(LocationHeader.exampleProjectLocation)
+      )
+      .out(statusCode(StatusCode.Ok))
 
-  val projectDeleteEndpoint = projectWithIdBaseEndpoint.delete
-    .out(statusCode(StatusCode.Ok))
+  val projectDeleteEndpoint: Endpoint[ProjectId, error.ApiError, Unit, Nothing] =
+    projectWithIdBaseEndpoint.delete
+      .out(statusCode(StatusCode.Ok))
 
 }
