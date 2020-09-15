@@ -22,7 +22,7 @@ Data are stored in PostgreSQL database. There are separate schemas in SQL databa
    and [OpenAPI](https://www.openapis.org/) documentation with [Swagger UI](https://swagger.io/tools/swagger-ui/)
  * [read-side](read-side/README.md) - implementation of the query (read) side of the API
  * [write-side](write-side/README.md) - implementation of command (write) side of the API
- * [e2e-tests](e2e-tests/README.md) - end to end tests (TBD)
+ * [e2e-tests](e2e-tests/README.md) - end to end tests
 
 ## Run
 
@@ -75,6 +75,9 @@ To run only integration tests (much slower than unit tests, using
 ```
 $ sbt it:test
 ```
+
+End to end tests are not included in `checks`, because they require running application,
+see [e2e-tests](e2e-tests/README.md)) for details
 
 ## Date and time formats
 

@@ -1,4 +1,4 @@
-# End to end tests (WORK IN PROGRESS)
+# End to end tests
 
 ## Description
 
