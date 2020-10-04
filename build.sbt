@@ -1,6 +1,8 @@
+enablePlugins(GitVersioning)
+
 lazy val root = project
   .in(file("."))
-  .settings(commonSettings)
+  .settings(commonSettings, name := "project-time-tracker", publish / skip := true)
   .aggregate(api, gateway, `read-side`, `write-side`, `e2e-tests`)
 
 lazy val apiLibraryDependencies = Seq(
@@ -18,11 +20,18 @@ lazy val apiLibraryDependencies = Seq(
 )
 
 lazy val api = project
-  .settings(commonSettings, libraryDependencies ++= apiLibraryDependencies)
+  .settings(
+    name := "project-time-tracker-api",
+    commonSettings,
+    publish / skip := true,
+    libraryDependencies ++= apiLibraryDependencies,
+    exportJars := true
+  )
 
 lazy val gateway = project
   .configs(IntegrationTest)
   .settings(
+    name := "project-time-tracker-gateway",
     commonSettings,
     Defaults.itSettings,
     libraryDependencies ++= apiLibraryDependencies ++ Seq(
@@ -40,13 +49,18 @@ lazy val gateway = project
       "com.typesafe.akka"           %% "akka-http-testkit"          % Versions.akkaHttpTestkit % "test, it",
       "com.typesafe.akka"           %% "akka-stream-testkit"        % Versions.akkaStream      % "test, it",
       "org.mock-server"              % "mockserver-netty"           % Versions.mockserver      % IntegrationTest
-    )
+    ),
+    commonDockerSettings,
+    dockerExposedPorts := Seq(8080),
+    packageName := "ptt-gateway"
   )
+  .enablePlugins(DockerPlugin, JavaAppPackaging)
   .dependsOn(api)
 
 lazy val `read-side` = project
   .configs(IntegrationTest)
   .settings(
+    name := "project-time-tracker-read-side",
     commonSettings,
     Defaults.itSettings,
     libraryDependencies ++= apiLibraryDependencies ++ Seq(
@@ -70,13 +84,18 @@ lazy val `read-side` = project
       "org.scalamock"               %% "scalamock"                       % Versions.scalamock      % Test,
       "com.dimafeng"                %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
       "com.dimafeng"                %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest
-    )
+    ),
+    commonDockerSettings,
+    dockerExposedPorts := Seq(8081),
+    packageName := "ptt-read-side"
   )
+  .enablePlugins(DockerPlugin, JavaAppPackaging)
   .dependsOn(api)
 
 lazy val `write-side` = project
   .configs(IntegrationTest)
   .settings(
+    name := "project-time-tracker-write-side",
     commonSettings,
     Defaults.itSettings,
     libraryDependencies ++= apiLibraryDependencies ++ Seq(
@@ -97,8 +116,12 @@ lazy val `write-side` = project
       "org.scalamock"               %% "scalamock"                       % Versions.scalamock      % Test,
       "com.dimafeng"                %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
       "com.dimafeng"                %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest
-    )
+    ),
+    commonDockerSettings,
+    dockerExposedPorts := Seq(8082),
+    packageName := "ptt-write-side"
   )
+  .enablePlugins(DockerPlugin, JavaAppPackaging)
   .dependsOn(api)
 
 lazy val EndToEndTest = config("e2e") extend (Runtime)
@@ -113,8 +136,10 @@ lazy val e2eSettings  =
 lazy val `e2e-tests` = project
   .configs(EndToEndTest)
   .settings(
+    name := "project-time-tracker-e2e-tests",
     commonSettings,
     e2eSettings,
+    publish / skip := true,
     libraryDependencies ++= apiLibraryDependencies ++ Seq(
       "com.github.pureconfig"       %% "pureconfig"        % Versions.pureConfig % "e2e",
       "com.pauldijou"               %% "jwt-circe"         % Versions.jwt        % "e2e",
@@ -128,13 +153,14 @@ lazy val `e2e-tests` = project
 
 lazy val commonSettings = Seq(
   organization := "io.github.rpiotrow",
-  name := "project-time-tracker",
-  version := "0.0.1-SNAPSHOT",
   scalaVersion := "2.13.1",
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0"),
   scalacOptions ++= compilerOptions
 )
+
+lazy val commonDockerSettings =
+  Seq(dockerBaseImage := "openjdk:11-jre-slim", dockerAutoremoveMultiStageIntermediateImages := false)
 
 lazy val compilerOptions = Seq(
   "-target:jvm-11",
