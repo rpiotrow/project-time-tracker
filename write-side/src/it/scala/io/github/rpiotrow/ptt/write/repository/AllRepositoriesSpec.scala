@@ -33,7 +33,7 @@ class AllRepositoriesSpec
   override def afterStart(): Unit = {
     val tnx = makeTransactor(container.username, container.password)
     Resource
-      .make(IO(Source.fromFile("local-dev/create-schema.sql")))(s => IO(s.close()))
+      .make(IO(Source.fromFile("local-dev/schema/create-schema.sql")))(s => IO(s.close()))
       .use(
         createSchemaSQL =>
           for {

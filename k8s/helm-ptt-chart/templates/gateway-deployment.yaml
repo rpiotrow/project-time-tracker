@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ptt.gateway.fullname" . }}
+  labels:
+    {{- include "ptt.gateway.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.gateway.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ptt.gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ptt.gateway.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ template "ptt.name" . }}-{{ .Values.gateway.name }}
+          image: "{{ .Values.gateway.image.repository }}:{{ .Values.gateway.image.tag | default .Values.pttVersion }}"
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+          env:
+            - name: GATEWAY_LISTEN_HOST
+              value: "0.0.0.0"
+            - name: READ_SERVICE_HOST
+              value: {{ include "ptt.readside.fullname" . }}
+            - name: WRITE_SERVICE_HOST
+              value: {{ include "ptt.writeside.fullname" . }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP

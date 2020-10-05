@@ -1,0 +1,28 @@
+# Default values for Project Time Tracker.
+
+# pttVersion should be defined when invoking char install or upgrade, e.g.:
+# helm install --set pttVersion=ac1f81dc5593da5918fa14213522aca063a45c83-SNAPSHOT project-time-tracker .
+
+gateway:
+  name: gateway
+  replicaCount: 1
+  image:
+    repository: ptt-gateway
+    pullPolicy: Never
+    tag: ""
+
+readside:
+  name: read-side
+  replicaCount: 1
+  image:
+    repository: ptt-read-side
+    pullPolicy: Never
+    tag: ""
+
+writeside:
+  name: write-side
+  replicaCount: 1
+  image:
+    repository: ptt-write-side
+    pullPolicy: Never
+    tag: ""

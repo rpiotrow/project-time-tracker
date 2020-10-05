@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ptt.readside.fullname" . }}
+  labels:
+    {{- include "ptt.readside.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.readside.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ptt.readside.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ptt.readside.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ template "ptt.name" . }}-{{ .Values.readside.name }}
+          image: "{{ .Values.readside.image.repository }}:{{ .Values.readside.image.tag | default .Values.pttVersion }}"
+          imagePullPolicy: {{ .Values.readside.image.pullPolicy }}
+          env:
+            - name: READSIDE_JDBC_URL
+              value: "jdbc:postgresql://postgresql/ptt"
+            - name: READSIDE_LISTEN_HOST
+              value: "0.0.0.0"
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ptt.readside.fullname" . }}
+  labels:
+    {{- include "ptt.readside.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: 8081
+      name: http
+      targetPort: 8081
+      protocol: TCP
+  selector:
+    {{- include "ptt.readside.selectorLabels" . | nindent 4 }}

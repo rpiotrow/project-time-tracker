@@ -11,7 +11,7 @@ services:
       - 5432:5432
     volumes:
       - project-time-tracker-postgresql-data:/var/lib/postgresql/data
-      - ./create-schema.sql:/docker-entrypoint-initdb.d/create-schema.sql
+      - ./schema/create-schema.sql:/docker-entrypoint-initdb.d/create-schema.sql
 
 volumes:
   project-time-tracker-postgresql-data:

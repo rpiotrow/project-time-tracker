@@ -62,7 +62,7 @@ class AllRepositoriesSpec
       Blocker.liftExecutionContext(ExecutionContexts.synchronous)
     )
     val task = ZManaged
-      .make(IO(Source.fromFile("local-dev/create-schema.sql")))(s => IO(s.close()).orDie)
+      .make(IO(Source.fromFile("local-dev/schema/create-schema.sql")))(s => IO(s.close()).orDie)
       .use(
         createSchemaSQL =>
           for {

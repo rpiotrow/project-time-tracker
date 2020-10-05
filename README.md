@@ -23,8 +23,12 @@ Data are stored in PostgreSQL database. There are separate schemas in SQL databa
  * [read-side](read-side/README.md) - implementation of the query (read) side of the API
  * [write-side](write-side/README.md) - implementation of command (write) side of the API
  * [e2e-tests](e2e-tests/README.md) - end to end tests
+ * [k8s](k8s/README.md) - helm chart to deploy applications to Kubernetes cluster in docker (kind)
 
 ## Run
+
+You can run database in docker and separate applications locally (see below). There is also helm chart
+that can be used to deploy everything to local Kubernetes cluster (see [k8s](k8s/README.md)).
 
 ### Local database:
 
