@@ -94,3 +94,6 @@ modules.xml
 *.metals
 
 # End of https://www.gitignore.io/api/scala,intellij+all
+
+# BSP
+.bsp/

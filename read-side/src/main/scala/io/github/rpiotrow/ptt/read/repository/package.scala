@@ -33,7 +33,7 @@ package object repository {
   ): ZLayer[RepositoryEnv, Throwable, Has[HikariTransactor[Task]]] =
     ZLayer.fromManaged(for {
       blockingEC    <- blocking.blocking { ZIO.descriptor.map(_.executor.asEC) }.toManaged_
-      configuration <- zio.config.config[DatabaseConfiguration].toManaged_
+      configuration <- zio.config.getConfig[DatabaseConfiguration].toManaged_
       tnx           <- createTransactor(configuration, connectEC, blockingEC)
     } yield tnx)
 

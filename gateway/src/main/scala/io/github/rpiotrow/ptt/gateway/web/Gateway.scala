@@ -19,5 +19,5 @@ object Gateway extends App {
 
   private val routes = Routes.docsRoute ~ Routes.serviceRoute(authorization, readSideProxy, writeSideProxy)
 
-  Http(system).bindAndHandle(handler = routes, interface = config.host, port = config.port)
+  Http(system).newServerAt(config.host, config.port).bindFlow(routes)
 }

@@ -43,12 +43,12 @@ lazy val gateway = project
       "com.github.pureconfig"       %% "pureconfig"                 % Versions.pureConfig,
       "com.pauldijou"               %% "jwt-circe"                  % Versions.jwt,
       "ch.qos.logback"               % "logback-classic"            % Versions.logback,
-      "org.scalamock"               %% "scalamock"                  % Versions.scalamock       % Test,
-      "org.scalactic"               %% "scalactic"                  % Versions.scalatest       % "test, it",
-      "org.scalatest"               %% "scalatest"                  % Versions.scalatest       % "test, it",
-      "com.typesafe.akka"           %% "akka-http-testkit"          % Versions.akkaHttpTestkit % "test, it",
-      "com.typesafe.akka"           %% "akka-stream-testkit"        % Versions.akkaStream      % "test, it",
-      "org.mock-server"              % "mockserver-netty"           % Versions.mockserver      % IntegrationTest
+      "org.scalamock"               %% "scalamock"                  % Versions.scalamock  % Test,
+      "org.scalactic"               %% "scalactic"                  % Versions.scalatest  % "test, it",
+      "org.scalatest"               %% "scalatest"                  % Versions.scalatest  % "test, it",
+      "com.typesafe.akka"           %% "akka-http-testkit"          % Versions.akkaHttp   % "test, it",
+      "com.typesafe.akka"           %% "akka-stream-testkit"        % Versions.akkaStream % "test, it",
+      "org.mock-server"              % "mockserver-netty"           % Versions.mockserver % IntegrationTest
     ),
     commonDockerSettings,
     dockerExposedPorts := Seq(8080),
