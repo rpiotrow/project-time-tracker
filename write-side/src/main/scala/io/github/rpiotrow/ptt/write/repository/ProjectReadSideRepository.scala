@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, Instant}
 
 import cats.implicits._
 import io.getquill.{idiom => _}
@@ -12,9 +12,9 @@ trait ProjectReadSideRepository {
 
   def newProject(project: ProjectEntity): DBResult[Unit]
   def updateProject(projectId: ProjectId, updated: ProjectEntity): DBResult[Unit]
-  def deleteProject(dbId: Long, projectId: ProjectId, deletedAt: LocalDateTime): DBResult[Unit]
+  def deleteProject(dbId: Long, projectId: ProjectId, deletedAt: Instant): DBResult[Unit]
 
-  def addDuration(projectDbId: Long, duration: Duration, dateTime: LocalDateTime): DBResult[Unit]
+  def addDuration(projectDbId: Long, duration: Duration, dateTime: Instant): DBResult[Unit]
   def subtractDuration(projectDbId: Long, duration: Duration): DBResult[Unit]
 }
 
@@ -50,7 +50,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
     }).map(logIfNotUpdated(s"no project '$projectId' in read model"))
   }
 
-  override def deleteProject(dbId: Long, projectId: ProjectId, deletedAt: LocalDateTime): DBResult[Unit] = {
+  override def deleteProject(dbId: Long, projectId: ProjectId, deletedAt: Instant): DBResult[Unit] = {
     run(quote {
       projectsReadSide
         .filter(p => p.dbId == lift(dbId) && p.deletedAt.isEmpty)
@@ -58,7 +58,7 @@ private[repository] class ProjectReadSideRepositoryLive(private val ctx: DBConte
     }).map(logIfNotUpdated(s"no project '$projectId' in read model"))
   }
 
-  override def addDuration(projectDbId: Long, duration: Duration, dateTime: LocalDateTime): DBResult[Unit] =
+  override def addDuration(projectDbId: Long, duration: Duration, dateTime: Instant): DBResult[Unit] =
     run(quote {
       projectsReadSide
         .filter(_.dbId == lift(projectDbId))

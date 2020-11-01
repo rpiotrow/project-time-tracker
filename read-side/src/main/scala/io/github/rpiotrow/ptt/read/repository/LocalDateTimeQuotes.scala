@@ -1,18 +1,16 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import java.time.{Duration, LocalDateTime}
+import java.time.Instant
 
-import io.getquill.context.jdbc.{Decoders, JdbcContextBase}
 import io.getquill.context.sql.SqlContext
-import org.postgresql.util.PGInterval
 
-private trait LocalDateTimeQuotes {
+private trait InstantQuotes {
   this: SqlContext[_, _] =>
 
-  implicit class LocalDateTimeQuotes(left: LocalDateTime) {
-    def >(right: LocalDateTime)  = quote(infix"$left > $right".as[Boolean])
-    def <(right: LocalDateTime)  = quote(infix"$left < $right".as[Boolean])
-    def >=(right: LocalDateTime) = quote(infix"$left >= $right".as[Boolean])
-    def <=(right: LocalDateTime) = quote(infix"$left <= $right".as[Boolean])
+  implicit class InstantQuotes(left: Instant) {
+    def >(right: Instant)  = quote(infix"$left > $right".as[Boolean])
+    def <(right: Instant)  = quote(infix"$left < $right".as[Boolean])
+    def >=(right: Instant) = quote(infix"$left >= $right".as[Boolean])
+    def <=(right: Instant) = quote(infix"$left <= $right".as[Boolean])
   }
 }

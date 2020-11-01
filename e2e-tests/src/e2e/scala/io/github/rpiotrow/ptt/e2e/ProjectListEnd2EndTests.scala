@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.e2e
 
-import java.time.{Clock, LocalDateTime}
+import java.time.{Clock, OffsetDateTime}
 
 import eu.timepit.refined
 import eu.timepit.refined.auto._
@@ -97,8 +97,8 @@ class ProjectListEnd2EndTests extends AnyFunSpec with should.Matchers with End2E
 
       val params = ProjectListParams(
         ids = projects,
-        from = Some(LocalDateTime.now(utcClock).minusHours(1)),
-        to = Some(LocalDateTime.now(utcClock).plusHours(1)),
+        from = Some(OffsetDateTime.now(utcClock).minusHours(1)),
+        to = Some(OffsetDateTime.now(utcClock).plusHours(1)),
         deleted = None,
         orderBy = Some(CreatedAt),
         orderDirection = Some(Ascending),
@@ -111,8 +111,8 @@ class ProjectListEnd2EndTests extends AnyFunSpec with should.Matchers with End2E
 
       val outOfTimeRange = projectList(
         params.copy(
-          from = Some(LocalDateTime.now(utcClock).plusHours(1)),
-          to = Some(LocalDateTime.now(utcClock).plusHours(2))
+          from = Some(OffsetDateTime.now(utcClock).plusHours(1)),
+          to = Some(OffsetDateTime.now(utcClock).plusHours(2))
         ),
         generateUserId()
       ).success().map(_.projectId)

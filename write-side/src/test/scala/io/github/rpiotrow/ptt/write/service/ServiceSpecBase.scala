@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.write.service
 
 import java.sql.Connection
-import java.time.{Duration, LocalDateTime, YearMonth}
+import java.time.{Duration, Instant, YearMonth, ZoneOffset, OffsetDateTime}
 import java.util.UUID
 
 import cats.implicits._
@@ -29,7 +29,7 @@ trait ServiceSpecBase { this: MockFactory =>
     Strategy.void
   )
 
-  protected val now                  = LocalDateTime.now()
+  protected val now                  = Instant.now()
   protected val ownerId: UserId      = UserId(UUID.randomUUID())
   protected val userId: UserId       = UserId(UUID.randomUUID())
   protected val projectId: ProjectId = "p1"
@@ -37,7 +37,7 @@ trait ServiceSpecBase { this: MockFactory =>
   protected val projectOutput        = ProjectOutput(
     projectId = projectId,
     owner = ownerId,
-    createdAt = now,
+    createdAt = OffsetDateTime.ofInstant(now, ZoneOffset.UTC),
     deletedAt = None,
     durationSum = Duration.ZERO,
     tasks = List()
@@ -60,7 +60,7 @@ trait ServiceSpecBase { this: MockFactory =>
   protected val projectUpdatedReadModel       = projectReadModel.copy(projectId = projectIdForUpdate)
 
   protected val taskId: TaskId             = TaskId.random()
-  protected val taskStartedAt              = LocalDateTime.parse("2020-08-18T17:30:00")
+  protected val taskStartedAt              = OffsetDateTime.parse("2020-08-18T17:30:00Z")
   protected val taskStartedAtYearMonth     = YearMonth.of(2020, 8)
   protected val taskDuration               = Duration.ofMinutes(30)
   protected val taskVolume                 = 10
@@ -82,7 +82,7 @@ trait ServiceSpecBase { this: MockFactory =>
     projectDbId = project.dbId,
     deletedAt = None,
     owner = ownerId,
-    startedAt = taskStartedAt,
+    startedAt = taskStartedAt.toInstant,
     createdAt = now,
     duration = taskDuration,
     volume = taskVolume.some,

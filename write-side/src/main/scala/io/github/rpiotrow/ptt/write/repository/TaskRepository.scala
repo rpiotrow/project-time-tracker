@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Clock, Duration, LocalDateTime}
+import java.time.{Clock, Duration, Instant}
 import java.util.UUID
 
 import cats.implicits._
@@ -12,8 +12,8 @@ trait TaskRepository {
   def add(projectId: Long, input: TaskInput, owner: UserId): DBResult[TaskEntity]
   def get(taskId: TaskId): DBResult[Option[TaskEntity]]
   def delete(task: TaskEntity): DBResult[TaskEntity]
-  def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit]
-  def overlapping(userId: UserId, startedAt: LocalDateTime, duration: Duration): DBResult[List[TaskEntity]]
+  def deleteAll(projectDbId: Long, deletedAt: Instant): DBResult[Unit]
+  def overlapping(userId: UserId, startedAt: Instant, duration: Duration): DBResult[List[TaskEntity]]
 }
 
 object TaskRepository {
@@ -32,10 +32,10 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext, private
       dbId = 0,
       taskId = TaskId.random(),
       projectDbId = projectDbId,
-      createdAt = LocalDateTime.now(clock),
+      createdAt = Instant.now(clock),
       deletedAt = None,
       owner = owner,
-      startedAt = input.startedAt,
+      startedAt = input.startedAt.toInstant,
       duration = input.duration,
       volume = input.volume,
       comment = input.comment
@@ -50,7 +50,7 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext, private
     }).map(_.headOption)
 
   override def delete(task: TaskEntity): DBResult[TaskEntity] = {
-    val now = LocalDateTime.now(clock)
+    val now = Instant.now(clock)
     run(quote {
       tasks
         .filter(t => t.dbId == lift(task.dbId) && t.deletedAt.isEmpty)
@@ -61,14 +61,14 @@ private[repository] class TaskRepositoryLive(private val ctx: DBContext, private
     })
   }
 
-  override def deleteAll(projectDbId: Long, deletedAt: LocalDateTime): DBResult[Unit] =
+  override def deleteAll(projectDbId: Long, deletedAt: Instant): DBResult[Unit] =
     run(quote {
       tasks
         .filter(t => t.projectDbId == lift(projectDbId) && t.deletedAt.isEmpty)
         .update(_.deletedAt -> lift(deletedAt.some))
     }).map(_ => ())
 
-  override def overlapping(userId: UserId, startedAt: LocalDateTime, duration: Duration): DBResult[List[TaskEntity]] =
+  override def overlapping(userId: UserId, startedAt: Instant, duration: Duration): DBResult[List[TaskEntity]] =
     run(quote {
       tasks
         .filter(_.owner == lift(userId))

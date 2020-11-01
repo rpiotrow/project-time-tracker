@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.read.service
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, Instant, OffsetDateTime}
 import java.util.UUID
 
 import eu.timepit.refined.auto._
@@ -25,8 +25,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
   val p1 = ProjectEntity(
     dbId = 1,
     projectId = "project one",
-    createdAt = LocalDateTime.of(2020, 7, 29, 15, 0),
-    lastAddDurationAt = LocalDateTime.of(2020, 7, 29, 22, 0),
+    createdAt = Instant.parse("2020-07-29T15:00:00Z"),
+    lastAddDurationAt = Instant.parse("2020-07-29T22:00:00Z"),
     deletedAt = None,
     owner = owner1Id,
     durationSum = Duration.ofHours(3)
@@ -34,8 +34,8 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
   val p2 = ProjectEntity(
     dbId = 2,
     projectId = "project two",
-    createdAt = LocalDateTime.of(2020, 7, 30, 15, 0),
-    lastAddDurationAt = LocalDateTime.of(2020, 7, 30, 22, 0),
+    createdAt = Instant.parse("2020-07-30T15:00:00Z"),
+    lastAddDurationAt = Instant.parse("2020-07-30T22:00:00Z"),
     deletedAt = None,
     owner = owner2Id,
     durationSum = Duration.ofHours(4)
@@ -45,7 +45,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     projectDbId = p1.dbId,
     deletedAt = None,
     owner = owner1Id,
-    startedAt = LocalDateTime.of(2020, 7, 29, 17, 0),
+    startedAt = Instant.parse("2020-07-29T17:00:00Z"),
     duration = Duration.ofHours(2),
     volume = None,
     comment = Some("first task")
@@ -55,7 +55,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     projectDbId = p1.dbId,
     deletedAt = None,
     owner = owner1Id,
-    startedAt = LocalDateTime.of(2020, 7, 29, 18, 0),
+    startedAt = Instant.parse("2020-07-29T18:00:00Z"),
     duration = Duration.ofHours(1),
     volume = Some(4),
     comment = Some("second task")
@@ -65,7 +65,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
     projectDbId = p2.dbId,
     deletedAt = None,
     owner = owner2Id,
-    startedAt = LocalDateTime.of(2020, 7, 30, 18, 0),
+    startedAt = Instant.parse("2020-07-30T18:00:00Z"),
     duration = Duration.ofHours(4),
     volume = Some(2),
     comment = None
@@ -79,7 +79,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
 
         val expectedOutput = ProjectOutput(
           projectId = "project one",
-          createdAt = LocalDateTime.of(2020, 7, 29, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-29T15:00:00Z"),
           deletedAt = None,
           owner = owner1Id,
           durationSum = Duration.ofHours(3),
@@ -87,7 +87,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
             TaskOutput(
               taskId = t1.taskId,
               owner = owner1Id,
-              startedAt = LocalDateTime.of(2020, 7, 29, 17, 0),
+              startedAt = OffsetDateTime.parse("2020-07-29T17:00:00Z"),
               duration = Duration.ofHours(2),
               volume = None,
               comment = Some("first task"),
@@ -96,7 +96,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
             TaskOutput(
               taskId = t2.taskId,
               owner = owner1Id,
-              startedAt = LocalDateTime.of(2020, 7, 29, 18, 0),
+              startedAt = OffsetDateTime.parse("2020-07-29T18:00:00Z"),
               duration = Duration.ofHours(1),
               volume = Some(4),
               comment = Some("second task"),
@@ -120,7 +120,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
 
         val expectedOutput = ProjectOutput(
           projectId = "project one",
-          createdAt = LocalDateTime.of(2020, 7, 29, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-29T15:00:00Z"),
           deletedAt = None,
           owner = owner1Id,
           durationSum = Duration.ofHours(3),
@@ -170,7 +170,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
 
         val expectedOutput1 = ProjectOutput(
           projectId = "project one",
-          createdAt = LocalDateTime.of(2020, 7, 29, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-29T15:00:00Z"),
           deletedAt = None,
           owner = owner1Id,
           durationSum = Duration.ofHours(3),
@@ -178,7 +178,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
             TaskOutput(
               taskId = t1.taskId,
               owner = owner1Id,
-              startedAt = LocalDateTime.of(2020, 7, 29, 17, 0),
+              startedAt = OffsetDateTime.parse("2020-07-29T17:00:00Z"),
               duration = Duration.ofHours(2),
               volume = None,
               comment = Some("first task"),
@@ -187,7 +187,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
             TaskOutput(
               taskId = t2.taskId,
               owner = owner1Id,
-              startedAt = LocalDateTime.of(2020, 7, 29, 18, 0),
+              startedAt = OffsetDateTime.parse("2020-07-29T18:00:00Z"),
               duration = Duration.ofHours(1),
               volume = Some(4),
               comment = Some("second task"),
@@ -197,7 +197,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         )
         val expectedOutput2 = ProjectOutput(
           projectId = "project two",
-          createdAt = LocalDateTime.of(2020, 7, 30, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-30T15:00:00Z"),
           deletedAt = None,
           owner = owner2Id,
           durationSum = Duration.ofHours(4),
@@ -205,7 +205,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
             TaskOutput(
               taskId = t3.taskId,
               owner = owner2Id,
-              startedAt = LocalDateTime.of(2020, 7, 30, 18, 0),
+              startedAt = OffsetDateTime.parse("2020-07-30T18:00:00Z"),
               duration = Duration.ofHours(4),
               volume = Some(2),
               comment = None,
@@ -228,7 +228,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
 
         val expectedOutput1 = ProjectOutput(
           projectId = "project one",
-          createdAt = LocalDateTime.of(2020, 7, 29, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-29T15:00:00Z"),
           deletedAt = None,
           owner = owner1Id,
           durationSum = Duration.ofHours(3),
@@ -236,7 +236,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         )
         val expectedOutput2 = ProjectOutput(
           projectId = "project two",
-          createdAt = LocalDateTime.of(2020, 7, 30, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-30T15:00:00Z"),
           deletedAt = None,
           owner = owner2Id,
           durationSum = Duration.ofHours(4),
@@ -244,7 +244,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
             TaskOutput(
               taskId = t3.taskId,
               owner = owner2Id,
-              startedAt = LocalDateTime.of(2020, 7, 30, 18, 0),
+              startedAt = OffsetDateTime.parse("2020-07-30T18:00:00Z"),
               duration = Duration.ofHours(4),
               volume = Some(2),
               comment = None,
@@ -268,7 +268,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
 
         val expectedOutput1 = ProjectOutput(
           projectId = "project one",
-          createdAt = LocalDateTime.of(2020, 7, 29, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-29T15:00:00Z"),
           deletedAt = None,
           owner = owner1Id,
           durationSum = Duration.ofHours(3),
@@ -276,7 +276,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         )
         val expectedOutput2 = ProjectOutput(
           projectId = "project two",
-          createdAt = LocalDateTime.of(2020, 7, 30, 15, 0),
+          createdAt = OffsetDateTime.parse("2020-07-30T15:00:00Z"),
           deletedAt = None,
           owner = owner2Id,
           durationSum = Duration.ofHours(4),

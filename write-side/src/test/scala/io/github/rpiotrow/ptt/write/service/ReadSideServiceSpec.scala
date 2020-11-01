@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.{Duration, LocalDateTime, YearMonth}
+import java.time.{Duration, YearMonth, OffsetDateTime, Instant}
 
 import cats.Monad
 import com.softwaremill.diffx.scalatest.DiffMatcher._
@@ -204,7 +204,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
       }
       it("create initial statistics for two months") {
         val lateTask                                = task.copy(
-          startedAt = LocalDateTime.parse("2020-08-31T23:00:00"),
+          startedAt = OffsetDateTime.parse("2020-08-31T23:00:00Z").toInstant,
           duration = Duration.ofHours(2),
           volume = None,
           comment = None
@@ -259,7 +259,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
         val service                      =
           new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
-        val now                          = LocalDateTime.now()
+        val now                          = Instant.now()
         val taskDeleted                  = task.copy(deletedAt = now.some)
 
         (taskReadSideRepository.get _).expects(taskReadModel.taskId).returning(taskReadModel.some.pure[DBResult])
@@ -287,7 +287,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
         val service                      =
           new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
-        val now                          = LocalDateTime.now()
+        val now                          = Instant.now()
         val taskDeleted                  = task.copy(deletedAt = now.some)
 
         (taskReadSideRepository.get _).expects(taskReadModel.taskId).returning(taskReadModel.some.pure[DBResult])
@@ -325,7 +325,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
         val service                      =
           new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
-        val now                          = LocalDateTime.now()
+        val now                          = Instant.now()
         val taskDeleted                  = task.copy(deletedAt = now.some)
 
         (taskReadSideRepository.get _).expects(taskReadModel.taskId).returning(taskReadModel.some.pure[DBResult])
@@ -364,7 +364,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
       val statisticsReadSideRepository = mock[StatisticsReadSideRepository]
       val service                      =
         new ReadSideServiceLive(projectReadSideRepository, taskReadSideRepository, statisticsReadSideRepository)
-      val now                          = LocalDateTime.now()
+      val now                          = Instant.now()
       val taskDeleted                  = task.copy(deletedAt = now.some)
 
       (taskReadSideRepository.get _)

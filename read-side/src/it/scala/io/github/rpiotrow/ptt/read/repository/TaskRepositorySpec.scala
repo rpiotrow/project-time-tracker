@@ -1,7 +1,6 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import java.time.{Duration, LocalDateTime}
-import java.util.UUID
+import java.time.{Duration, Instant}
 
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._
@@ -38,7 +37,7 @@ trait TaskRepositorySpec {
     projectDbId = project1Id,
     deletedAt = None,
     owner = owner1Id,
-    startedAt = LocalDateTime.of(2020, 7, 22, 17, 0),
+    startedAt = Instant.parse("2020-07-22T17:00:00Z"),
     duration = Duration.ofHours(2),
     volume = None,
     comment = Some("first task")
@@ -46,9 +45,9 @@ trait TaskRepositorySpec {
   lazy val t2 = TaskEntity(
     taskId = t2Id,
     projectDbId = project1Id,
-    deletedAt = Some(LocalDateTime.of(2020, 7, 22, 17, 10)),
+    deletedAt = Some(Instant.parse("2020-07-22T17:10:00Z")),
     owner = owner1Id,
-    startedAt = LocalDateTime.of(2020, 7, 22, 17, 0),
+    startedAt = Instant.parse("2020-07-22T17:00:00Z"),
     duration = Duration.ofHours(2),
     volume = None,
     comment = Some("deleted task")
@@ -58,7 +57,7 @@ trait TaskRepositorySpec {
     projectDbId = project2Id,
     deletedAt = None,
     owner = owner1Id,
-    startedAt = LocalDateTime.of(2020, 7, 23, 17, 0),
+    startedAt = Instant.parse("2020-07-23T17:00:00Z"),
     duration = Duration.ofHours(2),
     volume = Some(8),
     comment = Some("high volume different project")

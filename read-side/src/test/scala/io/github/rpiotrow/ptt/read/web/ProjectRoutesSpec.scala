@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.read.web
 
-import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
-import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+import java.time.OffsetDateTime
 
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import eu.timepit.refined.auto._
@@ -104,7 +104,7 @@ class ProjectRoutesSpec extends AnyFunSpec with RoutesSpecBase {
     )
   }
 
-  private def dateTimeString(localDateTime: LocalDateTime): String = localDateTime.format(ISO_LOCAL_DATE_TIME)
+  private def dateTimeString(OffsetDateTime: OffsetDateTime): String = OffsetDateTime.format(ISO_OFFSET_DATE_TIME)
 
   private def bodyAsProjectOutput(response: Response[Task]): ProjectOutput = {
     import io.github.rpiotrow.ptt.api.CirceMappings._

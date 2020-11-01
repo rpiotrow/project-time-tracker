@@ -75,7 +75,7 @@ private[service] class TaskServiceLive[F[_]: Sync](
     input: TaskInput,
     userId: UserId
   ): EitherT[DBResult, InvalidTimeSpan.type, Unit] = {
-    val dbResult = taskRepository.overlapping(userId, input.startedAt, input.duration)
+    val dbResult = taskRepository.overlapping(userId, input.startedAt.toInstant, input.duration)
     for {
       list  <- EitherT.right[InvalidTimeSpan.type](dbResult)
       check <-

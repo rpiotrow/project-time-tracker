@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.e2e
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, OffsetDateTime}
 
 import io.github.rpiotrow.ptt.api.error._
 import io.github.rpiotrow.ptt.api.model._
@@ -71,15 +71,18 @@ class TaskEnd2EndTests extends AnyFunSpec with should.Matchers with End2EndTests
       val (projectId: ProjectId, userId: UserId) = createProjectWithOwner
 
       val taskInput =
-        generateTaskInput().copy(startedAt = LocalDateTime.parse("2020-09-10T09:00:00"), duration = Duration.ofHours(8))
+        generateTaskInput().copy(
+          startedAt = OffsetDateTime.parse("2020-09-10T09:00:00Z"),
+          duration = Duration.ofHours(8)
+        )
       createTask(projectId, taskInput, userId).success()
 
       val taskInputOverlapBegin       =
-        taskInput.copy(startedAt = LocalDateTime.parse("2020-09-10T08:00:00"), duration = Duration.ofHours(2))
+        taskInput.copy(startedAt = OffsetDateTime.parse("2020-09-10T08:00:00Z"), duration = Duration.ofHours(2))
       val taskInputOverlapEnd         =
-        taskInput.copy(startedAt = LocalDateTime.parse("2020-09-10T16:00:00"), duration = Duration.ofHours(2))
+        taskInput.copy(startedAt = OffsetDateTime.parse("2020-09-10T16:00:00Z"), duration = Duration.ofHours(2))
       val taskInputOverlapInTheMiddle =
-        taskInput.copy(startedAt = LocalDateTime.parse("2020-09-10T12:00:00"), duration = Duration.ofHours(2))
+        taskInput.copy(startedAt = OffsetDateTime.parse("2020-09-10T12:00:00Z"), duration = Duration.ofHours(2))
       List(taskInputOverlapBegin, taskInputOverlapEnd, taskInputOverlapInTheMiddle).foreach(t => {
         val taskOverlapping = createTask(projectId, t, userId).failure()
         taskOverlapping should be(Conflict("other task overlaps task time span"))

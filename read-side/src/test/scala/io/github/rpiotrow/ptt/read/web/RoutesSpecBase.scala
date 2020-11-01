@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.read.web
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, OffsetDateTime}
 import java.util.UUID
 
 import eu.timepit.refined.auto._
@@ -28,7 +28,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
   val owner1Id                           = UserId(UUID.randomUUID())
   val projectOutput1                     = ProjectOutput(
     projectId = "project one",
-    createdAt = LocalDateTime.now(),
+    createdAt = OffsetDateTime.now(),
     deletedAt = None,
     owner = owner1Id,
     durationSum = Duration.ofHours(3),
@@ -36,7 +36,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
       TaskOutput(
         taskId = TaskId.random(),
         owner = owner1Id,
-        startedAt = LocalDateTime.now(),
+        startedAt = OffsetDateTime.now(),
         duration = Duration.ofHours(2),
         volume = None,
         comment = Some("first task"),
@@ -45,7 +45,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
       TaskOutput(
         taskId = TaskId.random(),
         owner = owner1Id,
-        startedAt = LocalDateTime.now(),
+        startedAt = OffsetDateTime.now(),
         duration = Duration.ofHours(1),
         volume = Some(4),
         comment = Some("second task"),
@@ -56,7 +56,7 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
   val projectOutput2                     = ProjectOutput(
     projectId = "project without tasks",
     owner = owner1Id,
-    createdAt = LocalDateTime.now(),
+    createdAt = OffsetDateTime.now(),
     deletedAt = None,
     durationSum = Duration.ZERO,
     tasks = List()

@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.read.web
 
-import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
-import java.time.{LocalDateTime, OffsetDateTime, ZoneOffset}
+import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+import java.time.OffsetDateTime
 
 import cats.implicits._
 import eu.timepit.refined.auto._
@@ -42,14 +42,14 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
       val params = emptyParams.copy(ids = List("project one", "project without tasks"))
       checkJson(url, params)
     }
-    it(s"$projects?from=2020-02-03T10:11:50") {
-      val url    = s"$projects?from=2020-02-03T10:11:50"
-      val params = emptyParams.copy(from = LocalDateTime.of(2020, 2, 3, 10, 11, 50).some)
+    it(s"$projects?from=2020-02-03T10:11:50Z") {
+      val url    = s"$projects?from=2020-02-03T10:11:50Z"
+      val params = emptyParams.copy(from = OffsetDateTime.parse("2020-02-03T10:11:50Z").some)
       checkProjectList(url, params)
     }
-    it(s"$projects?to=2020-03-02T11:12:52") {
-      val url    = s"$projects?to=2020-03-02T11:12:52"
-      val params = emptyParams.copy(to = LocalDateTime.of(2020, 3, 2, 11, 12, 52).some)
+    it(s"$projects?to=2020-03-02T11:12:52Z") {
+      val url    = s"$projects?to=2020-03-02T11:12:52Z"
+      val params = emptyParams.copy(to = OffsetDateTime.parse("2020-03-02T11:12:52Z").some)
       checkProjectList(url, params)
     }
     it(s"$projects?deleted=false") {
@@ -81,8 +81,8 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
       val url    =
         s"""
            |$projects?ids=project%20one&ids=project%20without%20tasks
-           |&from=2020-03-03T10:11:50
-           |&to=2020-04-02T11:12:52
+           |&from=2020-03-03T10:11:50Z
+           |&to=2020-04-02T11:12:52Z
            |&deleted=true
            |&orderBy=LastAddDurationAt
            |&orderDirection=Ascending
@@ -91,8 +91,8 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
            |""".stripMargin.replaceAllLiterally("\n", "")
       val params = ProjectListParams(
         ids = List("project one", "project without tasks"),
-        from = LocalDateTime.of(2020, 3, 3, 10, 11, 50).some,
-        to = LocalDateTime.of(2020, 4, 2, 11, 12, 52).some,
+        from = OffsetDateTime.parse("2020-03-03T10:11:50Z").some,
+        to = OffsetDateTime.parse("2020-04-02T11:12:52Z").some,
         deleted = Some(true),
         orderBy = Some(LastAddDurationAt),
         orderDirection = Some(Ascending),
@@ -235,7 +235,7 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
     )
   }
 
-  private def dateTimeString(localDateTime: LocalDateTime): String = localDateTime.format(ISO_LOCAL_DATE_TIME)
+  private def dateTimeString(OffsetDateTime: OffsetDateTime): String = OffsetDateTime.format(ISO_OFFSET_DATE_TIME)
 
   private def bodyAsProjectOutputList(request: Response[Task]) = {
     import io.github.rpiotrow.ptt.api.CirceMappings._

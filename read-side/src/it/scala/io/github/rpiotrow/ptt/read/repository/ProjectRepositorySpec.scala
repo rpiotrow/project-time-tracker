@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, Instant, OffsetDateTime}
 
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._
@@ -32,8 +32,8 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   lazy val p1       = ProjectEntity(
     dbId = 1,
     projectId = "first",
-    createdAt = LocalDateTime.of(2020, 7, 22, 15, 0),
-    lastAddDurationAt = LocalDateTime.of(2020, 7, 22, 18, 0),
+    createdAt = Instant.parse("2020-07-22T15:00:00Z"),
+    lastAddDurationAt = Instant.parse("2020-07-22T18:00:00Z"),
     deletedAt = None,
     owner = owner1Id,
     durationSum = Duration.ofHours(4)
@@ -41,8 +41,8 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   lazy val p2       = ProjectEntity(
     dbId = 2,
     projectId = "second",
-    createdAt = LocalDateTime.of(2020, 7, 22, 15, 10),
-    lastAddDurationAt = LocalDateTime.of(2020, 7, 22, 17, 0),
+    createdAt = Instant.parse("2020-07-22T15:10:00Z"),
+    lastAddDurationAt = Instant.parse("2020-07-22T17:00:00Z"),
     deletedAt = None,
     owner = owner1Id,
     durationSum = Duration.ZERO
@@ -50,9 +50,9 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   lazy val p3       = ProjectEntity(
     dbId = 3,
     projectId = "deleted",
-    createdAt = LocalDateTime.of(2020, 7, 31, 15, 0),
-    lastAddDurationAt = LocalDateTime.of(2020, 7, 31, 18, 0),
-    deletedAt = Some(LocalDateTime.of(2020, 7, 31, 18, 0)),
+    createdAt = Instant.parse("2020-07-31T15:00:00Z"),
+    lastAddDurationAt = Instant.parse("2020-07-31T18:00:00Z"),
+    deletedAt = Some(Instant.parse("2020-07-31T18:00:00Z")),
     owner = owner1Id,
     durationSum = Duration.ZERO
   )
@@ -91,7 +91,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val result = zio.Runtime.default.unsafeRun(
           projectRepo.list(
             defaultParams
-              .copy(to = Some(LocalDateTime.of(2020, 7, 25, 15, 0)))
+              .copy(to = Some(OffsetDateTime.parse("2020-07-25T15:00:00Z")))
           )
         )
         result should matchTo(List(p1, p2))
@@ -100,7 +100,10 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val result = zio.Runtime.default.unsafeRun(
           projectRepo.list(
             defaultParams
-              .copy(from = Some(LocalDateTime.of(2020, 7, 15, 15, 0)), to = Some(LocalDateTime.of(2020, 7, 25, 15, 0)))
+              .copy(
+                from = Some(OffsetDateTime.parse("2020-07-15T15:00:00Z")),
+                to = Some(OffsetDateTime.parse("2020-07-25T15:00:00Z"))
+              )
           )
         )
         result should matchTo(List(p1, p2))

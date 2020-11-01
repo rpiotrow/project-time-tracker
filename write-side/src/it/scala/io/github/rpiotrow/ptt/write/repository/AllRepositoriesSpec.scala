@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Clock, LocalDateTime, ZoneOffset}
+import java.time.{Clock, Instant, ZoneOffset}
 
 import cats.effect._
 import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}
@@ -48,8 +48,8 @@ class AllRepositoriesSpec
   }
 
   override lazy protected val tnx      = makeTransactor("writer", "writer")
-  override lazy protected val clockNow = LocalDateTime.of(2015, 2, 13, 14, 23)
-  private lazy val clock               = Clock.fixed(clockNow.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+  override lazy protected val clockNow = Instant.parse("2015-02-13T14:23:00Z")
+  private lazy val clock               = Clock.fixed(clockNow, ZoneOffset.UTC)
 
   override lazy protected val projectRepo            = new ProjectRepositoryLive(liveContext, clock)
   override lazy protected val projectReadSideRepo    = new ProjectReadSideRepositoryLive(liveContext)

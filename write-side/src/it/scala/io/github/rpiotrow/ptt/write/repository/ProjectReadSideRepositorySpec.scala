@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, Instant}
 import java.util.UUID
 
 import eu.timepit.refined.auto._
@@ -35,8 +35,8 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   private val projectD1       = ProjectReadSideEntity(
     dbId = 100,
     projectId = "projectD1",
-    createdAt = LocalDateTime.parse("2020-08-16T08:00:00"),
-    lastAddDurationAt = LocalDateTime.parse("2020-08-16T18:00:00"),
+    createdAt = Instant.parse("2020-08-16T08:00:00Z"),
+    lastAddDurationAt = Instant.parse("2020-08-16T18:00:00Z"),
     deletedAt = None,
     owner = UserId("41a854e4-4262-4672-a7df-c781f535d6ee"),
     durationSum = Duration.ofSeconds(240)
@@ -50,8 +50,8 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     projectD1.copy(
       dbId = 106,
       projectId = "project-get-one",
-      createdAt = LocalDateTime.parse("2020-08-21T08:00:00"),
-      lastAddDurationAt = LocalDateTime.parse("2020-08-21T23:00:00"),
+      createdAt = Instant.parse("2020-08-21T08:00:00Z"),
+      lastAddDurationAt = Instant.parse("2020-08-21T23:00:00Z"),
       durationSum = Duration.ofHours(2)
     )
 
@@ -85,7 +85,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
     describe("deletedProject should") {
       it("soft delete project from read model") {
-        val now      = LocalDateTime.now()
+        val now      = Instant.now()
         val expected = projectD1.copy(deletedAt = now.some, durationSum = Duration.ZERO)
 
         projectReadSideRepo.deleteProject(projectD1.dbId, projectD1.projectId, now).transact(tnx).unsafeRunSync()
@@ -95,7 +95,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
     describe("addDuration should") {
       it("update project on the read side when durationSum is zero") {
-        val dateTime = LocalDateTime.now()
+        val dateTime = Instant.now()
         projectReadSideRepo
           .addDuration(durationSumZero.dbId, Duration.ofMinutes(30), dateTime)
           .transact(tnx)
@@ -105,7 +105,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         readProjectByDbId(durationSumZero.dbId) should matchTo(expected.some)
       }
       it("update project on the read side when durationSum is positive") {
-        val dateTime = LocalDateTime.now()
+        val dateTime = Instant.now()
         projectReadSideRepo
           .addDuration(durationSum30.dbId, Duration.ofMinutes(30), dateTime)
           .transact(tnx)
@@ -129,7 +129,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   }
 
   private val owner1Id                                                      = UserId(UUID.randomUUID())
-  private val writeSideNow                                                  = LocalDateTime.now()
+  private val writeSideNow                                                  = Instant.now()
   private def project(dbId: Long, projectId: ProjectId): ProjectEntity      =
     ProjectEntity(dbId = dbId, projectId = projectId, createdAt = writeSideNow, deletedAt = None, owner = owner1Id)
   implicit private val ignoreDbId: Diff[ProjectReadSideEntity]              =

@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.{Duration, LocalDateTime, YearMonth}
+import java.time.{Duration, Instant, YearMonth}
 
 import cats.data.OptionT
 import cats.implicits._
@@ -46,7 +46,7 @@ private[service] class ReadSideServiceLive(
       _         <- OptionT(projectDeletedReadModel(readModel, deleted.deletedAt.get))
     } yield ()).getOrElse(logger.warn("Read model update failure: " + "project not found in read model"))
 
-  private def projectDeletedReadModel(readModel: ProjectReadSideEntity, deletedAt: LocalDateTime) =
+  private def projectDeletedReadModel(readModel: ProjectReadSideEntity, deletedAt: Instant) =
     for {
       _     <- projectReadSideRepository.deleteProject(readModel.dbId, readModel.projectId, deletedAt)
       tasks <- taskReadSideRepository.getNotDeleted(readModel.dbId)
@@ -73,7 +73,7 @@ private[service] class ReadSideServiceLive(
       _         <- OptionT(taskDeletedReadModel(readModel, deleted.deletedAt.get))
     } yield ()).getOrElse(logger.warn("Read model update failure: " + "task not found in read model"))
 
-  private def taskDeletedReadModel(readModel: TaskReadSideEntity, deletedAt: LocalDateTime) =
+  private def taskDeletedReadModel(readModel: TaskReadSideEntity, deletedAt: Instant) =
     for {
       _ <- taskReadSideRepository.delete(readModel.dbId, deletedAt)
       _ <- projectReadSideRepository.subtractDuration(readModel.projectDbId, readModel.duration)
@@ -104,7 +104,7 @@ private[service] class ReadSideServiceLive(
     splitDuration(task).map(updateStatisticsInYearMonth).toList.sequence_
 
   private def splitDuration(task: TaskReadSideEntity): Map[YearMonth, Duration] =
-    LocalDateTimeRange(task.startedAt, task.startedAt.plus(task.duration))
+    InstantRange(task.startedAt, task.startedAt.plus(task.duration))
       .splitToMonths()
       .map(r => r.fromYearMonth -> r.duration())
       .toMap

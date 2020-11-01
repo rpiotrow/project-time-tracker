@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.e2e
 
 import java.time.temporal.ChronoUnit
-import java.time.{Duration, LocalDateTime, YearMonth}
+import java.time.{Duration, OffsetDateTime, YearMonth}
 
 import io.github.rpiotrow.ptt.api.input._
 import io.github.rpiotrow.ptt.api.model._
@@ -39,7 +39,7 @@ class StatisticsEnd2EndTests extends AnyFunSpec with should.Matchers with End2En
       val (projectId: ProjectId, userId: UserId) = createProjectWithOwner
 
       val taskInput = TaskInput(
-        startedAt = LocalDateTime.parse("2020-09-10T09:00:00"),
+        startedAt = OffsetDateTime.parse("2020-09-10T09:00:00Z"),
         duration = Duration.ofHours(8),
         volume = Some(5),
         comment = None
@@ -61,19 +61,19 @@ class StatisticsEnd2EndTests extends AnyFunSpec with should.Matchers with End2En
       val (projectId: ProjectId, userId: UserId) = createProjectWithOwner
 
       val taskInput1 = TaskInput(
-        startedAt = LocalDateTime.parse("2020-09-10T09:00:00"),
+        startedAt = OffsetDateTime.parse("2020-09-10T09:00:00Z"),
         duration = Duration.ofHours(8),
         volume = Some(5),
         comment = None
       )
       val taskInput2 = TaskInput(
-        startedAt = LocalDateTime.parse("2020-09-11T09:00:00"),
+        startedAt = OffsetDateTime.parse("2020-09-11T09:00:00Z"),
         duration = Duration.ofHours(4),
         volume = Some(3),
         comment = None
       )
       val taskInput3 = TaskInput(
-        startedAt = LocalDateTime.parse("2020-09-12T09:00:00"),
+        startedAt = OffsetDateTime.parse("2020-09-12T09:00:00Z"),
         duration = Duration.ofHours(2),
         volume = Some(8),
         comment = None

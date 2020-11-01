@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, Instant, OffsetDateTime}
 import java.util.UUID
 
 import cats.effect.IO
@@ -18,7 +18,7 @@ import org.scalatest.matchers.should
 trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected def tnx: Transactor[IO]
-  protected val clockNow: LocalDateTime
+  protected val clockNow: Instant
   protected def taskRepo: TaskRepository
 
   protected val taskRepositoryData =
@@ -73,10 +73,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 201,
     taskId = TaskId("35631327-4dea-41aa-8f0a-1e6f335eef99"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-01T08:00"),
+    startedAt = Instant.parse("2020-08-01T08:00:00Z"),
     duration = Duration.ofHours(5),
     volume = None,
     comment = Some("p1")
@@ -85,10 +85,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 202,
     taskId = TaskId("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-01T12:00"),
+    startedAt = Instant.parse("2020-08-01T12:00:00Z"),
     duration = Duration.ofHours(1),
     volume = None,
     comment = Some("p1a")
@@ -97,10 +97,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 203,
     taskId = TaskId("9be91953-dc8d-4320-a628-fe5bfd19fb19"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-01T14:00"),
+    startedAt = Instant.parse("2020-08-01T14:00:00Z"),
     duration = Duration.ofHours(3),
     volume = None,
     comment = Some("p2")
@@ -109,10 +109,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 204,
     taskId = TaskId("f990af84-b711-485c-9f01-47dc9d830d4e"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-01T14:00"),
+    startedAt = Instant.parse("2020-08-01T14:00:00Z"),
     duration = Duration.ofHours(1),
     volume = None,
     comment = Some("p2a")
@@ -121,10 +121,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 205,
     taskId = TaskId("6158b42a-6cf1-4597-bf68-ad3f834d0633"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-02T13:00"),
+    startedAt = Instant.parse("2020-08-02T13:00:00Z"),
     duration = Duration.ofHours(1),
     volume = None,
     comment = Some("p3")
@@ -133,10 +133,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 206,
     taskId = TaskId("ce78dda0-3561-439d-b225-fd905a0521b2"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-03T09:00"),
+    startedAt = Instant.parse("2020-08-03T09:00:00Z"),
     duration = Duration.ofHours(8),
     volume = None,
     comment = Some("p4")
@@ -145,10 +145,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 207,
     taskId = TaskId("16d1d978-91c9-446a-9138-8ef8f8f4f415"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-04T12:00"),
+    startedAt = Instant.parse("2020-08-04T12:00:00Z"),
     duration = Duration.ofHours(3),
     volume = None,
     comment = Some("p5")
@@ -157,10 +157,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 213,
     taskId = TaskId("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-07T14:00"),
+    startedAt = Instant.parse("2020-08-07T14:00:00Z"),
     duration = Duration.ofHours(3),
     volume = None,
     comment = Some("not-deleted")
@@ -169,10 +169,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 214,
     taskId = TaskId("36c9eebe-88f9-473d-af6d-3c88d3b22230"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2020-08-01T01:00"),
+    createdAt = Instant.parse("2020-08-01T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-08T08:00"),
+    startedAt = Instant.parse("2020-08-08T08:00:00Z"),
     duration = Duration.ofHours(5),
     volume = None,
     comment = Some("owned")
@@ -181,10 +181,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 216,
     taskId = TaskId("18caffa9-7b3a-493e-a299-a4fba1efd9ae"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2015-02-13T01:00"),
+    createdAt = Instant.parse("2015-02-13T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-10T14:00"),
+    startedAt = Instant.parse("2020-08-10T14:00:00Z"),
     duration = Duration.ofHours(3),
     volume = None,
     comment = Some("to-delete-1")
@@ -193,10 +193,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 217,
     taskId = TaskId("d8ce26d3-722c-41ab-86d0-0630f2d51c04"),
     projectDbId = 100,
-    createdAt = LocalDateTime.parse("2015-02-13T01:00"),
+    createdAt = Instant.parse("2015-02-13T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-10T14:00"),
+    startedAt = Instant.parse("2020-08-10T14:00:00Z"),
     duration = Duration.ofHours(3),
     volume = None,
     comment = Some("to-delete-2")
@@ -205,10 +205,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 218,
     taskId = TaskId("a5f39662-0a01-4fd9-b35b-15f788518228"),
     projectDbId = 101,
-    createdAt = LocalDateTime.parse("2015-02-13T01:00"),
+    createdAt = Instant.parse("2015-02-13T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-15T17:00"),
+    startedAt = Instant.parse("2020-08-15T17:00:00Z"),
     duration = Duration.ofHours(1),
     volume = None,
     comment = Some("to-delete-with-project-1")
@@ -217,10 +217,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 219,
     taskId = TaskId("6c9d75b6-c7d7-46e5-9186-b496b1a2880c"),
     projectDbId = 101,
-    createdAt = LocalDateTime.parse("2015-02-13T01:00"),
-    deletedAt = LocalDateTime.parse("2020-08-21T18:00").some,
+    createdAt = Instant.parse("2015-02-13T01:00:00Z"),
+    deletedAt = Instant.parse("2020-08-21T18:00:00Z").some,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-15T18:00"),
+    startedAt = Instant.parse("2020-08-15T18:00:00Z"),
     duration = Duration.ofHours(1),
     volume = None,
     comment = Some("to-delete-with-project-2")
@@ -229,10 +229,10 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 220,
     taskId = TaskId("03610471-816b-4d3b-a321-5ba662954a1a"),
     projectDbId = 101,
-    createdAt = LocalDateTime.parse("2015-02-13T01:00"),
+    createdAt = Instant.parse("2015-02-13T01:00:00Z"),
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-15T19:00"),
+    startedAt = Instant.parse("2020-08-15T19:00:00Z"),
     duration = Duration.ofHours(1),
     volume = None,
     comment = Some("to-delete-with-project-3")
@@ -262,7 +262,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
        |       db:-------p1a--p2a----
        |       return p1,p2,p1a,p2a""".stripMargin) {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-01T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-01T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -272,7 +272,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
        |       db:----------p3-------
        |       return p3""".stripMargin) {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-02T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-02T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -282,7 +282,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
        |       db:-----p4p4p4p4p4p4--
        |       return p4""".stripMargin) {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-03T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-03T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -292,7 +292,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
        |       db:-------p5p5p5p5----
        |       return p5""".stripMargin) {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-04T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-04T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -302,7 +302,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
        |       db:--p6------------p7-
        |       return empty list""".stripMargin) {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-05T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-05T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -312,7 +312,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
        |       db:-----p8--------p9--
        |       return empty list""".stripMargin) {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-06T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-06T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -320,7 +320,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
         }
         it("should return only not-deleted overlapping tasks") {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-07T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-07T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -330,7 +330,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
       describe("for tasks of different user") {
         it("return overlapping task owned only by given user ") {
           val list = taskRepo
-            .overlapping(taskOwner, LocalDateTime.parse("2020-08-08T12:00"), newTaskDuration)
+            .overlapping(taskOwner, Instant.parse("2020-08-08T12:00:00Z"), newTaskDuration)
             .transact(tnx)
             .unsafeRunSync()
 
@@ -368,7 +368,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
     describe("deleteAll should") {
       it("soft delete tasks from the project") {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         taskRepo.deleteAll(101, now).transact(tnx).unsafeRunSync()
 
         val optionTask1 = taskRepo.get(toDeleteWithProject1.taskId).transact(tnx).unsafeRunSync()
@@ -385,7 +385,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val now                                            = LocalDateTime.now()
+  private val now                                            = OffsetDateTime.now()
   private val taskInput                                      =
     TaskInput(startedAt = now, duration = Duration.ofMinutes(30), volume = 10.some, comment = "text".some)
   implicit private val ignoreDbIdAndTaskId: Diff[TaskEntity] =
@@ -398,7 +398,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
       createdAt = clockNow,
       deletedAt = None,
       owner = owner,
-      startedAt = taskInput.startedAt,
+      startedAt = taskInput.startedAt.toInstant,
       duration = taskInput.duration,
       volume = taskInput.volume,
       comment = taskInput.comment

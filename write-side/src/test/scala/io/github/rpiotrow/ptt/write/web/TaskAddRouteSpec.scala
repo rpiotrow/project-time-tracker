@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.web
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, OffsetDateTime}
 import java.util.UUID
 
 import cats.data.EitherT
@@ -76,7 +76,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
   }
 
   private val taskInput  = TaskInput(
-    startedAt = LocalDateTime.now(),
+    startedAt = OffsetDateTime.now(),
     duration = Duration.ofMinutes(30),
     volume = 10.some,
     comment = "text".some
@@ -84,7 +84,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
   private val taskOutput = TaskOutput(
     taskId = taskId,
     owner = ownerId,
-    startedAt = LocalDateTime.now(),
+    startedAt = OffsetDateTime.now(),
     duration = Duration.ofMinutes(30),
     volume = 10.some,
     comment = "text".some,

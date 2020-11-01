@@ -6,7 +6,7 @@ import doobie.quill.DoobieContext
 import io.getquill.{idiom => _, _}
 import io.github.rpiotrow.ptt.api.param.OrderingDirection._
 import io.github.rpiotrow.ptt.api.param.ProjectOrderingField._
-import io.github.rpiotrow.ptt.api.param.{ProjectListParams, _}
+import io.github.rpiotrow.ptt.api.param._
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
 import zio.{IO, Task, ZIO}
 import zio.interop.catz._
@@ -24,7 +24,7 @@ object ProjectRepository {
 
 private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends ProjectRepository.Service {
 
-  private val dc = new DoobieContext.Postgres(SnakeCase) with LocalDateTimeQuotes with CustomDecoders
+  private val dc = new DoobieContext.Postgres(SnakeCase) with InstantQuotes with CustomDecoders
   import dc._
 
   private val projects = quote { querySchema[ProjectEntity]("projects") }
@@ -46,8 +46,8 @@ private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends P
         .filterIf(params.ids.nonEmpty)(p => quote(liftQuery(projectIds).contains(p.projectId)))
         .filterIf(params.deleted.contains(true))(p => quote(p.deletedAt.isDefined))
         .filterIf(params.deleted.contains(false))(p => quote(p.deletedAt.isEmpty))
-        .filterOpt(params.from)((p, from) => quote(p.createdAt >= from))
-        .filterOpt(params.to)((p, to) => quote(p.createdAt <= to))
+        .filterOpt(params.from.map(_.toInstant))((p, from) => quote(p.createdAt >= from))
+        .filterOpt(params.to.map(_.toInstant))((p, to) => quote(p.createdAt <= to))
         .sortBy(p => projectOrderingField(params.orderBy, p))(orderingDirection(params.orderDirection))
         .drop(pageNumber * pageSize)
         .take(pageSize)

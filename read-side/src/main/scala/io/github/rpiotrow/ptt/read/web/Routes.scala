@@ -15,6 +15,7 @@ import io.github.rpiotrow.ptt.api.param._
 import io.github.rpiotrow.ptt.read.repository._
 import io.github.rpiotrow.ptt.read.service._
 import org.http4s.HttpRoutes
+import org.slf4j.LoggerFactory
 import sttp.tapir.server.http4s._
 import zio._
 import zio.interop.catz._
@@ -40,6 +41,8 @@ private class RoutesLive(
   implicit private val serverOptions: Http4sServerOptions[Task] =
     Http4sServerOptions.default[Task].copy(decodeFailureHandler = DecodeFailure.decodeFailureHandler)
 
+  private val logger = LoggerFactory.getLogger("RoutesLive")
+
   override def readSideRoutes(): HttpRoutes[Task] = {
     projectListEndpoint.toRoutes { params =>
       projectList(params)
@@ -54,7 +57,10 @@ private class RoutesLive(
     projectService
       .list(params)
       .catchAll {
-        case RepositoryThrowable(_) => ZIO.fail(ServerError("server.error"))
+        case RepositoryThrowable(e) => {
+          logger.error(e.getMessage, e)
+          ZIO.fail(ServerError("server.error"))
+        }
       }
       .either
   }

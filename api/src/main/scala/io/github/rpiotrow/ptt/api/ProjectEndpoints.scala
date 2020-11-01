@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.api
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
@@ -11,8 +11,6 @@ import sttp.tapir.codec.enumeratum._
 import sttp.tapir.codec.refined._
 import sttp.tapir.json.circe._
 import cats.implicits._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.collection.NonEmpty
 import io.github.rpiotrow.ptt.api.input._
 import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output._
@@ -39,14 +37,14 @@ object ProjectEndpoints {
       .description("Filter projects with given identifiers")
       .example(ProjectId.exampleList)
       .and(
-        query[Option[LocalDateTime]]("from")
+        query[Option[OffsetDateTime]]("from")
           .description("Filter projects created after given date")
-          .example(LocalDateTime.parse("2020-01-01T10:00:00").some)
+          .example(OffsetDateTime.parse("2020-01-01T10:00:00Z").some)
       )
       .and(
-        query[Option[LocalDateTime]]("to")
+        query[Option[OffsetDateTime]]("to")
           .description("Filter projects created before given date")
-          .example(LocalDateTime.parse("2020-12-31T10:00:00").some)
+          .example(OffsetDateTime.parse("2020-12-31T10:00:00Z").some)
       )
       .and(
         query[Option[Boolean]]("deleted")

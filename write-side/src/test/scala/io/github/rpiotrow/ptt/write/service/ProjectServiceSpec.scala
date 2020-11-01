@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 import cats.Monad
@@ -74,7 +74,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        val now                   = LocalDateTime.now()
+        val now                   = Instant.now()
         val deletedProject        = project.copy(deletedAt = now.some)
         val deletedProjectUpdated = projectUpdated.copy(deletedAt = now.some)
 
@@ -206,7 +206,7 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val readSideService   = mock[ReadSideService]
         val service           = new ProjectServiceLive[IO](projectRepository, taskRepository, readSideService, tnx)
 
-        val deletedAt      = LocalDateTime.now
+        val deletedAt      = Instant.now
         val deletedProject = project.copy(deletedAt = deletedAt.some)
 
         (projectRepository.get _).expects(projectId).returning(Option(deletedProject).pure[DBResult])

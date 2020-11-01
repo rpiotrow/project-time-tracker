@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 import cats.effect.IO
@@ -18,7 +18,7 @@ import org.scalatest.matchers.should
 trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected def tnx: Transactor[IO]
-  protected def clockNow: LocalDateTime
+  protected def clockNow: Instant
   protected def projectRepo: ProjectRepository
 
   describe("ProjectRepository") {

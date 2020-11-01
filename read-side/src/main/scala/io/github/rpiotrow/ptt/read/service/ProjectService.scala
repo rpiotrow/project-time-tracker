@@ -1,5 +1,7 @@
 package io.github.rpiotrow.ptt.read.service
 
+import java.time.{Instant, ZoneOffset, OffsetDateTime}
+
 import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
 import io.github.rpiotrow.ptt.api.output.{ProjectOutput, TaskOutput}
 import io.github.rpiotrow.ptt.api.param.ProjectListParams
@@ -47,20 +49,22 @@ private class ProjectServiceLive(
     TaskOutput(
       taskId = task.taskId,
       owner = task.owner,
-      startedAt = task.startedAt,
+      startedAt = toOffsetDateTime(task.startedAt),
       duration = task.duration,
       volume = task.volume,
       comment = task.comment,
-      deletedAt = task.deletedAt
+      deletedAt = task.deletedAt.map(toOffsetDateTime)
     )
 
   private def toOutput(project: ProjectEntity, tasks: List[TaskEntity]): ProjectOutput =
     ProjectOutput(
       projectId = project.projectId,
-      createdAt = project.createdAt,
-      deletedAt = project.deletedAt,
+      createdAt = toOffsetDateTime(project.createdAt),
+      deletedAt = project.deletedAt.map(toOffsetDateTime),
       owner = project.owner,
       durationSum = project.durationSum,
       tasks = tasks.map(toOutput)
     )
+
+  private def toOffsetDateTime(instant: Instant) = OffsetDateTime.ofInstant(instant, ZoneOffset.UTC)
 }

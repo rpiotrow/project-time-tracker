@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Clock, LocalDateTime}
+import java.time.{Clock, Instant}
 
 import cats.implicits._
 import io.getquill.{idiom => _}
@@ -28,7 +28,7 @@ private[repository] class ProjectRepositoryLive(
   private val projects = quote { querySchema[ProjectEntity]("ptt.projects") }
 
   override def create(projectId: ProjectId, owner: UserId): DBResult[ProjectEntity] = {
-    val now    = LocalDateTime.now(clock)
+    val now    = Instant.now(clock)
     val entity = ProjectEntity(projectId = projectId, createdAt = now, deletedAt = None, owner = owner)
     run(quote { projects.insert(lift(entity)).returningGenerated(_.dbId) })
       .map(dbId => entity.copy(dbId = dbId))
@@ -50,7 +50,7 @@ private[repository] class ProjectRepositoryLive(
   }
 
   override def delete(project: ProjectEntity): DBResult[ProjectEntity] = {
-    val now = LocalDateTime.now(clock)
+    val now = Instant.now(clock)
     run(quote {
       projects
         .filter(e => e.projectId == lift(project.projectId) && e.deletedAt.isEmpty)

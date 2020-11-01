@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Duration, LocalDateTime}
+import java.time.{Duration, Instant}
 import java.util.UUID
 
 import cats.effect.IO
@@ -17,7 +17,6 @@ import org.scalatest.matchers.should
 trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected def tnx: Transactor[IO]
-  protected val clockNow: LocalDateTime
   protected def taskReadSideRepo: TaskReadSideRepository
 
   protected val taskReadSideRepositoryData =
@@ -54,7 +53,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     projectDbId = 200,
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-20T08:00"),
+    startedAt = Instant.parse("2020-08-20T08:00:00Z"),
     duration = Duration.ofHours(5),
     volume = None,
     comment = Some("p1")
@@ -67,7 +66,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     projectDbId = 201,
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-15T08:00"),
+    startedAt = Instant.parse("2020-08-15T08:00:00Z"),
     duration = Duration.ofHours(5),
     volume = 2.some,
     comment = Some("t2-p1")
@@ -78,7 +77,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     projectDbId = 201,
     deletedAt = None,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-17T08:00"),
+    startedAt = Instant.parse("2020-08-17T08:00:00Z"),
     duration = Duration.ofHours(7),
     volume = 1.some,
     comment = Some("t2-p3")
@@ -93,9 +92,9 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     dbId = 207,
     taskId = TaskId("032bc426-241e-4fea-9e7b-39a17db36628"),
     projectDbId = 202,
-    deletedAt = LocalDateTime.parse("2020-08-20T08:00").some,
+    deletedAt = Instant.parse("2020-08-20T08:00:00Z").some,
     owner = taskOwner,
-    startedAt = LocalDateTime.parse("2020-08-16T08:00"),
+    startedAt = Instant.parse("2020-08-16T08:00:00Z"),
     duration = Duration.ofHours(6),
     volume = None,
     comment = Some("t3-deleted")
@@ -146,7 +145,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
     describe("delete should") {
       it("soft delete task on read side") {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         taskReadSideRepo.delete(toDelete.dbId, now).transact(tnx).unsafeRunSync()
 
         val optionTask = taskReadSideRepo.get(toDelete.taskId).transact(tnx).unsafeRunSync()
@@ -156,7 +155,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
     describe("deleteAll should") {
       it("soft delete all project tasks in the read model") {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         taskReadSideRepo.deleteAll(202, now).transact(tnx).unsafeRunSync()
 
         val optionTask1 = taskReadSideRepo.get(t3p1.taskId).transact(tnx).unsafeRunSync()
@@ -169,13 +168,13 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val taskStart                                        = LocalDateTime.now()
+  private val taskStart                                        = Instant.now()
   private def task(): TaskEntity                               =
     TaskEntity(
       dbId = 0,
       taskId = TaskId.random(),
       projectDbId = 2,
-      createdAt = LocalDateTime.now(),
+      createdAt = Instant.now(),
       deletedAt = None,
       owner = taskOwner,
       startedAt = taskStart,

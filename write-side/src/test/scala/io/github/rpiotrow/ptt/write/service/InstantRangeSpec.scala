@@ -1,15 +1,15 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.{Duration, LocalDateTime, YearMonth}
+import java.time.{Duration, Instant, LocalDateTime, YearMonth, ZoneOffset}
 
 import cats.implicits._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 
-class LocalDateTimeRangeSpec extends AnyFunSpec with should.Matchers {
+class InstantRangeSpec extends AnyFunSpec with should.Matchers {
 
-  describe("LocalDateTimeRange") {
+  describe("InstantRange") {
     describe("intersection") {
       it("should return intersection for overlapping ranges") {
         val r1 = createRange("2020-08-01T10:00:00", "2020-08-10T17:00:00")
@@ -54,19 +54,17 @@ class LocalDateTimeRangeSpec extends AnyFunSpec with should.Matchers {
 
     describe("forYearMonth") {
       it("should return month range") {
-        val range = LocalDateTimeRange.forYearMonth(YearMonth.of(2020, 8))
+        val range = InstantRange.forYearMonth(YearMonth.of(2020, 8))
 
-        (range.from, range.to) should be(
-          (LocalDateTime.parse("2020-08-01T00:00:00"), LocalDateTime.parse("2020-09-01T00:00:00"))
-        )
+        (range.from, range.to) should be((Instant.parse("2020-08-01T00:00:00Z"), Instant.parse("2020-09-01T00:00:00Z")))
       }
     }
   }
 
   private def createRange(from: String, to: String) = {
-    val fromDate = LocalDateTime.parse(from)
-    val toDate   = LocalDateTime.parse(to)
-    LocalDateTimeRange(fromDate, toDate)
+    val fromDate = LocalDateTime.parse(from).toInstant(ZoneOffset.UTC)
+    val toDate   = LocalDateTime.parse(to).toInstant(ZoneOffset.UTC)
+    InstantRange(fromDate, toDate)
   }
 
 }

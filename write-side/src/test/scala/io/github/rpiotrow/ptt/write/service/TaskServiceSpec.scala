@@ -1,6 +1,5 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import eu.timepit.refined.auto._
@@ -15,6 +14,8 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 
+import java.time.Instant
+
 class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory with should.Matchers {
 
   describe("TaskService") {
@@ -27,7 +28,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
         (taskRepository.overlapping _)
-          .expects(userId, taskInput.startedAt, taskInput.duration)
+          .expects(userId, taskInput.startedAt.toInstant, taskInput.duration)
           .returning(List[TaskEntity]().pure[DBResult])
         (taskRepository.add _).expects(project.dbId, taskInput, userId).returning(task.pure[DBResult])
         (readSideService.taskAdded _)
@@ -46,7 +47,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
 
         (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
         (taskRepository.overlapping _)
-          .expects(userId, taskInput.startedAt, taskInput.duration)
+          .expects(userId, taskInput.startedAt.toInstant, taskInput.duration)
           .returning(List[TaskEntity](task.copy(dbId = 22)).pure[DBResult])
 
         val result = service.add(projectId, taskInput, userId).value.unsafeRunSync()
@@ -71,7 +72,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val readSideService   = mock[ReadSideService]
         val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
-        val now            = LocalDateTime.now()
+        val now            = Instant.now()
         val deletedProject = project.copy(deletedAt = now.some)
         (projectRepository.get _).expects(projectId).returning(deletedProject.some.pure[DBResult])
 
@@ -91,7 +92,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
         (taskRepository.overlapping _)
-          .expects(ownerId, updateInput.startedAt, updateInput.duration)
+          .expects(ownerId, updateInput.startedAt.toInstant, updateInput.duration)
           .returning(List[TaskEntity]().pure[DBResult])
         (taskRepository.delete _).expects(task).returning(task.pure[DBResult])
         (readSideService.taskDeleted _)
@@ -142,7 +143,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
         (taskRepository.overlapping _)
-          .expects(ownerId, updateInput.startedAt, updateInput.duration)
+          .expects(ownerId, updateInput.startedAt.toInstant, updateInput.duration)
           .returning(List[TaskEntity](task.copy(dbId = 22)).pure[DBResult])
 
         val result = service.update(projectId, taskId, updateInput, ownerId).value.unsafeRunSync()
@@ -172,7 +173,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val readSideService   = mock[ReadSideService]
         val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
-        val now         = LocalDateTime.now()
+        val now         = Instant.now()
         val deletedTask = task.copy(deletedAt = now.some)
 
         (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
@@ -191,7 +192,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val readSideService   = mock[ReadSideService]
         val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
-        val taskDeleted = task.copy(deletedAt = LocalDateTime.now.some)
+        val taskDeleted = task.copy(deletedAt = Instant.now.some)
 
         (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
         (taskRepository.get _).expects(taskId).returning(Option(task).pure[DBResult])
@@ -237,7 +238,7 @@ class TaskServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory w
         val readSideService   = mock[ReadSideService]
         val service           = new TaskServiceLive[IO](taskRepository, projectRepository, readSideService, tnx)
 
-        val deletedAt   = LocalDateTime.now
+        val deletedAt   = Instant.now
         val taskDeleted = task.copy(deletedAt = deletedAt.some)
 
         (projectRepository.get _).expects(projectId).returning(Option(project).pure[DBResult])
