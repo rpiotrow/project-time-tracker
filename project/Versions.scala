@@ -22,6 +22,6 @@ object Versions {
   val scalamock      = "5.0.0"
   val diffx          = "0.3.29"
   val scalatest      = "3.2.0"
-  val testContainers = "0.38.4"
+  val testContainers = "0.39.3"
   val mockserver     = "5.11.1"
 }

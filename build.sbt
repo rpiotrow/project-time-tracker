@@ -63,6 +63,7 @@ lazy val `read-side` = project
     name := "project-time-tracker-read-side",
     commonSettings,
     Defaults.itSettings,
+    IntegrationTest / test / fork := true,
     libraryDependencies ++= apiLibraryDependencies ++ Seq(
       "dev.zio"                     %% "zio"                             % Versions.zio,
       "dev.zio"                     %% "zio-config"                      % Versions.zioConfig,
@@ -98,6 +99,7 @@ lazy val `write-side` = project
     name := "project-time-tracker-write-side",
     commonSettings,
     Defaults.itSettings,
+    IntegrationTest / test / fork := true,
     libraryDependencies ++= apiLibraryDependencies ++ Seq(
       "org.typelevel"               %% "cats-core"                       % Versions.cats,
       "com.github.pureconfig"       %% "pureconfig"                      % Versions.pureConfig,

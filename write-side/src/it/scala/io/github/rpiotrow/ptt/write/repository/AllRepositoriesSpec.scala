@@ -1,7 +1,5 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Clock, Instant, ZoneOffset}
-
 import cats.effect._
 import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}
 import doobie.Transactor
@@ -11,6 +9,7 @@ import doobie.util.update.Update0
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers._
 
+import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.duration.DurationInt
 import scala.io.Source
 
@@ -33,7 +32,7 @@ class AllRepositoriesSpec
   override def afterStart(): Unit = {
     val tnx = makeTransactor(container.username, container.password)
     Resource
-      .make(IO(Source.fromFile("local-dev/schema/create-schema.sql")))(s => IO(s.close()))
+      .make(IO(Source.fromFile("../local-dev/schema/create-schema.sql")))(s => IO(s.close()))
       .use(
         createSchemaSQL =>
           for {

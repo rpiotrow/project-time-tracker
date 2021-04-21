@@ -1,7 +1,5 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import java.util.UUID
-
 import cats.effect.Blocker
 import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
@@ -62,7 +60,7 @@ class AllRepositoriesSpec
       Blocker.liftExecutionContext(ExecutionContexts.synchronous)
     )
     val task = ZManaged
-      .make(IO(Source.fromFile("local-dev/schema/create-schema.sql")))(s => IO(s.close()).orDie)
+      .make(IO(Source.fromFile("../local-dev/schema/create-schema.sql")))(s => IO(s.close()).orDie)
       .use(
         createSchemaSQL =>
           for {
