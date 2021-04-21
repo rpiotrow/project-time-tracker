@@ -38,7 +38,7 @@ class ServiceProxyLive(private val host: String, private val port: Int)(implicit
           )
         )
     }))(Keep.left)
-    .run
+    .run()
 
   def queueRequest(request: HttpRequest): Future[HttpResponse] = {
     val responsePromise = Promise[HttpResponse]()

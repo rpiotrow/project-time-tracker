@@ -88,7 +88,7 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
            |&orderDirection=Ascending
            |&pageNumber=2
            |&pageSize=20
-           |""".stripMargin.replaceAllLiterally("\n", "")
+           |""".stripMargin.replace("\n", "")
       val params = ProjectListParams(
         ids = List("project one", "project without tasks"),
         from = OffsetDateTime.parse("2020-03-03T10:11:50Z").some,

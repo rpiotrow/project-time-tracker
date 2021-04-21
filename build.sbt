@@ -128,9 +128,9 @@ lazy val EndToEndTest = config("e2e") extend (Runtime)
 lazy val e2eSettings  =
   inConfig(EndToEndTest)(Defaults.testSettings) ++
     Seq(
-      fork in EndToEndTest := false,
-      parallelExecution in EndToEndTest := false,
-      scalaSource in EndToEndTest := baseDirectory.value / "src/e2e/scala"
+      EndToEndTest / fork := false,
+      EndToEndTest / parallelExecution := false,
+      EndToEndTest / scalaSource := baseDirectory.value / "src/e2e/scala"
     )
 
 lazy val `e2e-tests` = project
@@ -153,7 +153,7 @@ lazy val `e2e-tests` = project
 
 lazy val commonSettings = Seq(
   organization := "io.github.rpiotrow",
-  scalaVersion := "2.13.1",
+  scalaVersion := "2.13.5",
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0"),
   scalacOptions ++= compilerOptions
@@ -171,7 +171,6 @@ lazy val compilerOptions = Seq(
   "-language:postfixOps",
   "-feature",
   "-Xfatal-warnings"
-//  "-Ymacro-annotations",
 )
 
 addCommandAlias("checks", ";test;it:test")
