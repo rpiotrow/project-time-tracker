@@ -149,9 +149,13 @@ class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactor
         val runtimeException = new RuntimeException("someone.changed.projectId.in.the.mean.time")
         (projectRepository.update _)
           .expects(project, projectIdForUpdate)
-          .throwing(runtimeException)
+          .returning(ApplicativeError[DBResult, Throwable].raiseError(runtimeException))
 
-        val result = service.update(projectId, projectUpdateInput, ownerId).value.attempt.unsafeRunSync()
+        val result = service
+          .update(projectId, projectUpdateInput, ownerId)
+          .value
+          .attempt
+          .unsafeRunSync()
 
         result should be(runtimeException.asLeft[Either[AppFailure, Unit]])
       }
