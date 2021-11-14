@@ -1,9 +1,10 @@
 package io.github.rpiotrow.ptt.read.repository
 
 import java.time.{Duration, Instant, OffsetDateTime}
-
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._
+import doobie.util.fragment.Fragment
 import eu.timepit.refined.auto._
 import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.api.param.OrderingDirection.{Ascending, Descending}
@@ -19,7 +20,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   def projectRepo: ProjectRepository.Service
 
-  val insertProjects =
+  val insertProjects: Fragment =
     sql"""
          |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (1, 'first', '2020-07-22 15:00:00', '2020-07-22 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 14400),
@@ -28,8 +29,8 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
          |;
          |""".stripMargin
 
-  val defaultParams = ProjectListParams(List(), None, None, None, None, None, 0, 25)
-  lazy val p1       = ProjectEntity(
+  val defaultParams: ProjectListParams = ProjectListParams(List(), None, None, None, None, None, 0, 25)
+  lazy val p1: ProjectEntity = ProjectEntity(
     dbId = 1,
     projectId = "first",
     createdAt = Instant.parse("2020-07-22T15:00:00Z"),
@@ -38,7 +39,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     owner = owner1Id,
     durationSum = Duration.ofHours(4)
   )
-  lazy val p2       = ProjectEntity(
+  lazy val p2: ProjectEntity = ProjectEntity(
     dbId = 2,
     projectId = "second",
     createdAt = Instant.parse("2020-07-22T15:10:00Z"),
@@ -47,7 +48,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     owner = owner1Id,
     durationSum = Duration.ZERO
   )
-  lazy val p3       = ProjectEntity(
+  lazy val p3: ProjectEntity = ProjectEntity(
     dbId = 3,
     projectId = "deleted",
     createdAt = Instant.parse("2020-07-31T15:00:00Z"),

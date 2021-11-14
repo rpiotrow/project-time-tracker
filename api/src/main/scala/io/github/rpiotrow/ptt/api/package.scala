@@ -21,6 +21,6 @@ package object api {
     taskUpdateEndpoint,
     taskDeleteEndpoint,
     statisticsEndpoint
-  ).map(_.in(auth.bearer[BearerToken]))
+  ).map(_.in(auth.bearer[BearerToken]()))
 
 }

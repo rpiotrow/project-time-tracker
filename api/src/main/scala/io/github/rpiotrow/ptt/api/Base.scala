@@ -5,6 +5,7 @@ import io.github.rpiotrow.ptt.api.error._
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.json.circe._
+import sttp.tapir.generic.auto._
 
 private[api] object Base {
 

@@ -8,15 +8,15 @@ import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.{RejectionHandler, RequestContext, Route, RouteResult}
 import io.github.rpiotrow.ptt.api.allEndpointsWithAuth
 import io.github.rpiotrow.ptt.api.model.UserId
-import sttp.tapir.docs.openapi._
-import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
+import sttp.tapir.openapi.circe.yaml.RichOpenAPI
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
 
 import scala.concurrent.Future
 
 object Routes {
   val docsRoute: Route = {
-    val openapi = allEndpointsWithAuth.toOpenAPI("Project Time Tracker", "1.0")
+    val openapi = OpenAPIDocsInterpreter().toOpenAPI(allEndpointsWithAuth, "Project Time Tracker", "1.0")
     new SwaggerAkka(openapi.toYaml).routes
   }
 

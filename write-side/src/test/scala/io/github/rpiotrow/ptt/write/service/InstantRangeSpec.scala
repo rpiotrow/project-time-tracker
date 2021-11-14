@@ -3,6 +3,7 @@ package io.github.rpiotrow.ptt.write.service
 import java.time.{Duration, Instant, LocalDateTime, YearMonth, ZoneOffset}
 
 import cats.implicits._
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should

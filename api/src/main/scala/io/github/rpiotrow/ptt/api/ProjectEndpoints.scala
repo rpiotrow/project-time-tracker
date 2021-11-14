@@ -1,7 +1,6 @@
 package io.github.rpiotrow.ptt.api
 
 import java.time.OffsetDateTime
-
 import eu.timepit.refined.auto._
 import io.circe.generic.auto._
 import io.circe.refined._
@@ -9,6 +8,7 @@ import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.codec.enumeratum._
 import sttp.tapir.codec.refined._
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.input._
@@ -77,18 +77,18 @@ object ProjectEndpoints {
       )
       .and(pageNumberInput)
       .and(pageSizeInput)
-      .mapTo(ProjectListParams)
+      .mapTo[ProjectListParams]
 
-  val projectListEndpoint: Endpoint[ProjectListParams, error.ApiError, List[ProjectOutput], Nothing] =
+  val projectListEndpoint: Endpoint[ProjectListParams, error.ApiError, List[ProjectOutput], Any] =
     projectsBaseEndpoint.get
       .in(projectListInput)
       .out(jsonBody[List[ProjectOutput]].example(List(ProjectOutput.example)))
 
-  val projectDetailEndpoint: Endpoint[ProjectId, error.ApiError, ProjectOutput, Nothing] =
+  val projectDetailEndpoint: Endpoint[ProjectId, error.ApiError, ProjectOutput, Any] =
     projectWithIdBaseEndpoint.get
       .out(jsonBody[ProjectOutput].example(ProjectOutput.example))
 
-  val projectCreateEndpoint: Endpoint[ProjectInput, error.ApiError, LocationHeader, Nothing] =
+  val projectCreateEndpoint: Endpoint[ProjectInput, error.ApiError, LocationHeader, Any] =
     projectsBaseEndpoint.post
       .in(jsonBody[ProjectInput].example(ProjectInput.example))
       .out(
@@ -98,7 +98,7 @@ object ProjectEndpoints {
       )
       .out(statusCode(StatusCode.Created))
 
-  val projectUpdateEndpoint: Endpoint[(ProjectId, ProjectInput), error.ApiError, LocationHeader, Nothing] =
+  val projectUpdateEndpoint: Endpoint[(ProjectId, ProjectInput), error.ApiError, LocationHeader, Any] =
     projectWithIdBaseEndpoint.put
       .in(jsonBody[ProjectInput].example(ProjectInput.example))
       .out(
@@ -108,7 +108,7 @@ object ProjectEndpoints {
       )
       .out(statusCode(StatusCode.Ok))
 
-  val projectDeleteEndpoint: Endpoint[ProjectId, error.ApiError, Unit, Nothing] =
+  val projectDeleteEndpoint: Endpoint[ProjectId, error.ApiError, Unit, Any] =
     projectWithIdBaseEndpoint.delete
       .out(statusCode(StatusCode.Ok))
 

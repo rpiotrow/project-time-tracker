@@ -1,20 +1,19 @@
 package io.github.rpiotrow.ptt.read
 
-import cats.effect._
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import io.getquill.{idiom => _}
 import io.github.rpiotrow.ptt.read.configuration.DatabaseConfiguration
 import zio._
 import zio.blocking.Blocking
-import zio.config._
 import zio.interop.catz._
+import zio.interop.catz.implicits._
 
 import scala.concurrent.ExecutionContext
 
 package object repository {
 
-  type RepositoryEnv        = Blocking with ZConfig[DatabaseConfiguration]
+  type RepositoryEnv        = Blocking with Has[DatabaseConfiguration]
   type StatisticsRepository = Has[StatisticsRepository.Service]
   type ProjectRepository    = Has[ProjectRepository.Service]
   type TaskRepository       = Has[TaskRepository.Service]
@@ -60,7 +59,7 @@ package object repository {
     hikariConfig.setReadOnly(true)
 
     HikariTransactor
-      .fromHikariConfig[Task](hikariConfig, connectEC, Blocker.liftExecutionContext(transactEC))
+      .fromHikariConfig[Task](hikariConfig, connectEC)
       .toManagedZIO
   }
 

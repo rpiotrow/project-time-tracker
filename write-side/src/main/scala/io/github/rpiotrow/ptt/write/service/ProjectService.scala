@@ -34,6 +34,7 @@ private[service] class ProjectServiceLive[F[_]: Sync](
     } yield ()).transact(tnx)
   }
 
+
   override def update(projectId: ProjectId, input: ProjectInput, user: UserId): EitherT[F, AppFailure, Unit] =
     (for {
       projectOption <- EitherT.right[AppFailure](projectRepository.get(projectId))

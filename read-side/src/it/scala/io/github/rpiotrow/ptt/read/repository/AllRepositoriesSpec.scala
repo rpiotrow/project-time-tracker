@@ -1,6 +1,5 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import cats.effect.Blocker
 import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import doobie.Transactor
@@ -12,6 +11,7 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers._
 import zio._
 import zio.interop.catz._
+import zio.interop.catz.implicits._
 
 import scala.concurrent.duration.DurationInt
 import scala.io.Source
@@ -28,8 +28,8 @@ class AllRepositoriesSpec
     commonJdbcParams = JdbcDatabaseContainer.CommonParams(startupTimeout = 240.seconds, connectTimeout = 240.seconds)
   )
 
-  override val owner1Id = UserId("41a854e4-4262-4672-a7df-c781f535d6ee")
-  override val owner2Id = UserId("66ffc00e-083b-48aa-abb5-8ef46ac0e06e")
+  override val owner1Id: UserId = UserId("41a854e4-4262-4672-a7df-c781f535d6ee")
+  override val owner2Id: UserId = UserId("66ffc00e-083b-48aa-abb5-8ef46ac0e06e")
 
   // use HikariConfig and HikariDataSource since it is not possible to set schema in Transactor
   private lazy val hikariConfig = {
@@ -41,24 +41,15 @@ class AllRepositoriesSpec
     hc.setSchema("ptt_read_model")
     hc
   }
-  private lazy val ds              = new HikariDataSource(hikariConfig)
-  private lazy val tnx             = Transactor.fromDataSource[Task](
-    ds,
-    ExecutionContexts.synchronous,
-    Blocker.liftExecutionContext(ExecutionContexts.synchronous)
-  )
-  override lazy val projectRepo    = ProjectRepository.live(tnx)
-  override lazy val taskRepo       = TaskRepository.live(tnx)
-  override lazy val statisticsRepo = StatisticsRepository.live(tnx)
+  private lazy val ds                                            = new HikariDataSource(hikariConfig)
+  private lazy val tnx                                           = Transactor.fromDataSource[Task](ds, ExecutionContexts.synchronous)
+  override lazy val projectRepo: ProjectRepository.Service       = ProjectRepository.live(tnx)
+  override lazy val taskRepo: TaskRepository.Service             = TaskRepository.live(tnx)
+  override lazy val statisticsRepo: StatisticsRepository.Service = StatisticsRepository.live(tnx)
 
   override def afterStart(): Unit = {
-    val tnx  = Transactor.fromDriverManager[Task](
-      "org.postgresql.Driver",
-      container.jdbcUrl,
-      container.username,
-      container.password,
-      Blocker.liftExecutionContext(ExecutionContexts.synchronous)
-    )
+    val tnx  = Transactor
+      .fromDriverManager[Task]("org.postgresql.Driver", container.jdbcUrl, container.username, container.password)
     val task = ZManaged
       .make(IO(Source.fromFile("../local-dev/schema/create-schema.sql")))(s => IO(s.close()).orDie)
       .use(

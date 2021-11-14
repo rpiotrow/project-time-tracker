@@ -2,9 +2,9 @@ package io.github.rpiotrow.ptt.read.service
 
 import java.time.{Duration, Instant, OffsetDateTime}
 import java.util.UUID
-
 import eu.timepit.refined.auto._
 import cats.implicits._
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import eu.timepit.refined.auto._
 import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}

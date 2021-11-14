@@ -3,6 +3,7 @@ package io.github.rpiotrow.ptt.read.web
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 import java.time.OffsetDateTime
 
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import eu.timepit.refined.auto._
 import io.circe.Json
@@ -17,7 +18,6 @@ import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
 import org.scalatest.funspec.AnyFunSpec
 import zio.Runtime.default.unsafeRun
-import zio.Task
 import zio.interop.catz._
 
 class ProjectRoutesSpec extends AnyFunSpec with RoutesSpecBase {
@@ -98,7 +98,7 @@ class ProjectRoutesSpec extends AnyFunSpec with RoutesSpecBase {
           "owner"       -> Json.fromString(projectOutput1.owner.id.toString),
           "durationSum" -> Json.fromString(projectOutput1.durationSum.toString),
           "tasks"       -> Json
-            .fromValues(List(taskToJsonObject(projectOutput1.tasks(0)), taskToJsonObject(projectOutput1.tasks(1))))
+            .fromValues(List(taskToJsonObject(projectOutput1.tasks.head), taskToJsonObject(projectOutput1.tasks(1))))
         )
       )
     )
@@ -106,7 +106,7 @@ class ProjectRoutesSpec extends AnyFunSpec with RoutesSpecBase {
 
   private def dateTimeString(OffsetDateTime: OffsetDateTime): String = OffsetDateTime.format(ISO_OFFSET_DATE_TIME)
 
-  private def bodyAsProjectOutput(response: Response[Task]): ProjectOutput = {
+  private def bodyAsProjectOutput(response: ResponseIO): ProjectOutput = {
     import io.github.rpiotrow.ptt.api.CirceMappings._
     unsafeRun(response.as[ProjectOutput])
   }

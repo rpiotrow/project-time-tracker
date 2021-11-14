@@ -3,6 +3,7 @@ package io.github.rpiotrow.ptt.write.service
 import java.util.UUID
 
 import eu.timepit.refined.auto._
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import cats.Monad
 import cats.effect.IO
@@ -13,6 +14,7 @@ import io.github.rpiotrow.ptt.write.repository._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
+
 
 import java.time.Instant
 

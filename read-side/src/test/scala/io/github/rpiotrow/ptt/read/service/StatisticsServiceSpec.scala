@@ -3,6 +3,7 @@ package io.github.rpiotrow.ptt.read.service
 import java.time.{Duration, YearMonth}
 import java.util.UUID
 
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import io.github.rpiotrow.ptt.api.output.StatisticsOutput
 import io.github.rpiotrow.ptt.api.param.StatisticsParams

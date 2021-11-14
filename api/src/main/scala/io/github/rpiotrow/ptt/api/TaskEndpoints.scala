@@ -10,6 +10,7 @@ import io.github.rpiotrow.ptt.api.output._
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.codec.refined._
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 
 object TaskEndpoints {
@@ -22,19 +23,19 @@ object TaskEndpoints {
   private val taskWithIdBaseEndpoint = tasksBaseEndpoint
     .in(path[TaskId]("id").description("task identifier").example(TaskId.example))
 
-  val taskCreateEndpoint: Endpoint[(ProjectId, TaskInput), error.ApiError, LocationHeader, Nothing] =
+  val taskCreateEndpoint: Endpoint[(ProjectId, TaskInput), error.ApiError, LocationHeader, Any] =
     tasksBaseEndpoint.post
       .in(jsonBody[TaskInput].example(TaskInput.example))
       .out(header[LocationHeader]("location").example(LocationHeader.exampleTaskLocation))
       .out(statusCode(StatusCode.Created))
 
-  val taskUpdateEndpoint: Endpoint[(ProjectId, TaskId, TaskInput), error.ApiError, LocationHeader, Nothing] =
+  val taskUpdateEndpoint: Endpoint[(ProjectId, TaskId, TaskInput), error.ApiError, LocationHeader, Any] =
     taskWithIdBaseEndpoint.put
       .in(jsonBody[TaskInput].example(TaskInput.example))
       .out(header[LocationHeader]("location").example(LocationHeader.exampleTaskLocation))
       .out(statusCode(StatusCode.Ok))
 
-  val taskDeleteEndpoint: Endpoint[(ProjectId, TaskId), error.ApiError, Unit, Nothing] =
+  val taskDeleteEndpoint: Endpoint[(ProjectId, TaskId), error.ApiError, Unit, Any] =
     taskWithIdBaseEndpoint.delete
       .out(statusCode(StatusCode.Ok))
 

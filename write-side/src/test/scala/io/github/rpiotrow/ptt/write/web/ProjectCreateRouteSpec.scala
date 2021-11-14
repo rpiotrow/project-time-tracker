@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write.web
 
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import cats.effect.IO
 import eu.timepit.refined.auto._
 import fs2.Stream
@@ -11,14 +11,15 @@ import io.circe.syntax._
 import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.write.service.{NotUnique, ProjectService}
 import org.http4s._
-import org.http4s.headers.Location
-import org.http4s.util.CaseInsensitiveString
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
+import org.typelevel.ci.CIString
 import sttp.model.HeaderNames
 
 class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
+
+  private val projectInput = ProjectInput(projectId = "project1")
 
   describe("POST /projects") {
     it("successful") {
@@ -27,8 +28,10 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
       val response       = makeAddProjectRequest(projectService)
 
       response.status should be(Status.Created)
-      response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
-        Some(Location(Uri.unsafeFromString("http://gateway.live/projects/project1")))
+      response.headers.get(CIString(HeaderNames.Location)) should be(
+        Some(NonEmptyList.of(
+          Header.Raw(CIString("Location"), "http://gateway.live/projects/project1")
+        ))
       )
     }
     describe("failure") {
@@ -40,12 +43,10 @@ class ProjectCreateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
         val response       = makeAddProjectRequest(projectService)
 
         response.status should be(Status.Conflict)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
     }
   }
-
-  private val projectInput = ProjectInput(projectId = "project1")
 
   private def makeAddProjectRequest(projectService: ProjectService[IO]) = {
     val url  = "/projects"

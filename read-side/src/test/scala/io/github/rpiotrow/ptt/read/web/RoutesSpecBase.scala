@@ -2,7 +2,6 @@ package io.github.rpiotrow.ptt.read.web
 
 import java.time.{Duration, OffsetDateTime}
 import java.util.UUID
-
 import eu.timepit.refined.auto._
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.error.DecodeFailure
@@ -19,14 +18,18 @@ import zio.interop.catz._
 import zio.interop.catz.implicits._
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
+import org.scalatest.Assertion
 
 trait RoutesSpecBase extends MockFactory with should.Matchers {
+
+  type RequestIO  = Request[RIO[WebEnv, *]]
+  type ResponseIO = Response[RIO[WebEnv, *]]
 
   val projects   = "/projects"
   val statistics = "/statistics"
 
-  val owner1Id                           = UserId(UUID.randomUUID())
-  val projectOutput1                     = ProjectOutput(
+  val owner1Id: UserId                   = UserId(UUID.randomUUID())
+  val projectOutput1: ProjectOutput      = ProjectOutput(
     projectId = "project one",
     createdAt = OffsetDateTime.now(),
     deletedAt = None,
@@ -68,17 +71,17 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
     volumeWeightedAverageTaskDuration = Duration.ofMinutes(44).some
   )
 
-  def bodyAsJson(response: Response[Task]) = {
+  def bodyAsJson(response: ResponseIO) = {
     import io.circe.parser._
     parse(unsafeRun(response.bodyText.compile.string))
   }
 
   def makeRequest(
-    request: Request[Task],
+    request: RequestIO,
     projectService: ProjectService.Service = mock[ProjectService.Service],
     statisticsService: StatisticsService.Service = mock[StatisticsService.Service]
-  ): Response[Task] = {
-    val app = for {
+  ): ResponseIO = {
+    val app: ZIO[WebEnv with Routes, Throwable, ResponseIO] = for {
       routes   <- Routes.readSideRoutes()
       response <- routes.run(request).value
     } yield response.getOrElse(Response.notFound)
@@ -86,17 +89,18 @@ trait RoutesSpecBase extends MockFactory with should.Matchers {
     val services =
       ZLayer.fromFunction[Any, ProjectService.Service](_ => projectService) ++
         ZLayer.fromFunction[Any, StatisticsService.Service](_ => statisticsService)
-    unsafeRun(app.provideLayer(services >>> Routes.live))
+    val webEnv   = zio.blocking.Blocking.live ++ zio.clock.Clock.live
+    unsafeRun(app.provideLayer(webEnv ++ (services >>> Routes.live)))
   }
 
-  def checkBadRequest(url: String, parameterName: String) = {
+  def checkBadRequest(url: String, parameterName: String): Assertion = {
     val response = makeRequest(Request(uri = Uri.unsafeFromString(url)))
 
     response.status should be(Status.BadRequest)
     decodeFailure(response).message should startWith(s"Invalid value for: query parameter $parameterName")
   }
 
-  def decodeFailure(response: Response[Task]): DecodeFailure = {
+  def decodeFailure(response: ResponseIO): DecodeFailure = {
     unsafeRun(response.as[DecodeFailure])
   }
 

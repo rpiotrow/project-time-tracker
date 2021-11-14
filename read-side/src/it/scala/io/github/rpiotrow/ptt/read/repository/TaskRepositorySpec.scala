@@ -1,9 +1,10 @@
 package io.github.rpiotrow.ptt.read.repository
 
 import java.time.{Duration, Instant}
-
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import doobie.implicits._
+import doobie.util.fragment.Fragment
 import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.read.entity.TaskEntity
 import org.scalatest.funspec.AnyFunSpec
@@ -20,7 +21,7 @@ trait TaskRepositorySpec {
 
   def taskRepo: TaskRepository.Service
 
-  val insertTasks =
+  val insertTasks: Fragment =
     sql"""
          |INSERT INTO ptt_read_model.tasks(task_id, project_db_id, deleted_at, owner, started_at, duration, volume, comment)
          |  VALUES ('aa37e5a5-2f5b-46d9-896a-28422df74ff1', 1, NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', '2020-07-22 17:00:00', 7200, NULL, 'first task'),

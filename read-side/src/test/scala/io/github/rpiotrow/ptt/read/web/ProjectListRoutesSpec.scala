@@ -237,7 +237,7 @@ class ProjectListRoutesSpec extends AnyFunSpec with RoutesSpecBase {
 
   private def dateTimeString(OffsetDateTime: OffsetDateTime): String = OffsetDateTime.format(ISO_OFFSET_DATE_TIME)
 
-  private def bodyAsProjectOutputList(request: Response[Task]) = {
+  private def bodyAsProjectOutputList(request: ResponseIO) = {
     import io.github.rpiotrow.ptt.api.CirceMappings._
     unsafeRun(request.as[List[ProjectOutput]])
   }

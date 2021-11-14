@@ -1,6 +1,6 @@
 package io.github.rpiotrow.ptt.write
 
-import cats.effect.{Async, Blocker, ContextShift, Resource}
+import cats.effect.{Async, Resource}
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
@@ -17,7 +17,7 @@ package object service {
   case class ProjectNotMatch(what: String) extends AppFailure
   case object InvalidTimeSpan              extends AppFailure
 
-  def services[F[_]: Async: ContextShift](): Resource[F, (ProjectService[F], TaskService[F])] = {
+  def services[F[_]: Async](): Resource[F, (ProjectService[F], TaskService[F])] = {
     for {
       tnx <- createTransactor[F](AppConfiguration.live.databaseConfiguration)
       projectService = new ProjectServiceLive(ProjectRepository.live, TaskRepository.live, ReadSideService.live, tnx)
@@ -25,7 +25,7 @@ package object service {
     } yield (projectService, taskService)
   }
 
-  private def createTransactor[F[_]: Async: ContextShift](
+  private def createTransactor[F[_]: Async](
     configuration: DatabaseConfiguration
   ): Resource[F, HikariTransactor[F]] = {
 
@@ -37,8 +37,7 @@ package object service {
 
     for {
       ec <- ExecutionContexts.fixedThreadPool[F](32)
-      b  <- Blocker[F]
-      t  <- HikariTransactor.fromHikariConfig[F](hikariConfig, ec, b)
+      t  <- HikariTransactor.fromHikariConfig[F](hikariConfig, ec)
     } yield t
   }
 

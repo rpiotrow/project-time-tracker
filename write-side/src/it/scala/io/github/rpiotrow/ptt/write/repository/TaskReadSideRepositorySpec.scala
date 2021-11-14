@@ -2,13 +2,15 @@ package io.github.rpiotrow.ptt.write.repository
 
 import java.time.{Duration, Instant}
 import java.util.UUID
-
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
+import doobie.util.fragment.Fragment
 import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
 import io.github.rpiotrow.ptt.write.entity.{TaskEntity, TaskReadSideEntity}
 import org.scalatest.funspec.AnyFunSpec
@@ -19,7 +21,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   protected def tnx: Transactor[IO]
   protected def taskReadSideRepo: TaskReadSideRepository
 
-  protected val taskReadSideRepositoryData =
+  protected val taskReadSideRepositoryData: Fragment =
     sql"""
          |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (200, 'projectT1', '2020-08-17 10:00:00', '2020-08-17 16:00:00', NULL, '181ab738-1cb7-4adc-a3d6-24e0bdcf1ebf', 21600)
@@ -183,7 +185,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       comment = "some comment".some
     )
   implicit private val ignoreDbId: Diff[TaskReadSideEntity]    =
-    Derived[Diff[TaskReadSideEntity]].ignore[TaskReadSideEntity, Long](_.dbId)
+    Derived[Diff[TaskReadSideEntity]].ignore(_.dbId)
   private def taskReadModel(projectDbId: Long, taskId: TaskId) =
     TaskReadSideEntity(
       dbId = 0,

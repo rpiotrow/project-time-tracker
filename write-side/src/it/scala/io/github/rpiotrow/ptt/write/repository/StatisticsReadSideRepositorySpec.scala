@@ -2,13 +2,15 @@ package io.github.rpiotrow.ptt.write.repository
 
 import java.time.{Duration, YearMonth}
 import java.util.UUID
-
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
+import doobie.util.fragment.Fragment
 import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.write.entity.StatisticsReadSideEntity
 import org.scalatest.funspec.AnyFunSpec
@@ -19,7 +21,7 @@ trait StatisticsReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =
   protected def tnx: Transactor[IO]
   protected def statisticsReadSideRepo: StatisticsReadSideRepository
 
-  protected val statisticsReadSideRepositoryData =
+  protected val statisticsReadSideRepositoryData: Fragment =
     sql"""
          |INSERT INTO ptt_read_model.statistics(db_id, owner, year, month, number_of_tasks, number_of_tasks_with_volume, duration_sum, volume_sum, volume_weighted_task_duration_sum)
          |  VALUES (100, '41a854e4-4262-4672-a7df-c781f535d6ee', 2020, 7, 1, 1, 7200, 3, 21600),
@@ -81,7 +83,7 @@ trait StatisticsReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =
           .unsafeRunSync()
 
         implicit val ignoreDbId: Diff[StatisticsReadSideEntity] =
-          Derived[Diff[StatisticsReadSideEntity]].ignore[StatisticsReadSideEntity, Long](_.dbId)
+          Derived[Diff[StatisticsReadSideEntity]].ignore(_.dbId)
         read should matchTo(statistics.some)
       }
       it("update existing statistics") {

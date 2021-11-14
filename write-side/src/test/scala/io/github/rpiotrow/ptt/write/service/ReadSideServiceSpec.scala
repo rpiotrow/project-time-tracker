@@ -3,6 +3,8 @@ package io.github.rpiotrow.ptt.write.service
 import java.time.{Duration, YearMonth, OffsetDateTime, Instant}
 
 import cats.Monad
+import cats.effect.unsafe.implicits.global
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import cats.implicits._
 import doobie.implicits._

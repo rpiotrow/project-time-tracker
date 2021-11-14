@@ -1,17 +1,18 @@
 package io.github.rpiotrow.ptt.read.repository
 
 import java.util.UUID
-
 import cats.implicits._
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 import doobie.implicits._
 import io.github.rpiotrow.ptt.api.param.StatisticsParams
-import java.time.{Duration, YearMonth}
 
+import java.time.{Duration, YearMonth}
 import cats.data.NonEmptyList
+import doobie.util.fragment.Fragment
 import io.github.rpiotrow.ptt.api.model.{NonEmptyUserIdList, UserId}
 
 trait StatisticsRepositorySpec { this: AnyFunSpec with should.Matchers =>
@@ -21,7 +22,7 @@ trait StatisticsRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   def statisticsRepo: StatisticsRepository.Service
 
-  val insertStatistics = sql"""
+  val insertStatistics: Fragment = sql"""
     |INSERT INTO ptt_read_model.statistics(owner, year, month, number_of_tasks, number_of_tasks_with_volume, duration_sum, volume_sum, volume_weighted_task_duration_sum)
     |  VALUES ('41a854e4-4262-4672-a7df-c781f535d6ee', 2020, 7, 1, 1, 7200, 3, 21600),
     |    ('41a854e4-4262-4672-a7df-c781f535d6ee', 2020, 8, 1, NULL, 7200, NULL, NULL),

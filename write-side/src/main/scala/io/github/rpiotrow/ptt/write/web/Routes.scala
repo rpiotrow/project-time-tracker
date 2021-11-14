@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.write.web
 
 import cats.implicits._
-import cats.effect.{Async, ContextShift, Resource}
+import cats.effect.{Async, Resource}
 import io.github.rpiotrow.ptt.api.ProjectEndpoints._
 import io.github.rpiotrow.ptt.api.TaskEndpoints._
 import io.github.rpiotrow.ptt.api.error._
@@ -10,9 +10,12 @@ import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output._
 import io.github.rpiotrow.ptt.write.configuration.AppConfiguration
 import io.github.rpiotrow.ptt.write.service._
-import org.http4s.{EntityBody, HttpRoutes}
-import sttp.tapir._
+import org.http4s.HttpRoutes
 import sttp.tapir.server.http4s._
+import sttp.tapir.server.http4s.Http4sServerOptions.Log
+import sttp.tapir.server.interceptor.exception.DefaultExceptionHandler
+import sttp.tapir.server.interceptor.reject.RejectInterceptor
+import sttp.tapir._
 
 trait Routes[F[_]] {
   def writeSideRoutes(): HttpRoutes[F]
@@ -20,7 +23,7 @@ trait Routes[F[_]] {
 
 object Routes {
 
-  def live[F[_]: Async: ContextShift](): Resource[F, Routes[F]] = {
+  def live[F[_]: Async](): Resource[F, Routes[F]] = {
     val gatewayConfiguration = AppConfiguration.live.gatewayConfiguration
     services[F]().map({
       case (projectService, taskService) =>
@@ -28,7 +31,7 @@ object Routes {
     })
   }
 
-  def test[F[_]: Async: ContextShift](
+  def test[F[_]: Async](
     gatewayAddress: String,
     projectService: ProjectService[F],
     taskService: TaskService[F]
@@ -40,38 +43,30 @@ private class RoutesLive[F[_]: Async](
   private val gatewayAddress: String,
   private val projectService: ProjectService[F],
   private val taskService: TaskService[F]
-)(implicit private val contextShift: ContextShift[F])
-    extends Routes[F] {
+) extends Routes[F] {
 
-  implicit private val serverOptions: Http4sServerOptions[F] =
-    Http4sServerOptions.default[F].copy(decodeFailureHandler = DecodeFailure.decodeFailureHandler)
+  private val serverOptions: Http4sServerOptions[F, F] =
+    Http4sServerOptions.customInterceptors(
+      Some(RejectInterceptor.default), Some(DefaultExceptionHandler), Some(Log.defaultServerLog),
+      decodeFailureHandler = DecodeFailure.decodeFailureHandler
+    )
 
   override def writeSideRoutes(): HttpRoutes[F] = {
-    val projectCreateRoute = projectCreateEndpoint
-      .withUserId()
-      .toRoutes { case (params, userId) => projectCreate(params, userId) }
-    val projectUpdateRoute = projectUpdateEndpoint
-      .withUserId()
-      .toRoutes { case ((projectId, input), userId) => projectUpdate(projectId, input, userId) }
-    val projectDeleteRoute = projectDeleteEndpoint
-      .withUserId()
-      .toRoutes { case (projectId, userId) => projectDelete(projectId, userId) }
-    val taskCreateRoute    = taskCreateEndpoint
-      .withUserId()
-      .toRoutes { case ((projectId, taskInput), userId) => taskAdd(projectId, taskInput, userId) }
-    val taskUpdateRoute    = taskUpdateEndpoint
-      .withUserId()
-      .toRoutes { case ((projectId, taskId, taskInput), userId) => taskUpdate(projectId, taskId, taskInput, userId) }
-    val taskDeleteRoute    = taskDeleteEndpoint
-      .withUserId()
-      .toRoutes { case ((projectId, taskId), userId) => taskDelete(projectId, taskId, userId) }
+    val interpreter = Http4sServerInterpreter[F](serverOptions)
 
-    projectCreateRoute <+>
-      projectUpdateRoute <+>
-      projectDeleteRoute <+>
-      taskCreateRoute <+>
-      taskUpdateRoute <+>
-      taskDeleteRoute
+    interpreter.toRoutes(projectCreateEndpoint.withUserId()) {
+      case (params, userId) => projectCreate(params, userId)
+    } <+> interpreter.toRoutes(projectUpdateEndpoint.withUserId()) {
+      case ((projectId, input), userId) => projectUpdate(projectId, input, userId)
+    } <+> interpreter.toRoutes(projectDeleteEndpoint.withUserId()) {
+      case (projectId, userId) => projectDelete(projectId, userId)
+    } <+> interpreter.toRoutes(taskCreateEndpoint.withUserId()) {
+      case ((projectId, taskInput), userId) => taskAdd(projectId, taskInput, userId)
+    } <+> interpreter.toRoutes(taskUpdateEndpoint.withUserId()) {
+      case ((projectId, taskId, taskInput), userId) => taskUpdate(projectId, taskId, taskInput, userId)
+    } <+> interpreter.toRoutes(taskDeleteEndpoint.withUserId()) {
+      case ((projectId, taskId), userId) => taskDelete(projectId, taskId, userId)
+    }
   }
 
   private def projectCreate(input: ProjectInput, userId: UserId): F[Either[ApiError, LocationHeader]] =
@@ -124,8 +119,8 @@ private class RoutesLive[F[_]: Async](
       .value
 
   import io.github.rpiotrow.ptt.api.TapirMappings.userIdCodec
-  implicit private class AuthorizedEndpoint[I, E, O](e: Endpoint[I, E, O, EntityBody[F]]) {
-    def withUserId(): Endpoint[(I, UserId), E, O, EntityBody[F]] = e.in(header[UserId]("X-Authorization"))
+  implicit private class AuthorizedEndpoint[I, E, O, -R](e: Endpoint[I, E, O, R]) {
+    def withUserId(): Endpoint[(I, UserId), E, O, R] = e.in(header[UserId]("X-Authorization"))
   }
 
   private def mapToApiErrors(error: AppFailure): ApiError =

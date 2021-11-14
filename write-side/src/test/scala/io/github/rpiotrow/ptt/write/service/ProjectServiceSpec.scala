@@ -1,11 +1,10 @@
 package io.github.rpiotrow.ptt.write.service
 
-import java.time.Instant
-import java.util.UUID
-
-import cats.Monad
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
+import cats.{ApplicativeError, Monad}
+import doobie.implicits._
 import io.github.rpiotrow.ptt.api.model.UserId
 import io.github.rpiotrow.ptt.api.output.ProjectOutput
 import io.github.rpiotrow.ptt.write.entity.ProjectEntity
@@ -13,6 +12,9 @@ import io.github.rpiotrow.ptt.write.repository.{DBResult, ProjectRepository, Tas
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
+
+import java.time.Instant
+import java.util.UUID
 
 class ProjectServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFactory with should.Matchers {
 

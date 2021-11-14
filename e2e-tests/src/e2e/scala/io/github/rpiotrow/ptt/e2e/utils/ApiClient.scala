@@ -11,14 +11,14 @@ import io.github.rpiotrow.ptt.api.param._
 import io.github.rpiotrow.ptt.e2e.configuration.End2EndTestsConfiguration.config
 import io.github.rpiotrow.ptt.e2e.factories.AuthorizationTokenFactory._
 import org.scalatest.matchers.should
-import sttp.client._
-import sttp.tapir._
-import sttp.tapir.client.sttp.RichEndpoint
+import sttp.client3._
+import sttp.tapir.client.sttp.SttpClientInterpreter
 import sttp.tapir.codec.refined._
+import sttp.tapir._
 
 object ApiClient extends should.Matchers {
 
-  implicit private val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
+  private val backend: SttpBackend[Identity, Any] = HttpURLConnectionBackend()
 
   def projectList(projectListParams: ProjectListParams, userId: UserId): Either[error.ApiError, List[ProjectOutput]] =
     requestWithAuth(projectListEndpoint, projectListParams, userId)
@@ -51,10 +51,11 @@ object ApiClient extends should.Matchers {
   def statistics(statisticsParams: StatisticsParams, userId: UserId): Either[error.ApiError, StatisticsOutput] =
     requestWithAuth(statisticsEndpoint, statisticsParams, userId)
 
-  private def requestWithAuth[I, E, O](e: Endpoint[I, E, O, Nothing], input: I, userId: UserId) = {
-    val request        = e.in(auth.bearer[BearerToken]).toSttpRequest(uri"${config.application.baseUri}")
-    val inputWithToken = (input, generateValidToken(userId))
-    request(inputWithToken).send().body match {
+  private def requestWithAuth[I, E, O](e: Endpoint[I, E, O, Any], input: I, userId: UserId) = {
+    val endpointWithAuth = e.in(auth.bearer[BearerToken]())
+    val request          = SttpClientInterpreter().toRequest(endpointWithAuth, Some(uri"${config.application.baseUri}"))
+    val inputWithToken   = (input, generateValidToken(userId))
+    request(inputWithToken).send(backend).body match {
       case DecodeResult.Value(v) => v
       case e                     => fail("request failed: " + e)
     }

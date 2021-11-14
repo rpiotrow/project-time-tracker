@@ -4,7 +4,6 @@ import cats.effect._
 import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, PostgreSQLContainer}
 import doobie.Transactor
 import doobie.implicits._
-import doobie.util.ExecutionContexts
 import doobie.util.update.Update0
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers._
@@ -12,6 +11,8 @@ import org.scalatest.matchers._
 import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.duration.DurationInt
 import scala.io.Source
+
+import cats.effect.unsafe.implicits.global
 
 class AllRepositoriesSpec
     extends AnyFunSpec
@@ -22,8 +23,6 @@ class AllRepositoriesSpec
     with StatisticsReadSideRepositorySpec
     with TaskReadSideRepositorySpec
     with TaskRepositorySpec {
-
-  implicit protected val contextShift: ContextShift[IO] = IO.contextShift(scala.concurrent.ExecutionContext.global)
 
   override val container = new PostgreSQLContainer(
     commonJdbcParams = JdbcDatabaseContainer.CommonParams(startupTimeout = 240.seconds, connectTimeout = 240.seconds)
@@ -46,9 +45,9 @@ class AllRepositoriesSpec
       .unsafeRunSync()
   }
 
-  override lazy protected val tnx      = makeTransactor("writer", "writer")
-  override lazy protected val clockNow = Instant.parse("2015-02-13T14:23:00Z")
-  private lazy val clock               = Clock.fixed(clockNow, ZoneOffset.UTC)
+  override lazy protected val tnx: Transactor[IO] = makeTransactor("writer", "writer")
+  override lazy protected val clockNow: Instant   = Instant.parse("2015-02-13T14:23:00Z")
+  private lazy val clock                          = Clock.fixed(clockNow, ZoneOffset.UTC)
 
   override lazy protected val projectRepo            = new ProjectRepositoryLive(liveContext, clock)
   override lazy protected val projectReadSideRepo    = new ProjectReadSideRepositoryLive(liveContext)
@@ -57,12 +56,6 @@ class AllRepositoriesSpec
   override lazy protected val statisticsReadSideRepo = new StatisticsReadSideRepositoryLive(liveContext)
 
   private def makeTransactor(username: String, password: String) =
-    Transactor.fromDriverManager[IO](
-      "org.postgresql.Driver",
-      container.jdbcUrl,
-      username,
-      password,
-      Blocker.liftExecutionContext(ExecutionContexts.synchronous)
-    )
+    Transactor.fromDriverManager[IO]("org.postgresql.Driver", container.jdbcUrl, username, password)
 
 }

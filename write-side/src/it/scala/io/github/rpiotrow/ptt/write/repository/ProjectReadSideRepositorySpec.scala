@@ -1,26 +1,29 @@
 package io.github.rpiotrow.ptt.write.repository
 
-import java.time.{Duration, Instant}
-import java.util.UUID
-
-import eu.timepit.refined.auto._
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
-import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
-import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity, TaskEntity}
+import doobie.util.fragment.Fragment
+import eu.timepit.refined.auto._
+import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
+import io.github.rpiotrow.ptt.write.entity.{ProjectEntity, ProjectReadSideEntity}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
+
+import java.time.{Duration, Instant}
+import java.util.UUID
 
 trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
   protected def tnx: Transactor[IO]
   protected def projectReadSideRepo: ProjectReadSideRepository
 
-  protected val projectReadSideRepositoryData =
+  protected val projectReadSideRepositoryData: Fragment =
     sql"""
          |INSERT INTO ptt_read_model.projects(db_id, project_id, created_at, last_add_duration_at, deleted_at, owner, duration_sum)
          |  VALUES (100, 'projectD1', '2020-08-16 08:00:00', '2020-08-16 18:00:00', NULL, '41a854e4-4262-4672-a7df-c781f535d6ee', 240),
@@ -133,7 +136,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
   private def project(dbId: Long, projectId: ProjectId): ProjectEntity      =
     ProjectEntity(dbId = dbId, projectId = projectId, createdAt = writeSideNow, deletedAt = None, owner = owner1Id)
   implicit private val ignoreDbId: Diff[ProjectReadSideEntity]              =
-    Derived[Diff[ProjectReadSideEntity]].ignore[ProjectReadSideEntity, Long](_.dbId)
+    Derived[Diff[ProjectReadSideEntity]].ignore(_.dbId)
   private def projectReadModel(projectId: ProjectId): ProjectReadSideEntity =
     ProjectReadSideEntity(
       dbId = 0,

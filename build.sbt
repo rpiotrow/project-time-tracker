@@ -70,7 +70,7 @@ lazy val `read-side` = project
       "dev.zio"                     %% "zio-config-magnolia"             % Versions.zioConfig,
       "dev.zio"                     %% "zio-config-typesafe"             % Versions.zioConfig,
       "dev.zio"                     %% "zio-interop-cats"                % Versions.zioInteropCats,
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server"             % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server"         % Versions.tapir,
       "org.http4s"                  %% "http4s-blaze-server"             % Versions.http4s,
       "org.http4s"                  %% "http4s-circe"                    % Versions.http4s,
       "org.http4s"                  %% "http4s-dsl"                      % Versions.http4s,
@@ -116,6 +116,7 @@ lazy val `write-side` = project
       "org.scalatest"               %% "scalatest"                       % Versions.scalatest      % "test, it",
       "com.softwaremill.diffx"      %% "diffx-scalatest"                 % Versions.diffx          % "test, it",
       "org.scalamock"               %% "scalamock"                       % Versions.scalamock      % Test,
+      "org.typelevel"               %% "cats-effect-testing-scalatest"   % Versions.catsScalatest  % Test,
       "com.dimafeng"                %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
       "com.dimafeng"                %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest
     ),
@@ -155,9 +156,9 @@ lazy val `e2e-tests` = project
 
 lazy val commonSettings = Seq(
   organization := "io.github.rpiotrow",
-  scalaVersion := "2.13.5",
-  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0"),
+  scalaVersion := "2.13.6",
+  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.2" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   scalacOptions ++= compilerOptions
 )
 
@@ -175,5 +176,6 @@ lazy val compilerOptions = Seq(
   "-Xfatal-warnings"
 )
 
-addCommandAlias("checks", ";test;it:test")
-addCommandAlias("runAll", ";project gateway;bgRun;project read-side;bgRun;project write-side;run")
+addCommandAlias("compileAll", "compile;Test/compile;IntegrationTest/compile;e2e-tests/EndToEndTest/compile")
+addCommandAlias("checks", "test;IntegrationTest/test")
+addCommandAlias("runAll", "project gateway;bgRun;project read-side;bgRun;project write-side;run")

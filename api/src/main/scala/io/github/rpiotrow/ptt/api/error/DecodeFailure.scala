@@ -1,18 +1,20 @@
 package io.github.rpiotrow.ptt.api.error
 
 import io.circe.generic.auto._
-import sttp.model.StatusCode
+import sttp.model.{Header, StatusCode}
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.server.{DecodeFailureHandling, ServerDefaults}
-import sttp.tapir.statusCode
+import sttp.tapir.server.interceptor.ValuedEndpointOutput
+import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler
 
 case class DecodeFailure(message: String)
 
 object DecodeFailure {
 
-  def failureResponse(code: StatusCode, message: String): DecodeFailureHandling =
-    DecodeFailureHandling.response(statusCode.and(jsonBody[DecodeFailure]))((code, DecodeFailure(message)))
+  val decodeFailureHandler: DefaultDecodeFailureHandler =
+    DefaultDecodeFailureHandler.handler.copy(response = failureResponse)
 
-  val decodeFailureHandler = ServerDefaults.decodeFailureHandler.copy(response = failureResponse)
+  private def failureResponse(code: StatusCode, headers: List[Header], message: String): ValuedEndpointOutput[_] =
+    ValuedEndpointOutput(jsonBody[DecodeFailure], DecodeFailure(message))
 
 }

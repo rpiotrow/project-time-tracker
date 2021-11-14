@@ -2,8 +2,7 @@ package io.github.rpiotrow.ptt.write.web
 
 import java.time.{Duration, OffsetDateTime}
 import java.util.UUID
-
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import cats.effect.IO
 import cats.implicits._
 import eu.timepit.refined.auto._
@@ -15,12 +14,11 @@ import io.github.rpiotrow.ptt.api.input.TaskInput
 import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.output.TaskOutput
 import io.github.rpiotrow.ptt.write.service._
-import org.http4s.headers.Location
-import org.http4s.util.CaseInsensitiveString
-import org.http4s.{Method, Request, Status, Uri}
+import org.http4s.{Header, Method, Request, Status, Uri}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
+import org.typelevel.ci.CIString
 import sttp.model.HeaderNames
 
 class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
@@ -29,6 +27,13 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
   private val taskIdUUID           = UUID.randomUUID()
   private val taskId: TaskId       = TaskId(taskIdUUID)
 
+  private val taskInput  = TaskInput(
+    startedAt = OffsetDateTime.now(),
+    duration = Duration.ofMinutes(30),
+    volume = 10.some,
+    comment = "text".some
+  )
+
   describe(s"POST /projects/$projectId/tasks") {
     it("successful") {
       val taskService = mock[TaskService[IO]]
@@ -36,8 +41,10 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
       val response    = makeAddTaskRequest(taskService)
 
       response.status should be(Status.Created)
-      response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
-        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/pp1/tasks/$taskIdUUID")))
+      response.headers.get(CIString(HeaderNames.Location)) should be(
+        Some(NonEmptyList.of(
+          Header.Raw(CIString("Location"), s"http://gateway.live/projects/pp1/tasks/$taskIdUUID")
+        ))
       )
     }
     describe("failure") {
@@ -49,7 +56,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
         val response    = makeAddTaskRequest(taskService)
 
         response.status should be(Status.NotFound)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
       it("when task time span is invalid") {
         val taskService            = mock[TaskService[IO]]
@@ -60,7 +67,7 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
         val response               = makeAddTaskRequest(taskService)
 
         response.status should be(Status.Conflict)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
       it("when project is deleted") {
         val taskService = mock[TaskService[IO]]
@@ -70,26 +77,10 @@ class TaskAddRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory wi
         val response    = makeAddTaskRequest(taskService)
 
         response.status should be(Status.Conflict)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
     }
   }
-
-  private val taskInput  = TaskInput(
-    startedAt = OffsetDateTime.now(),
-    duration = Duration.ofMinutes(30),
-    volume = 10.some,
-    comment = "text".some
-  )
-  private val taskOutput = TaskOutput(
-    taskId = taskId,
-    owner = ownerId,
-    startedAt = OffsetDateTime.now(),
-    duration = Duration.ofMinutes(30),
-    volume = 10.some,
-    comment = "text".some,
-    deletedAt = None
-  )
 
   private def makeAddTaskRequest(taskService: TaskService[IO]) = {
     val url  = s"/projects/$projectId/tasks"

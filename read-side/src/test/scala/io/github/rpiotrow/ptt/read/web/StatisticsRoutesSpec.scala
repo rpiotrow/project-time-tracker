@@ -145,7 +145,7 @@ class StatisticsRoutesSpec extends AnyFunSpec with RoutesSpecBase {
     )
   }
 
-  private def bodyAsStatisticsOutput(response: Response[Task]): StatisticsOutput = {
+  private def bodyAsStatisticsOutput(response: ResponseIO): StatisticsOutput = {
     unsafeRun(response.as[StatisticsOutput])
   }
 

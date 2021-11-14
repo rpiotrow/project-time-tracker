@@ -2,8 +2,7 @@ package io.github.rpiotrow.ptt.write.web
 
 import java.time.{Duration, OffsetDateTime}
 import java.util.UUID
-
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import cats.effect.IO
 import cats.implicits._
 import eu.timepit.refined.auto._
@@ -15,12 +14,11 @@ import io.github.rpiotrow.ptt.api.input.TaskInput
 import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId}
 import io.github.rpiotrow.ptt.api.output.TaskOutput
 import io.github.rpiotrow.ptt.write.service._
-import org.http4s.headers.Location
-import org.http4s.util.CaseInsensitiveString
-import org.http4s.{Method, Request, Status, Uri}
+import org.http4s.{Header, Method, Request, Status, Uri}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
+import org.typelevel.ci.CIString
 import sttp.model.HeaderNames
 
 class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
@@ -30,6 +28,13 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
   private val newTaskIdUUID        = UUID.randomUUID()
   private val newTaskId: TaskId    = TaskId(newTaskIdUUID)
 
+  private val taskInput  = TaskInput(
+    startedAt = OffsetDateTime.now(),
+    duration = Duration.ofMinutes(30),
+    volume = 10.some,
+    comment = "text".some
+  )
+
   describe(s"PUT /projects/$projectId/tasks/${taskId.id}") {
     it("successful") {
       val taskService = mock[TaskService[IO]]
@@ -37,8 +42,10 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
       val response    = makeUpdateTaskRequest(taskService)
 
       response.status should be(Status.Ok)
-      response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
-        Some(Location(Uri.unsafeFromString(s"http://gateway.live/projects/pp3/tasks/$newTaskIdUUID")))
+      response.headers.get(CIString(HeaderNames.Location)) should be(
+        Some(NonEmptyList.of(
+          Header.Raw(CIString("Location"), s"http://gateway.live/projects/pp3/tasks/$newTaskIdUUID")
+        ))
       )
     }
     describe("failure") {
@@ -50,7 +57,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         val response    = makeUpdateTaskRequest(taskService)
 
         response.status should be(Status.NotFound)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
       it("when owner does not match authorized user") {
         val taskService = mock[TaskService[IO]]
@@ -79,7 +86,7 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         val response               = makeUpdateTaskRequest(taskService)
 
         response.status should be(Status.Conflict)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
       it("when task is deleted") {
         val taskService = mock[TaskService[IO]]
@@ -89,26 +96,10 @@ class TaskUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory
         val response    = makeUpdateTaskRequest(taskService)
 
         response.status should be(Status.Conflict)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
     }
   }
-
-  private val taskInput  = TaskInput(
-    startedAt = OffsetDateTime.now(),
-    duration = Duration.ofMinutes(30),
-    volume = 10.some,
-    comment = "text".some
-  )
-  private val taskOutput = TaskOutput(
-    taskId = newTaskId,
-    owner = ownerId,
-    startedAt = OffsetDateTime.now(),
-    duration = Duration.ofMinutes(30),
-    volume = 10.some,
-    comment = "text".some,
-    deletedAt = None
-  )
 
   private def makeUpdateTaskRequest(taskService: TaskService[IO]) = {
     val url  = s"/projects/$projectId/tasks/${taskId.id}"

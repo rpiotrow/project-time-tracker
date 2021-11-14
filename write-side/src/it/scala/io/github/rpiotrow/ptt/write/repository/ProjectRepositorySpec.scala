@@ -4,7 +4,9 @@ import java.time.Instant
 import java.util.UUID
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
+import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
@@ -20,6 +22,8 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   protected def tnx: Transactor[IO]
   protected def clockNow: Instant
   protected def projectRepo: ProjectRepository
+
+  private val owner1Id = UserId(UUID.randomUUID())
 
   describe("ProjectRepository") {
     describe("create should") {
@@ -76,8 +80,6 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     }
   }
 
-  private val owner1Id = UserId(UUID.randomUUID())
-
   private val projects = liveContext.quote { liveContext.querySchema[ProjectEntity]("ptt.projects") }
 
   private def readProjectByDbId(dbId: Long) = {
@@ -99,7 +101,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
   }
 
   implicit private val ignoreDbId: Diff[ProjectEntity]      =
-    Derived[Diff[ProjectEntity]].ignore[ProjectEntity, Long](_.dbId)
+    Derived[Diff[ProjectEntity]].ignore(_.dbId)
   private def expected(projectId: ProjectId): ProjectEntity =
     ProjectEntity(projectId = projectId, createdAt = clockNow, deletedAt = None, owner = owner1Id)
 

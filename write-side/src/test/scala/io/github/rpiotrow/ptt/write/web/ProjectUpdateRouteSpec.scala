@@ -1,7 +1,7 @@
 package io.github.rpiotrow.ptt.write.web
 
 import cats.Monad
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import cats.effect.IO
 import eu.timepit.refined.auto._
 import fs2.Stream
@@ -13,14 +13,16 @@ import io.github.rpiotrow.ptt.api.input.ProjectInput
 import io.github.rpiotrow.ptt.api.model.ProjectId
 import io.github.rpiotrow.ptt.write.service.{EntityNotFound, NotOwner, NotUnique, ProjectService}
 import org.http4s._
-import org.http4s.headers.Location
-import org.http4s.util.CaseInsensitiveString
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
+import org.typelevel.ci.CIString
 import sttp.model.HeaderNames
 
 class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFactory with should.Matchers {
+
+  private val projectId: ProjectId = "change-me"
+  private val projectInput         = ProjectInput(projectId = "project-new")
 
   describe("PUT /projects/change-me") {
     it("successful") {
@@ -29,8 +31,10 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
       val response       = makeUpdateProjectRequest(projectService)
 
       response.status should be(Status.Ok)
-      response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(
-        Some(Location(Uri.unsafeFromString("http://gateway.live/projects/project-new")))
+      response.headers.get(CIString(HeaderNames.Location)) should be(
+        Some(NonEmptyList.of(
+          Header.Raw(CIString("Location"), "http://gateway.live/projects/project-new")
+        ))
       )
     }
     describe("failure") {
@@ -42,7 +46,7 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
         val response       = makeUpdateProjectRequest(projectService)
 
         response.status should be(Status.Conflict)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
       it("when user is not owner of the project") {
         val projectService = mock[ProjectService[IO]]
@@ -52,7 +56,7 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
         val response       = makeUpdateProjectRequest(projectService)
 
         response.status should be(Status.Forbidden)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
       it("when project does not exist") {
         val projectService = mock[ProjectService[IO]]
@@ -62,13 +66,10 @@ class ProjectUpdateRouteSpec extends AnyFunSpec with RouteSpecBase with MockFact
         val response       = makeUpdateProjectRequest(projectService)
 
         response.status should be(Status.NotFound)
-        response.headers.find(_.name == CaseInsensitiveString(HeaderNames.Location)) should be(None)
+        response.headers.get(CIString(HeaderNames.Location)) should be(None)
       }
     }
   }
-
-  private val projectId: ProjectId = "change-me"
-  private val projectInput         = ProjectInput(projectId = "project-new")
 
   private def makeUpdateProjectRequest(projectService: ProjectService[IO]) = {
     val url  = "/projects/change-me"
