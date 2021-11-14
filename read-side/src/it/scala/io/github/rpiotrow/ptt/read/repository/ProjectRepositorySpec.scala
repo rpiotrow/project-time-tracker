@@ -2,7 +2,7 @@ package io.github.rpiotrow.ptt.read.repository
 
 import java.time.{Duration, Instant, OffsetDateTime}
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import doobie.implicits._
 import doobie.util.fragment.Fragment
 import eu.timepit.refined.auto._
@@ -62,7 +62,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     describe("one() should") {
       it("return entity when exists") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.one("second"))
-        result should matchTo(p2)
+        result shouldMatchTo(p2)
       }
       it("return not found error when entity not exists") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.one("not-existing-one").either)
@@ -72,17 +72,17 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
     describe("list() should") {
       it("return list with all projects") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.list(defaultParams))
-        result should matchTo(List(p1, p2, p3))
+        result shouldMatchTo(List(p1, p2, p3))
       }
       it("return one project based on one id") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.list(defaultParams.copy(ids = List("first"))))
-        result should matchTo(List(p1))
+        result shouldMatchTo(List(p1))
       }
       it("return two project based on three ids (one of non-existing project)") {
         val result = zio.Runtime.default.unsafeRun(
           projectRepo.list(defaultParams.copy(ids = List("first", "non-existing", "deleted")))
         )
-        result should matchTo(List(p1, p3))
+        result shouldMatchTo(List(p1, p3))
       }
       it("return empty list for non-existing project id") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.list(defaultParams.copy(ids = List("non-existing"))))
@@ -95,7 +95,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
               .copy(to = Some(OffsetDateTime.parse("2020-07-25T15:00:00Z")))
           )
         )
-        result should matchTo(List(p1, p2))
+        result shouldMatchTo(List(p1, p2))
       }
       it("return projects from createdAt time range") {
         val result = zio.Runtime.default.unsafeRun(
@@ -107,42 +107,42 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
               )
           )
         )
-        result should matchTo(List(p1, p2))
+        result shouldMatchTo(List(p1, p2))
       }
       it("return only deleted projects") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.list(defaultParams.copy(deleted = Some(true))))
-        result should matchTo(List(p3))
+        result shouldMatchTo(List(p3))
       }
       it("return only not deleted projects") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.list(defaultParams.copy(deleted = Some(false))))
-        result should matchTo(List(p1, p2))
+        result shouldMatchTo(List(p1, p2))
       }
       it("return order list by createdAt ascending") {
         val result = zio.Runtime.default.unsafeRun(projectRepo.list(defaultParams.copy(orderBy = Some(CreatedAt))))
-        result should matchTo(List(p1, p2, p3))
+        result shouldMatchTo(List(p1, p2, p3))
       }
       it("return order list by createdAt descending") {
         val result = zio.Runtime.default.unsafeRun(
           projectRepo.list(defaultParams.copy(orderBy = Some(CreatedAt), orderDirection = Some(Descending)))
         )
-        result should matchTo(List(p3, p2, p1))
+        result shouldMatchTo(List(p3, p2, p1))
       }
       it("return order list by updatedAt ascending") {
         val result = zio.Runtime.default.unsafeRun(
           projectRepo.list(defaultParams.copy(orderBy = Some(LastAddDurationAt), orderDirection = Some(Ascending)))
         )
-        result should matchTo(List(p2, p1, p3))
+        result shouldMatchTo(List(p2, p1, p3))
       }
       it("return order list by updatedAt descending") {
         val result = zio.Runtime.default.unsafeRun(
           projectRepo.list(defaultParams.copy(orderBy = Some(LastAddDurationAt), orderDirection = Some(Descending)))
         )
-        result should matchTo(List(p3, p1, p2))
+        result shouldMatchTo(List(p3, p1, p2))
       }
       it("return return second page with createdAt descending order") {
         val result =
           zio.Runtime.default.unsafeRun(projectRepo.list(defaultParams.copy(pageNumber = 1, pageSize = 1)))
-        result should matchTo(List(p2))
+        result shouldMatchTo(List(p2))
       }
       it("return return empty list when page number is out of scope of pages") {
         val result =

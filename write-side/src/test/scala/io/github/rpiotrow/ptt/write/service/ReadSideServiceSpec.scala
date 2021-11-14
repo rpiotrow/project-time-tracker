@@ -5,7 +5,7 @@ import java.time.{Duration, YearMonth, OffsetDateTime, Instant}
 import cats.Monad
 import cats.effect.unsafe.implicits.global
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import cats.implicits._
 import doobie.implicits._
 import io.github.rpiotrow.ptt.write.entity
@@ -129,7 +129,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         statisticsReadSideRepository.upsert _ expects capture(argCaptor) repeat 2 returning ().pure[DBResult]
         service.projectDeleted(deletedProject).transact(tnx).unsafeRunSync()
 
-        argCaptor.values should matchTo(Seq(stats2, stats3))
+        argCaptor.values shouldMatchTo(Seq(stats2, stats3))
       }
       it("do nothing and do not throw error when there is no project in the read model") {
         val projectReadSideRepository    = mock[ProjectReadSideRepository]
@@ -176,7 +176,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         statisticsReadSideRepository.upsert _ expects capture(argCaptor) returning ().pure[DBResult]
         service.taskAdded(projectId, task).transact(tnx).unsafeRunSync()
 
-        argCaptor.value should matchTo(stats)
+        argCaptor.value shouldMatchTo(stats)
       }
       it("update existing statistics") {
         val (service, statisticsReadSideRepository) = taskAddedPrepare()
@@ -202,7 +202,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
         statisticsReadSideRepository.upsert _ expects capture(argCaptor) returning ().pure[DBResult]
 
         service.taskAdded(projectId, task).transact(tnx).unsafeRunSync()
-        argCaptor.value should matchTo(newStats)
+        argCaptor.value shouldMatchTo(newStats)
       }
       it("create initial statistics for two months") {
         val lateTask                                = task.copy(
@@ -237,7 +237,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
           numberOfTasksWithVolume = None,
           durationSum = Duration.ofHours(1)
         )
-        argCaptor.values should matchTo(Seq(stats8, stats9))
+        argCaptor.values shouldMatchTo(Seq(stats8, stats9))
       }
       it("do nothing and do not throw error when there is no project in the read model") {
         val projectReadSideRepository    = mock[ProjectReadSideRepository]
@@ -319,7 +319,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
           volumeWeightedTaskDurationSum = Duration.ofMinutes(585).some,
           volumeSum = 13L.some
         )
-        argCaptor.value should matchTo(newStats)
+        argCaptor.value shouldMatchTo(newStats)
       }
       it("update statistics when last task is deleted") {
         val projectReadSideRepository    = mock[ProjectReadSideRepository]
@@ -357,7 +357,7 @@ class ReadSideServiceSpec extends AnyFunSpec with ServiceSpecBase with MockFacto
           volumeWeightedTaskDurationSum = None,
           volumeSum = None
         )
-        argCaptor.value should matchTo(newStats)
+        argCaptor.value shouldMatchTo(newStats)
       }
     }
     it("do nothing and do not throw error when there is no task in the read model") {

@@ -4,7 +4,7 @@ import java.time.{Duration, Instant, LocalDateTime, YearMonth, ZoneOffset}
 
 import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
 
@@ -16,7 +16,7 @@ class InstantRangeSpec extends AnyFunSpec with should.Matchers {
         val r1 = createRange("2020-08-01T10:00:00", "2020-08-10T17:00:00")
         val r2 = createRange("2020-08-05T10:00:00", "2020-08-10T18:00:00")
 
-        r1.intersection(r2) should matchTo(createRange("2020-08-05T10:00:00", "2020-08-10T17:00:00").some)
+        r1.intersection(r2) shouldMatchTo(createRange("2020-08-05T10:00:00", "2020-08-10T17:00:00").some)
       }
       it("should return none for not overlapping ranges") {
         val r1 = createRange("2020-08-01T10:00:00", "2020-08-10T17:00:00")
@@ -38,12 +38,12 @@ class InstantRangeSpec extends AnyFunSpec with should.Matchers {
       it("should return one element when range is within one month") {
         val months = createRange("2020-08-01T10:00:00", "2020-08-10T10:00:00").splitToMonths()
 
-        months should matchTo(List(createRange("2020-08-01T10:00:00", "2020-08-10T10:00:00")))
+        months shouldMatchTo(List(createRange("2020-08-01T10:00:00", "2020-08-10T10:00:00")))
       }
       it("should return 3 elements when range is within on3 month") {
         val months = createRange("2020-08-30T00:00:00", "2020-10-10T00:00:00").splitToMonths()
 
-        months should matchTo(
+        months shouldMatchTo(
           List(
             createRange("2020-08-30T00:00:00", "2020-09-01T00:00:00"),
             createRange("2020-09-01T00:00:00", "2020-10-01T00:00:00"),

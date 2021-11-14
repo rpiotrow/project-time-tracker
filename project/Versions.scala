@@ -20,7 +20,7 @@ object Versions {
 
   val specs2         = "4.8.3"
   val scalamock      = "5.1.0"
-  val diffx          = "0.5.6"
+  val diffx          = "0.6.0"
   val scalatest      = "3.2.9"
   val catsScalatest  = "1.3.0"
   val testContainers = "0.39.11"

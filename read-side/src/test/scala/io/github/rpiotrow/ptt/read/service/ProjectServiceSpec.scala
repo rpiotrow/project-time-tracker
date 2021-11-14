@@ -5,7 +5,7 @@ import java.util.UUID
 import eu.timepit.refined.auto._
 import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import eu.timepit.refined.auto._
 import io.github.rpiotrow.ptt.api.model.{ProjectId, TaskId, UserId}
 import io.github.rpiotrow.ptt.api.output._
@@ -112,7 +112,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         val service = ProjectService.live(projectRepository, taskRepository)
         val result  = zio.Runtime.default.unsafeRun(service.one("project one").either)
 
-        result should matchTo(expectedOutput.asRight[RepositoryFailure])
+        result shouldMatchTo(expectedOutput.asRight[RepositoryFailure])
       }
       it("return ProjectOutput when project exists and has no tasks") {
         val projectRepository = mock[ProjectRepository.Service]
@@ -134,7 +134,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         val service = ProjectService.live(projectRepository, taskRepository)
         val result  = zio.Runtime.default.unsafeRun(service.one("project one").either)
 
-        result should matchTo(expectedOutput.asRight[RepositoryFailure])
+        result shouldMatchTo(expectedOutput.asRight[RepositoryFailure])
       }
       it("return error when project does not exist") {
         val projectRepository = mock[ProjectRepository.Service]
@@ -220,7 +220,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         val service = ProjectService.live(projectRepository, taskRepository)
         val result  = zio.Runtime.default.unsafeRun(service.list(params))
 
-        result should matchTo(List(expectedOutput1, expectedOutput2))
+        result shouldMatchTo(List(expectedOutput1, expectedOutput2))
       }
       it("return list of ProjectOutput when some projects does not have tasks") {
         val projectRepository = mock[ProjectRepository.Service]
@@ -260,7 +260,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         val service = ProjectService.live(projectRepository, taskRepository)
         val result  = zio.Runtime.default.unsafeRun(service.list(params))
 
-        result should matchTo(List(expectedOutput1, expectedOutput2))
+        result shouldMatchTo(List(expectedOutput1, expectedOutput2))
       }
       it("return list of ProjectOutput when all projects does not have tasks") {
         val projectRepository = mock[ProjectRepository.Service]
@@ -289,7 +289,7 @@ class ProjectServiceSpec extends AnyFunSpec with MockFactory with should.Matcher
         val service = ProjectService.live(projectRepository, taskRepository)
         val result  = zio.Runtime.default.unsafeRun(service.list(params))
 
-        result should matchTo(List(expectedOutput1, expectedOutput2))
+        result shouldMatchTo(List(expectedOutput1, expectedOutput2))
       }
     }
   }

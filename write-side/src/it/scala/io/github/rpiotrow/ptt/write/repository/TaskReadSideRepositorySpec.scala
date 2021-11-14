@@ -6,7 +6,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
@@ -114,13 +114,13 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val entity   = task()
         val readSide = taskReadSideRepo.add(200, entity).transact(tnx).unsafeRunSync()
 
-        readTaskByDbId(readSide.dbId) should matchTo(taskReadModel(200, entity.taskId).some)
+        readTaskByDbId(readSide.dbId) shouldMatchTo(taskReadModel(200, entity.taskId).some)
       }
       it("return read side task entity") {
         val entity   = task()
         val readSide = taskReadSideRepo.add(200, entity).transact(tnx).unsafeRunSync()
 
-        readSide should matchTo(taskReadModel(200, entity.taskId))
+        readSide shouldMatchTo(taskReadModel(200, entity.taskId))
       }
     }
 
@@ -128,7 +128,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       it("return existing") {
         val optionTask = taskReadSideRepo.get(readSideTask1.taskId).transact(tnx).unsafeRunSync()
 
-        optionTask should matchTo(readSideTask1.some)
+        optionTask shouldMatchTo(readSideTask1.some)
       }
       it("return None when task with given taskId does not exist") {
         val optionTask = taskReadSideRepo.get(TaskId.random()).transact(tnx).unsafeRunSync()
@@ -141,7 +141,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       it("return not deleted task for specified project") {
         val list = taskReadSideRepo.getNotDeleted(201).transact(tnx).unsafeRunSync()
 
-        list should matchTo(List(t2p1, t2p3))
+        list shouldMatchTo(List(t2p1, t2p3))
       }
     }
 
@@ -151,7 +151,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         taskReadSideRepo.delete(toDelete.dbId, now).transact(tnx).unsafeRunSync()
 
         val optionTask = taskReadSideRepo.get(toDelete.taskId).transact(tnx).unsafeRunSync()
-        optionTask should matchTo(toDelete.copy(deletedAt = now.some).some)
+        optionTask shouldMatchTo(toDelete.copy(deletedAt = now.some).some)
       }
     }
 
@@ -163,7 +163,7 @@ trait TaskReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val optionTask1 = taskReadSideRepo.get(t3p1.taskId).transact(tnx).unsafeRunSync()
         val optionTask2 = taskReadSideRepo.get(t3p2.taskId).transact(tnx).unsafeRunSync()
         val optionTask3 = taskReadSideRepo.get(t3p3.taskId).transact(tnx).unsafeRunSync()
-        List(optionTask1, optionTask2, optionTask3) should matchTo(
+        List(optionTask1, optionTask2, optionTask3) shouldMatchTo(
           List(t3p1.copy(deletedAt = now.some).some, t3p2.some, t3p3.copy(deletedAt = now.some).some)
         )
       }

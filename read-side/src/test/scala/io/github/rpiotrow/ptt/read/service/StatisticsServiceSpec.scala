@@ -4,7 +4,7 @@ import java.time.{Duration, YearMonth}
 import java.util.UUID
 
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import io.github.rpiotrow.ptt.api.output.StatisticsOutput
 import io.github.rpiotrow.ptt.api.param.StatisticsParams
 import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
@@ -34,7 +34,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val result =
         zio.Runtime.default.unsafeRun(service.read(params))
 
-      result should matchTo(StatisticsOutput.ZERO)
+      result shouldMatchTo(StatisticsOutput.ZERO)
     }
     it("return one when repository returns one element list") {
       val statisticsRepository = mock[StatisticsRepository.Service]
@@ -60,7 +60,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val result =
         zio.Runtime.default.unsafeRun(service.read(params))
 
-      result should matchTo(output)
+      result shouldMatchTo(output)
     }
     it("return sum when repository returns two-element list") {
       val statisticsRepository = mock[StatisticsRepository.Service]
@@ -96,7 +96,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val result =
         zio.Runtime.default.unsafeRun(service.read(params))
 
-      result should matchTo(output)
+      result shouldMatchTo(output)
     }
     it("return sum when repository returns three-element list") {
       val statisticsRepository = mock[StatisticsRepository.Service]
@@ -143,7 +143,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val result =
         zio.Runtime.default.unsafeRun(service.read(params))
 
-      result should matchTo(output)
+      result shouldMatchTo(output)
     }
     it("return sum when repository returns three-element list with task without volume") {
       val statisticsRepository = mock[StatisticsRepository.Service]
@@ -189,7 +189,7 @@ class StatisticsServiceSpec extends AnyFunSpec with MockFactory with should.Matc
       val result =
         zio.Runtime.default.unsafeRun(service.read(params))
 
-      result should matchTo(output)
+      result shouldMatchTo(output)
     }
   }
 

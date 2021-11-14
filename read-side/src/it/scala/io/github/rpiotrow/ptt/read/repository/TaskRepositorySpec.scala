@@ -2,7 +2,7 @@ package io.github.rpiotrow.ptt.read.repository
 
 import java.time.{Duration, Instant}
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import doobie.implicits._
 import doobie.util.fragment.Fragment
 import io.github.rpiotrow.ptt.api.model.{TaskId, UserId}
@@ -67,11 +67,11 @@ trait TaskRepositorySpec {
   describe("TaskRepositorySpec read() should") {
     it("return list of tasks for two projects") {
       val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(project1Id, project2Id)))
-      result should matchTo(List(t1, t2, t3))
+      result shouldMatchTo(List(t1, t2, t3))
     }
     it("return list of tasks for one project") {
       val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(project2Id)))
-      result should matchTo(List(t3))
+      result shouldMatchTo(List(t3))
     }
     it("return empty list when tasks for given projects does not exist") {
       val result = zio.Runtime.default.unsafeRun(taskRepo.read(List(666)))

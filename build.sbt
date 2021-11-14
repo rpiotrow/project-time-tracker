@@ -81,7 +81,7 @@ lazy val `read-side` = project
       "ch.qos.logback"               % "logback-classic"                 % Versions.logback,
       "org.scalactic"               %% "scalactic"                       % Versions.scalatest      % "test, it",
       "org.scalatest"               %% "scalatest"                       % Versions.scalatest      % "test, it",
-      "com.softwaremill.diffx"      %% "diffx-scalatest"                 % Versions.diffx          % "test, it",
+      "com.softwaremill.diffx"      %% "diffx-scalatest-should"          % Versions.diffx          % "test, it",
       "org.scalamock"               %% "scalamock"                       % Versions.scalamock      % Test,
       "com.dimafeng"                %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
       "com.dimafeng"                %% "testcontainers-scala-postgresql" % Versions.testContainers % IntegrationTest
@@ -114,7 +114,7 @@ lazy val `write-side` = project
       "ch.qos.logback"               % "logback-classic"                 % Versions.logback,
       "org.scalactic"               %% "scalactic"                       % Versions.scalatest      % "test, it",
       "org.scalatest"               %% "scalatest"                       % Versions.scalatest      % "test, it",
-      "com.softwaremill.diffx"      %% "diffx-scalatest"                 % Versions.diffx          % "test, it",
+      "com.softwaremill.diffx"      %% "diffx-scalatest-should"          % Versions.diffx          % "test, it",
       "org.scalamock"               %% "scalamock"                       % Versions.scalamock      % Test,
       "org.typelevel"               %% "cats-effect-testing-scalatest"   % Versions.catsScalatest  % Test,
       "com.dimafeng"                %% "testcontainers-scala-scalatest"  % Versions.testContainers % IntegrationTest,
@@ -144,12 +144,12 @@ lazy val `e2e-tests` = project
     e2eSettings,
     publish / skip := true,
     libraryDependencies ++= apiLibraryDependencies ++ Seq(
-      "com.github.pureconfig"       %% "pureconfig"        % Versions.pureConfig % "e2e",
-      "com.pauldijou"               %% "jwt-circe"         % Versions.jwt        % "e2e",
-      "org.scalactic"               %% "scalactic"         % Versions.scalatest  % "e2e",
-      "org.scalatest"               %% "scalatest"         % Versions.scalatest  % "e2e",
-      "com.softwaremill.diffx"      %% "diffx-scalatest"   % Versions.diffx      % "e2e",
-      "com.softwaremill.sttp.tapir" %% "tapir-sttp-client" % Versions.tapir      % "e2e"
+      "com.github.pureconfig"       %% "pureconfig"             % Versions.pureConfig % "e2e",
+      "com.pauldijou"               %% "jwt-circe"              % Versions.jwt        % "e2e",
+      "org.scalactic"               %% "scalactic"              % Versions.scalatest  % "e2e",
+      "org.scalatest"               %% "scalatest"              % Versions.scalatest  % "e2e",
+      "com.softwaremill.diffx"      %% "diffx-scalatest-should" % Versions.diffx      % "e2e",
+      "com.softwaremill.sttp.tapir" %% "tapir-sttp-client"      % Versions.tapir      % "e2e"
     )
   )
   .dependsOn(api)

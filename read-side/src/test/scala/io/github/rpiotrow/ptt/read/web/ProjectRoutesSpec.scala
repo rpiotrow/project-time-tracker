@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 import java.time.OffsetDateTime
 
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import eu.timepit.refined.auto._
 import io.circe.Json
 import io.circe.generic.auto._
@@ -71,7 +71,7 @@ class ProjectRoutesSpec extends AnyFunSpec with RoutesSpecBase {
     val response = makeRequest(Request(uri = Uri.unsafeFromString(url)), project(id))
 
     response.status should be(Status.Ok)
-    bodyAsProjectOutput(response) should matchTo(projectOutput1)
+    bodyAsProjectOutput(response) shouldMatchTo(projectOutput1)
   }
 
   private def checkJson(url: String, id: ProjectId) = {

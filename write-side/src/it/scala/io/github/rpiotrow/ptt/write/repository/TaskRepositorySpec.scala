@@ -8,7 +8,7 @@ import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.implicits._
-import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import doobie.Transactor
 import doobie.util.fragment.Fragment
 import io.github.rpiotrow.ptt.api.input.TaskInput
@@ -246,13 +246,13 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val taskOwner = UserId(UUID.randomUUID())
         val entity    = taskRepo.add(100, taskInput, taskOwner).transact(tnx).unsafeRunSync()
 
-        entity should matchTo(taskEntity(100, taskOwner))
+        entity shouldMatchTo(taskEntity(100, taskOwner))
       }
       it("write entity that is possible to find by dbId") {
         val taskOwner = UserId(UUID.randomUUID())
         val entity    = taskRepo.add(100, taskInput, taskOwner).transact(tnx).unsafeRunSync()
 
-        readTaskByDbId(entity.dbId) should matchTo(taskEntity(100, taskOwner).some)
+        readTaskByDbId(entity.dbId) shouldMatchTo(taskEntity(100, taskOwner).some)
       }
     }
 
@@ -268,7 +268,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
             .transact(tnx)
             .unsafeRunSync()
 
-          list should matchTo(List(p1, p1a, p2, p2a))
+          list shouldMatchTo(List(p1, p1a, p2, p2a))
         }
         it("""arg:-------xxxxxxxx----
        |       db:----------p3-------
@@ -278,7 +278,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
             .transact(tnx)
             .unsafeRunSync()
 
-          list should matchTo(List(p3))
+          list shouldMatchTo(List(p3))
         }
         it("""arg:-------xxxxxxxx----
        |       db:-----p4p4p4p4p4p4--
@@ -288,7 +288,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
             .transact(tnx)
             .unsafeRunSync()
 
-          list should matchTo(List(p4))
+          list shouldMatchTo(List(p4))
         }
         it("""arg:-------xxxxxxxx----
        |       db:-------p5p5p5p5----
@@ -298,7 +298,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
             .transact(tnx)
             .unsafeRunSync()
 
-          list should matchTo(List(p5))
+          list shouldMatchTo(List(p5))
         }
         it("""arg:-------xxxxxxxx----
        |       db:--p6------------p7-
@@ -326,7 +326,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
             .transact(tnx)
             .unsafeRunSync()
 
-          list should matchTo(List(notDeleted))
+          list shouldMatchTo(List(notDeleted))
         }
       }
       describe("for tasks of different user") {
@@ -336,7 +336,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
             .transact(tnx)
             .unsafeRunSync()
 
-          list should matchTo(List(owned))
+          list shouldMatchTo(List(owned))
         }
       }
     }
@@ -345,7 +345,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
       it("return existing") {
         val optionTask = taskRepo.get(p1.taskId).transact(tnx).unsafeRunSync()
 
-        optionTask should matchTo(p1.some)
+        optionTask shouldMatchTo(p1.some)
       }
       it("return None when task with given taskId does not exist") {
         val optionTask = taskRepo.get(TaskId.random()).transact(tnx).unsafeRunSync()
@@ -358,13 +358,13 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
       it("return deleted task") {
         val result = taskRepo.delete(toDelete1).transact(tnx).unsafeRunSync()
 
-        result should matchTo(result.copy(deletedAt = clockNow.some))
+        result shouldMatchTo(result.copy(deletedAt = clockNow.some))
       }
       it("soft delete task") {
         taskRepo.delete(toDelete2).transact(tnx).unsafeRunSync()
 
         val optionTask = taskRepo.get(toDelete2.taskId).transact(tnx).unsafeRunSync()
-        optionTask should matchTo(toDelete2.copy(deletedAt = clockNow.some).some)
+        optionTask shouldMatchTo(toDelete2.copy(deletedAt = clockNow.some).some)
       }
     }
 
@@ -376,7 +376,7 @@ trait TaskRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val optionTask1 = taskRepo.get(toDeleteWithProject1.taskId).transact(tnx).unsafeRunSync()
         val optionTask2 = taskRepo.get(toDeleteWithProject2.taskId).transact(tnx).unsafeRunSync()
         val optionTask3 = taskRepo.get(toDeleteWithProject3.taskId).transact(tnx).unsafeRunSync()
-        List(optionTask1, optionTask2, optionTask3) should matchTo(
+        List(optionTask1, optionTask2, optionTask3) shouldMatchTo(
           List(
             toDeleteWithProject1.copy(deletedAt = now.some).some,
             toDeleteWithProject2.some,

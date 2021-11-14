@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
@@ -31,19 +31,19 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val projectId: ProjectId = "project1"
         val entity               = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
 
-        entity should matchTo(expected(projectId))
+        entity shouldMatchTo(expected(projectId))
       }
       it("write entity that is possible to find by dbId") {
         val projectId: ProjectId = "project2"
         val entity               = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
 
-        readProjectByDbId(entity.dbId) should matchTo(expected(projectId).some)
+        readProjectByDbId(entity.dbId) shouldMatchTo(expected(projectId).some)
       }
       it("write entity that is possible to find by projectId") {
         val projectId: ProjectId = "project3"
         projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
 
-        readProjectByProjectId(projectId) should matchTo(expected(projectId).some)
+        readProjectByProjectId(projectId) shouldMatchTo(expected(projectId).some)
       }
     }
     describe("get should") {
@@ -53,7 +53,7 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
         val entity = projectRepo.get("project4").transact(tnx).unsafeRunSync()
 
-        entity should matchTo(expected(projectId).some)
+        entity shouldMatchTo(expected(projectId).some)
       }
       it("return none for non-existing entity") {
         val projectId: ProjectId = "non-existing-project"
@@ -68,14 +68,14 @@ trait ProjectRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val entity               = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
 
         projectRepo.delete(entity).transact(tnx).unsafeRunSync()
-        readProjectByDbId(entity.dbId) should matchTo(entity.copy(deletedAt = clockNow.some).some)
+        readProjectByDbId(entity.dbId) shouldMatchTo(entity.copy(deletedAt = clockNow.some).some)
       }
       it("return soft deleted entity") {
         val projectId: ProjectId = "projectD2"
         val entity               = projectRepo.create(projectId, owner1Id).transact(tnx).unsafeRunSync()
 
         val deleted = projectRepo.delete(entity).transact(tnx).unsafeRunSync()
-        deleted should matchTo(entity.copy(deletedAt = clockNow.some))
+        deleted shouldMatchTo(entity.copy(deletedAt = clockNow.some))
       }
     }
   }

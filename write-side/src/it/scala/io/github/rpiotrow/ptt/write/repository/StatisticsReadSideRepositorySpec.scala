@@ -6,7 +6,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
@@ -62,7 +62,7 @@ trait StatisticsReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =
           .transact(tnx)
           .unsafeRunSync()
 
-        result should matchTo(s1.some)
+        result shouldMatchTo(s1.some)
       }
       it("return none when does not exist") {
         val result = statisticsReadSideRepo
@@ -84,7 +84,7 @@ trait StatisticsReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =
 
         implicit val ignoreDbId: Diff[StatisticsReadSideEntity] =
           Derived[Diff[StatisticsReadSideEntity]].ignore(_.dbId)
-        read should matchTo(statistics.some)
+        read shouldMatchTo(statistics.some)
       }
       it("update existing statistics") {
         val statistics = s2.copy(numberOfTasks = 7)
@@ -94,7 +94,7 @@ trait StatisticsReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =
           .transact(tnx)
           .unsafeRunSync()
 
-        read should matchTo(statistics.some)
+        read shouldMatchTo(statistics.some)
       }
     }
   }

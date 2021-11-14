@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import com.softwaremill.diffx.{Derived, Diff}
 import doobie.Transactor
 import doobie.implicits._
@@ -63,7 +63,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
       it("return existing project from the read model") {
         val result = projectReadSideRepo.get("project-get-one").transact(tnx).unsafeRunSync()
 
-        result should matchTo(getOne.some)
+        result shouldMatchTo(getOne.some)
       }
       it("return none for non-existing project in the read model") {
         val result = projectReadSideRepo.get("project-get-no-existing").transact(tnx).unsafeRunSync()
@@ -83,7 +83,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
         val projectId: ProjectId = "project3"
         projectReadSideRepo.newProject(project(7, projectId)).transact(tnx).unsafeRunSync()
 
-        readProjectByProjectId(projectId) should matchTo(projectReadModel(projectId).some)
+        readProjectByProjectId(projectId) shouldMatchTo(projectReadModel(projectId).some)
       }
     }
     describe("deletedProject should") {
@@ -93,7 +93,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
 
         projectReadSideRepo.deleteProject(projectD1.dbId, projectD1.projectId, now).transact(tnx).unsafeRunSync()
 
-        readProjectByDbId(projectD1.dbId) should matchTo(expected.some)
+        readProjectByDbId(projectD1.dbId) shouldMatchTo(expected.some)
       }
     }
     describe("addDuration should") {
@@ -105,7 +105,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
           .unsafeRunSync()
 
         val expected = durationSumZero.copy(durationSum = Duration.ofMinutes(30), lastAddDurationAt = dateTime)
-        readProjectByDbId(durationSumZero.dbId) should matchTo(expected.some)
+        readProjectByDbId(durationSumZero.dbId) shouldMatchTo(expected.some)
       }
       it("update project on the read side when durationSum is positive") {
         val dateTime = Instant.now()
@@ -115,7 +115,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
           .unsafeRunSync()
 
         val expected = durationSum30.copy(durationSum = Duration.ofMinutes(60), lastAddDurationAt = dateTime)
-        readProjectByDbId(durationSum30.dbId) should matchTo(expected.some)
+        readProjectByDbId(durationSum30.dbId) shouldMatchTo(expected.some)
       }
     }
     describe("subtractDuration should") {
@@ -126,7 +126,7 @@ trait ProjectReadSideRepositorySpec { this: AnyFunSpec with should.Matchers =>
           .unsafeRunSync()
 
         val expected = durationSum60.copy(durationSum = Duration.ofMinutes(15))
-        readProjectByDbId(durationSum60.dbId) should matchTo(expected.some)
+        readProjectByDbId(durationSum60.dbId) shouldMatchTo(expected.some)
       }
     }
   }

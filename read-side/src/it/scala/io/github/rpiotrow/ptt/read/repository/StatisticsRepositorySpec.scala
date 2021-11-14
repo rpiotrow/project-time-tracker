@@ -3,7 +3,7 @@ package io.github.rpiotrow.ptt.read.repository
 import java.util.UUID
 import cats.implicits._
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -42,18 +42,18 @@ trait StatisticsRepositorySpec { this: AnyFunSpec with should.Matchers =>
       val params =
         StatisticsParams(NonEmptyUserIdList.of(owner1Id, owner2Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
       val result = zio.Runtime.default.unsafeRun(statisticsRepo.list(params))
-      result should matchTo(List(s1, s2, s3))
+      result shouldMatchTo(List(s1, s2, s3))
     }
     it("return list for one owner") {
       val params = StatisticsParams(NonEmptyUserIdList.of(owner2Id), YearMonth.of(2020, 1), YearMonth.of(2020, 12))
       val result = zio.Runtime.default.unsafeRun(statisticsRepo.list(params))
-      result should matchTo(List(s3))
+      result shouldMatchTo(List(s3))
     }
     it("return list for one month") {
       val params =
         StatisticsParams(NonEmptyUserIdList.of(owner1Id, owner2Id), YearMonth.of(2020, 7), YearMonth.of(2020, 7))
       val result = zio.Runtime.default.unsafeRun(statisticsRepo.list(params))
-      result should matchTo(List(s1, s3))
+      result shouldMatchTo(List(s1, s3))
     }
     it("return empty list for unknown owner") {
       val params = StatisticsParams(
