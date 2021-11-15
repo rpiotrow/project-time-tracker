@@ -1,18 +1,13 @@
 package io.github.rpiotrow.ptt.read.service
 
-import java.time.{Instant, ZoneOffset, OffsetDateTime}
-
-import io.github.rpiotrow.ptt.api.model.{ProjectId, UserId}
+import io.github.rpiotrow.ptt.api.model.ProjectId
 import io.github.rpiotrow.ptt.api.output.{ProjectOutput, TaskOutput}
 import io.github.rpiotrow.ptt.api.param.ProjectListParams
 import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
-import io.github.rpiotrow.ptt.read.repository.{
-  ProjectRepository,
-  RepositoryFailure,
-  RepositoryThrowable,
-  TaskRepository
-}
-import zio.{IO, Task}
+import io.github.rpiotrow.ptt.read.repository.{ProjectRepository, RepositoryFailure, RepositoryThrowable, TaskRepository}
+import zio.IO
+
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 
 object ProjectService {
   trait Service {

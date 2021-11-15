@@ -23,7 +23,7 @@ object Main extends zio.App {
       configuration.narrow(_.webConfiguration)
 
     val repositories: ZLayer[Any, Throwable, Repositories] =
-      (databaseConfiguration ++ Blocking.live) >>> postgreSQLRepositories(platform.executor.asEC)
+      (databaseConfiguration ++ Blocking.live) >>> postgreSQLRepositories()
     val server                                             =
       (repositories >>> liveServices >>> Routes.live) ++ webConfiguration >>> Server.live
 

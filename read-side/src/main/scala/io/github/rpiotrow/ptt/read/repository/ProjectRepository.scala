@@ -1,17 +1,15 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import doobie.Transactor
-import doobie.implicits._
-import doobie.quill.DoobieContext
+import eu.timepit.refined.auto._
+import io.getquill.context.ZioJdbc._
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import io.getquill.{idiom => _, _}
+import io.github.rpiotrow.ptt.api.model.ProjectId
 import io.github.rpiotrow.ptt.api.param.OrderingDirection._
 import io.github.rpiotrow.ptt.api.param.ProjectOrderingField._
 import io.github.rpiotrow.ptt.api.param._
 import io.github.rpiotrow.ptt.read.entity.ProjectEntity
-import zio.{IO, Task, ZIO}
-import zio.interop.catz._
-import eu.timepit.refined.auto._
-import io.github.rpiotrow.ptt.api.model.ProjectId
+import zio.{Has, IO, ZIO}
 
 object ProjectRepository {
   trait Service {
@@ -19,20 +17,20 @@ object ProjectRepository {
     def list(params: ProjectListParams): IO[RepositoryThrowable, List[ProjectEntity]]
   }
 
-  def live(tnx: Transactor[Task]): Service = new ProjectRepositoryLive(tnx)
+  def live(ds: DataSourceCloseable): Service = new ProjectRepositoryLive(ds)
 }
 
-private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends ProjectRepository.Service {
+private class ProjectRepositoryLive(private val ds: DataSourceCloseable) extends ProjectRepository.Service {
 
-  private val dc = new DoobieContext.Postgres(SnakeCase) with InstantQuotes with CustomDecoders
-  import dc._
+  import quillContext._
+  implicit private val implicitDS: Implicit[Has[DataSourceCloseable]] = Implicit(Has(ds))
 
   private val projects = quote { querySchema[ProjectEntity]("projects") }
 
   override def one(projectId: ProjectId): IO[RepositoryFailure, ProjectEntity] = {
     run(projects.filter(_.projectId == lift(projectId)))
       .map(_.headOption)
-      .transact(tnx)
+      .implicitDS
       .mapError(RepositoryThrowable)
       .flatMap(ZIO.fromOption(_).orElseFail(EntityNotFound(projectId.value)))
   }
@@ -52,11 +50,11 @@ private class ProjectRepositoryLive(private val tnx: Transactor[Task]) extends P
         .drop(pageNumber * pageSize)
         .take(pageSize)
     )
-      .transact(tnx)
+      .implicitDS
       .mapError(RepositoryThrowable)
   }
 
-  private def projectOrderingField[T](order: Option[ProjectOrderingField], p: dc.Quoted[ProjectEntity]) = {
+  private def projectOrderingField[T](order: Option[ProjectOrderingField], p: Quoted[ProjectEntity]) = {
     order match {
       case Some(CreatedAt)         => quote(p.createdAt)
       case Some(LastAddDurationAt) => quote(p.lastAddDurationAt)

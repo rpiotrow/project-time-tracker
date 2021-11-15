@@ -1,8 +1,5 @@
 package io.github.rpiotrow.ptt.read.service
 
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-
 import cats.Monoid
 import cats.implicits._
 import io.github.rpiotrow.ptt.api.output.StatisticsOutput
@@ -11,6 +8,8 @@ import io.github.rpiotrow.ptt.read.entity.StatisticsEntity
 import io.github.rpiotrow.ptt.read.repository._
 import zio.IO
 
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 import scala.math.BigDecimal.RoundingMode
 
 object StatisticsService {

@@ -4,7 +4,6 @@ import com.dimafeng.testcontainers.{ForAllTestContainer, JdbcDatabaseContainer, 
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import doobie.Transactor
 import doobie.implicits._
-import doobie.util.ExecutionContexts
 import doobie.util.update.Update0
 import io.github.rpiotrow.ptt.api.model.UserId
 import org.scalatest.funspec.AnyFunSpec
@@ -42,10 +41,9 @@ class AllRepositoriesSpec
     hc
   }
   private lazy val ds                                            = new HikariDataSource(hikariConfig)
-  private lazy val tnx                                           = Transactor.fromDataSource[Task](ds, ExecutionContexts.synchronous)
-  override lazy val projectRepo: ProjectRepository.Service       = ProjectRepository.live(tnx)
-  override lazy val taskRepo: TaskRepository.Service             = TaskRepository.live(tnx)
-  override lazy val statisticsRepo: StatisticsRepository.Service = StatisticsRepository.live(tnx)
+  override lazy val projectRepo: ProjectRepository.Service       = ProjectRepository.live(ds)
+  override lazy val taskRepo: TaskRepository.Service             = TaskRepository.live(ds)
+  override lazy val statisticsRepo: StatisticsRepository.Service = StatisticsRepository.live(ds)
 
   override def afterStart(): Unit = {
     val tnx  = Transactor

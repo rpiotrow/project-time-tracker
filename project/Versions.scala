@@ -12,6 +12,8 @@ object Versions {
   val refined    = "0.9.26"
   val tapir      = "0.19.0-M4"
   val doobie     = "1.0.0-RC1"
+  val postgresql = "42.3.1"
+  val quill      = "3.10.0"
   val logback    = "1.2.6"
 
   val zio            = "1.0.12"

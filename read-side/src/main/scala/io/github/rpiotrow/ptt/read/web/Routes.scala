@@ -3,7 +3,6 @@ package io.github.rpiotrow.ptt.read.web
 import java.net.URLDecoder
 import cats.implicits._
 import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection._
 import io.github.rpiotrow.ptt.api.model._
 import io.github.rpiotrow.ptt.api.ProjectEndpoints._

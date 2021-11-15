@@ -1,13 +1,12 @@
 package io.github.rpiotrow.ptt.read.repository
 
 import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
-
 import eu.timepit.refined.api.Refined
-import io.getquill.context.jdbc.{Decoders, JdbcContextBase}
+import io.getquill.context.jdbc.{Decoders, JdbcRunContext}
 import io.github.rpiotrow.ptt.api.model.ProjectId
 
 private trait CustomDecoders extends Decoders {
-  this: JdbcContextBase[_, _] =>
+  this: JdbcRunContext[_, _] =>
 
   implicit val decodeDuration = MappedEncoding[Long, Duration](Duration.ofSeconds)
 

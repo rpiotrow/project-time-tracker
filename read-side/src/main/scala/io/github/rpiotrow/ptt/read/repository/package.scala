@@ -1,18 +1,18 @@
 package io.github.rpiotrow.ptt.read
 
-import com.zaxxer.hikari.HikariConfig
-import doobie.hikari.HikariTransactor
-import io.getquill.{idiom => _}
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import io.getquill.{PostgresZioJdbcContext, SnakeCase}
 import io.github.rpiotrow.ptt.read.configuration.DatabaseConfiguration
 import zio._
 import zio.blocking.Blocking
-import zio.interop.catz._
-import zio.interop.catz.implicits._
 
+import java.io.Closeable
+import javax.sql.DataSource
 import scala.concurrent.ExecutionContext
 
 package object repository {
 
+  type DataSourceCloseable  = DataSource with Closeable
   type RepositoryEnv        = Blocking with Has[DatabaseConfiguration]
   type StatisticsRepository = Has[StatisticsRepository.Service]
   type ProjectRepository    = Has[ProjectRepository.Service]
@@ -20,36 +20,31 @@ package object repository {
 
   type Repositories = StatisticsRepository with ProjectRepository with TaskRepository
 
+  private[repository] val quillContext =
+    new PostgresZioJdbcContext(SnakeCase) with CustomDecoders with InstantQuotes
+
   sealed trait RepositoryFailure
   case class EntityNotFound(id: String)         extends RepositoryFailure
   case class RepositoryThrowable(ex: Throwable) extends RepositoryFailure
 
-  def postgreSQLRepositories(connectEC: ExecutionContext): ZLayer[RepositoryEnv, Throwable, Repositories] =
-    transactorLive(connectEC) >>> repositoriesLive()
+  def postgreSQLRepositories(): ZLayer[RepositoryEnv, Throwable, Repositories] =
+    datasourceLive() >>> repositoriesLive()
 
-  private def transactorLive(
-    connectEC: ExecutionContext
-  ): ZLayer[RepositoryEnv, Throwable, Has[HikariTransactor[Task]]] =
+  private def datasourceLive(): ZLayer[RepositoryEnv, Throwable, Has[DataSourceCloseable]] =
     ZLayer.fromManaged(for {
-      blockingEC    <- blocking.blocking { ZIO.descriptor.map(_.executor.asEC) }.toManaged_
       configuration <- zio.config.getConfig[DatabaseConfiguration].toManaged_
-      tnx           <- createTransactor(configuration, connectEC, blockingEC)
-    } yield tnx)
+      ds            <- createDatasource(configuration)
+    } yield ds)
 
-  private def repositoriesLive(): ZLayer[Has[HikariTransactor[Task]], Throwable, Repositories] =
-    ZLayer.fromServiceMany[HikariTransactor[Task], Repositories](tnx => {
-      val statistics = StatisticsRepository.live(tnx)
-      val project    = ProjectRepository.live(tnx)
-      val task       = TaskRepository.live(tnx)
+  private def repositoriesLive(): ZLayer[Has[DataSourceCloseable], Throwable, Repositories] =
+    ZLayer.fromServiceMany[DataSourceCloseable, Repositories] { ds => {
+      val statistics = StatisticsRepository.live(ds)
+      val project    = ProjectRepository.live(ds)
+      val task       = TaskRepository.live(ds)
       Has(statistics) ++ Has(project) ++ Has(task)
-    })
+    }}
 
-  private def createTransactor(
-    configuration: DatabaseConfiguration,
-    connectEC: ExecutionContext,
-    transactEC: ExecutionContext
-  ): Managed[Throwable, HikariTransactor[Task]] = {
-
+  private def createDatasource(configuration: DatabaseConfiguration): Managed[Throwable, DataSourceCloseable] = {
     val hikariConfig = new HikariConfig()
     hikariConfig.setDriverClassName(configuration.jdbcDriver)
     hikariConfig.setJdbcUrl(configuration.jdbcUrl)
@@ -58,9 +53,6 @@ package object repository {
     hikariConfig.setSchema(configuration.schema)
     hikariConfig.setReadOnly(true)
 
-    HikariTransactor
-      .fromHikariConfig[Task](hikariConfig, connectEC)
-      .toManagedZIO
+    Managed.makeEffect(new HikariDataSource(hikariConfig))(_.close())
   }
-
 }

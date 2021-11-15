@@ -1,21 +1,18 @@
 package io.github.rpiotrow.ptt.read.repository
 
-import doobie.Transactor
-import doobie.implicits._
-import doobie.quill.DoobieContext
-import io.getquill.{SnakeCase, idiom => _}
-import io.github.rpiotrow.ptt.read.entity.{ProjectEntity, TaskEntity}
-import zio.{IO, Task}
-import zio.interop.catz._
+import io.getquill.context.ZioJdbc._
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import io.github.rpiotrow.ptt.read.entity.TaskEntity
+import zio.{Has, IO}
 
 object TaskRepository {
   trait Service {
     def read(projectIds: List[Long]): IO[RepositoryThrowable, List[TaskEntity]]
   }
-  def live(tnx: Transactor[Task]): Service =
+  def live(ds: DataSourceCloseable): Service =
     new Service {
-      private val dc = new DoobieContext.Postgres(SnakeCase) with CustomDecoders
-      import dc._
+      import quillContext._
+      implicit private val implicitDS: Implicit[Has[DataSourceCloseable]] = Implicit(Has(ds))
 
       private val tasks = quote { querySchema[TaskEntity]("tasks") }
 
@@ -23,7 +20,7 @@ object TaskRepository {
         run(quote {
           tasks.filter(e => liftQuery(projectIds).contains(e.projectDbId))
         })
-          .transact(tnx)
+          .implicitDS
           .mapError(RepositoryThrowable)
       }
     }
